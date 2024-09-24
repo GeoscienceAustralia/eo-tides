@@ -2,7 +2,7 @@ name: release-main
 
 on:
   release:
-    types: [published]
+    types: [published, edited]
     branches: [main]
 
 jobs:
