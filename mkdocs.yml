@@ -1,10 +1,10 @@
 site_name: eo-tides
-repo_url: https://github.com/robbibt/eo-tides
-site_url: https://robbibt.github.io/eo-tides
+repo_url: https://github.com/GeoscienceAustralia/eo-tides
+site_url: https://GeoscienceAustralia.github.io/eo-tides
 site_description: A sample docs page
 site_author: Robbi Bishop-Taylor
 edit_uri: edit/main/docs/
-repo_name: robbibt/eo-tides
+repo_name: GeoscienceAustralia/eo-tides
 copyright: Maintained by Robbi Bishop-Taylor (@satellitesci).
 
 nav:
@@ -74,7 +74,7 @@ theme:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/robbibt/eo-tides
+      link: https://github.com/GeoscienceAustralia/eo-tides
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/eo-tides
 

@@ -1,15 +1,15 @@
 # eo-tides
 
-[![Release](https://img.shields.io/github/v/release/robbibt/eo-tides)](https://img.shields.io/github/v/release/robbibt/eo-tides)
-[![Build status](https://img.shields.io/github/actions/workflow/status/robbibt/eo-tides/main.yml?branch=main)](https://github.com/robbibt/eo-tides/actions/workflows/main.yml?query=branch%3Amain)
-[![codecov](https://codecov.io/gh/robbibt/eo-tides/branch/main/graph/badge.svg)](https://codecov.io/gh/robbibt/eo-tides)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/robbibt/eo-tides)](https://img.shields.io/github/commit-activity/m/robbibt/eo-tides)
-[![License](https://img.shields.io/github/license/robbibt/eo-tides)](https://img.shields.io/github/license/robbibt/eo-tides)
+[![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)
+[![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/main.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/main.yml?query=branch%3Amain)
+[![codecov](https://codecov.io/gh/GeoscienceAustralia/eo-tides/branch/main/graph/badge.svg)](https://codecov.io/gh/GeoscienceAustralia/eo-tides)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/commit-activity/m/GeoscienceAustralia/eo-tides)
+[![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
 
 This is placeholder text.
 
-- **Github repository**: <https://github.com/robbibt/eo-tides/>
-- **Documentation** <https://robbibt.github.io/eo-tides/>
+- **Github repository**: <https://github.com/GeoscienceAustralia/eo-tides/>
+- **Documentation** <https://GeoscienceAustralia.github.io/eo-tides/>
 
 ## Getting started with your project
 
@@ -21,7 +21,7 @@ First, create a repository on GitHub with the same name as this project, and the
 git init -b main
 git add .
 git commit -m "init commit"
-git remote add origin git@github.com:robbibt/eo-tides.git
+git remote add origin git@github.com:GeoscienceAustralia/eo-tides.git
 git push -u origin main
 ```
 
@@ -63,8 +63,8 @@ To enable the code coverage reports, see [here](https://fpgmaas.github.io/cookie
 ## Releasing a new version
 
 - Create an API Token on [PyPI](https://pypi.org/).
-- Add the API Token to your projects secrets with the name `PYPI_TOKEN` by visiting [this page](https://github.com/robbibt/eo-tides/settings/secrets/actions/new).
-- Create a [new release](https://github.com/robbibt/eo-tides/releases/new) on Github.
+- Add the API Token to your projects secrets with the name `PYPI_TOKEN` by visiting [this page](https://github.com/GeoscienceAustralia/eo-tides/settings/secrets/actions/new).
+- Create a [new release](https://github.com/GeoscienceAustralia/eo-tides/releases/new) on Github.
 - Create a new tag in the form `*.*.*`.
 
 For more details, see [here](https://fpgmaas.github.io/cookiecutter-uv/features/cicd/#how-to-trigger-a-release).
