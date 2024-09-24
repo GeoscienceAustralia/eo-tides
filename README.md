@@ -8,3 +8,6 @@
 
 - **Github repository**: <https://github.com/GeoscienceAustralia/eo-tides/>
 - **Documentation** <https://GeoscienceAustralia.github.io/eo-tides/>
+
+> [!CAUTION]
+> This package is a work in progress, and not currently ready for operational use.
