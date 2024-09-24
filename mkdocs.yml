@@ -83,3 +83,6 @@ markdown_extensions:
       permalink: true
   - pymdownx.arithmatex:
       generic: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences

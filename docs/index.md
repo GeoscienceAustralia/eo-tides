@@ -5,5 +5,8 @@
 [![Commit activity](https://img.shields.io/github/commit-activity/m/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/commit-activity/m/GeoscienceAustralia/eo-tides)
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
 
-> [!CAUTION]
-> This package is a work in progress, and not currently ready for operational use.
+!!! warning
+
+    Note: This package is a work in progress, and not currently ready for operational use.
+
+The `eo-tides` package contains parallelised tools for modelling ocean tides and combining them with time-series satellite earth observation data. The package builds upon tide modelling functionality from the powerful `pyTMD` package which supports many of the best-performing global tide models (e.g. FES2022, FES2014, TPXO9, EOT20 and many more). Tides can be easily modelled in parallel for multiple models, then combined with satellite data from any location on the planet using Open Data Cube's `odc-stac` or `datacube` packages.
