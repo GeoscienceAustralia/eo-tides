@@ -1,0 +1,102 @@
+[project]
+name = "eo-tides"
+version = "0.0.1"
+description = "Placeholder"
+authors = [{ name = "Robbi Bishop-Taylor", email = "Robbi.BishopTaylor@ga.gov.au" }]
+readme = "README.md"
+keywords = ['python']
+requires-python = ">=3.9"
+dependencies = [
+  "geopandas",
+  "numpy",
+  "odc-geo[xr]",
+  "pandas",
+  "pyproj",
+  "pyTMD==2.1.6",
+  # "pyTMD@git+https://github.com/tsutterley/pyTMD",
+  "scikit-learn",
+  "scipy",
+  "shapely",
+  "tqdm",
+]
+
+[project.urls]
+Homepage = "https://GeoscienceAustralia.github.io/eo-tides/"
+Repository = "https://github.com/GeoscienceAustralia/eo-tides"
+Documentation = "https://GeoscienceAustralia.github.io/eo-tides/"
+
+[project.optional-dependencies]
+notebooks = [
+    "odc-stac",
+    "pystac-client",
+    "folium",
+    "matplotlib",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.2.0",
+    "nbval>=0.11.0",
+    "pre-commit>=2.20.0",
+    "tox>=3.25.1",
+    "deptry>=0.20.0",
+    "mypy>=0.991",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.0.235",
+    "mkdocs>=1.4.2",
+    "mkdocs-material>=8.5.10",
+    "mkdocs-jupyter>=0.25.0",
+    "mkdocstrings[python]>=0.19.0",
+    "black",
+    "odc-stac",
+    "pystac-client",
+]
+
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.mypy]
+files = ["eo_tides"]
+python_version = "3.10"
+ignore_missing_imports = "True"
+allow_redefinition = "True"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+fix = true
+lint.ignore = [
+    # LineTooLong
+    "E501",
+    # DoNotAssignLambda
+    "E731",
+    # Unused import
+    "F401"
+]
+
+[tool.ruff.format]
+preview = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.deptry.per_rule_ignores]
+DEP002 = [
+    "matplotlib",
+    "folium",
+    "pystac-client",
+]
+
+[tool.coverage.report]
+skip_empty = true
+
+[tool.coverage.run]
+branch = true
+source = ["eo_tides"]
+
+[tool.setuptools]
+py-modules = ["eo_tides"]

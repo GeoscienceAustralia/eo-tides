@@ -1,0 +1,85 @@
+site_name: eo-tides
+repo_url: https://github.com/robbibt/eo-tides
+site_url: https://robbibt.github.io/eo-tides
+site_description: A sample docs page
+site_author: Robbi Bishop-Taylor
+edit_uri: edit/main/docs/
+repo_name: robbibt/eo-tides
+copyright: Maintained by Robbi Bishop-Taylor (@satellitesci).
+
+nav:
+  - Home: index.md
+  - Installation: install.md
+  - Setting up tide models: setup.md
+  - Usage examples:
+      # - Overview: usage.md
+      - notebooks/Model_tides.ipynb
+      - notebooks/Tidal_modelling.ipynb
+  - API reference: api.md
+
+plugins:
+  - search
+  - mkdocs-jupyter
+  - mkdocstrings:
+      handlers:
+        python:
+          setup_commands:
+            - import sys
+            - sys.path.append('../')
+          options:
+            docstring_style: numpy
+            # docstring_options:
+            #   ignore_init_summary: true
+            # docstring_section_style: list
+            # filters: ["!^_"]
+            # heading_level: 1
+            # inherited_members: true
+            # merge_init_into_class: true
+            parameter_headings: true
+            separate_signature: true
+            line_length: 60
+            show_root_heading: true
+            # show_category_heading: true
+            # show_root_full_path: true
+            # show_root_members_full_path: true
+            # show_signature_annotations: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            # group_by_category: true
+            # signature_crossrefs: true
+            summary: true
+
+theme:
+  name: material
+  feature:
+    tabs: true
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/robbibt/eo-tides
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/eo-tides
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
