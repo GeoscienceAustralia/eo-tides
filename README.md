@@ -1,4 +1,4 @@
-# eo-tides: Tide modelling tools for Earth Observation
+# eo-tides: Tide modelling tools for large-scale satellite earth observation analysis
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)
 [![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/main.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/main.yml?query=branch%3Amain)
