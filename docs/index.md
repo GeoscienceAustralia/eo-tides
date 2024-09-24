@@ -6,3 +6,6 @@
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
 
 Tide modelling tools for large-scale satellite earth observation analysis.
+
+> [!CAUTION]
+> This package is a work in progress, and not currently ready for operational use.
