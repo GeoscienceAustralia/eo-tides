@@ -1,7 +1,7 @@
 [project]
 name = "eo-tides"
 version = "0.0.1"
-description = "Placeholder"
+description = "Tide modelling tools for large-scale satellite earth observation analysis"
 authors = [{ name = "Robbi Bishop-Taylor", email = "Robbi.BishopTaylor@ga.gov.au" }]
 readme = "README.md"
 keywords = ['python']
