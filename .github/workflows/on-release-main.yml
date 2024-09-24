@@ -47,11 +47,11 @@ jobs:
       - name: Build package
         run: uvx --from build pyproject-build --installer uv
 
-      # - name: Publish package
-      #   run: uvx twine upload dist/*
-      #   env:
-      #     TWINE_USERNAME: __token__
-      #     TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      - name: Publish package
+        run: uvx twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
 
   deploy-docs:
     needs: publish
