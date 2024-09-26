@@ -1,4 +1,6 @@
-# `eo-tides:` Tide modelling tools for large-scale satellite earth observation analysis <img style="float: right; margin: 0 50px 0 0;" src="docs/assets/eo-tides-logo.jpg" width="136">
+# `eo-tides:` Tide modelling tools for large-scale satellite earth observation analysis
+
+<img style="float: left;" src="docs/assets/eo-tides-logo.jpg" width="160">
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
 [![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/main.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/main.yml?query=branch%3Amain)
