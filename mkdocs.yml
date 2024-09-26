@@ -14,7 +14,7 @@ nav:
   - Usage examples:
       # - Overview: usage.md
       - notebooks/Model_tides.ipynb
-      - notebooks/Tidal_modelling.ipynb
+      # - notebooks/Tidal_modelling.ipynb
   - API reference: api.md
 
 plugins:
@@ -70,6 +70,13 @@ theme:
         name: Switch to light mode
   icon:
     repo: fontawesome/brands/github
+  logo: assets/eo-tides-logo.jpg
+  # features:
+  #   - navigation.instant
+  #   - navigation.tracking
+  #   - navigation.tabs
+  #   - navigation.sections
+  #   - navigation.expand
 
 extra:
   social:
