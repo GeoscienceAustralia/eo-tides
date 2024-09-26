@@ -21,37 +21,24 @@
 
 6. Navigate to `/auxiliary/tide_model/fes2014_elevations_and_load/`, and download the following files:
 
-- `fes2014a_loadtide/load_tide.tar.xz`
 - `fes2014b_elevations/ocean_tide.tar.xz` (_or_ `fes2014b_elevations_extrapolated/ocean_tide_extrapolated.tar.xz`; this extrapolated version includes additional coverage of the coastal zone, which can be useful for coastal applications)
 
-7. Create a new folder (i.e. `tide_models/fes2014/`) to store the model files in a location that will be accessible to the DEA Coastlines code. Extract `load_tide.tar.xz` and `ocean_tide.tar.xz` into this folder (e.g. `tar -xf load_tide.tar.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
+7. Create a new folder (i.e. `tide_models/fes2014/`) to store the model files in an accessible location. Extract `ocean_tide.tar.xz` into this folder (e.g. `tar -xf ocean_tide.tar.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
 
 ```
-tide_models/fes2014/load_tide/
-    |- 2n2.nc
-    |- ...
-    |- t2.nc
 tide_models/fes2014/ocean_tide/
     |- 2n2.nc
     |- ...
     |- t2.nc
 ```
 
-> **Note**: If you downloaded `ocean_tide_extrapolated.tar.xz`, you will need to rename the extracted `ocean_tide_extrapolated` folder to `ocean_tide`.
-
 ### Modelling tides
 
-If the `pyTMD` Python package is not installed on your system, this can be installed using:
-
-```
-pip install pytmd
-```
-
-Tides can now be modelled using the `model_tides` function from the `dea_tools.coastal` package:
+Tides can now be modelled using the `model_tides` function from the `eo_tides.model` module:
 
 ```
 import pandas as pd
-from dea_tools.coastal import model_tides
+from eo_tides.model import model_tides
 
 lons=[155, 160]
 lats=[-35, -36]
@@ -60,11 +47,9 @@ example_times = pd.date_range("2022-01-01", "2022-01-04", freq="1D")
 model_tides(
         x=lons,
         y=lats,
-        time=example_times.values,
-        directory='tide_models'
+        time=example_times,
+        directory='tide_models/'
 )
 ```
 
-In the DEA Coastlines code, this function is used in the `raster` module as part of the annual water index composite generation process.
-
-Depending on where you created the `tide_models` directory, you may need to update the `directory` parameter of the `model_tide_points` function to point to the location of the FES2014 model files.
+Depending on where you created the `tide_models` directory, you may need to update the `directory` parameter of the `model_tides` function to point to the location of the FES2014 model files.
