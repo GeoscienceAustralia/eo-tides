@@ -21,8 +21,8 @@
 
 6. Navigate to `/auxiliary/tide_model/fes2014_elevations_and_load/`, and download one of the following files:
 
-- `fes2014b_elevations/ocean_tide.tar.xz`, _or_
-- `fes2014b_elevations_extrapolated/ocean_tide_extrapolated.tar.xz` (this extrapolated version includes additional coverage of the coastal zone, which can be useful for coastal applications)
+   - `fes2014b_elevations/ocean_tide.tar.xz`, _or_
+   - `fes2014b_elevations_extrapolated/ocean_tide_extrapolated.tar.xz` (this extrapolated version includes additional coverage of the coastal zone, which can be useful for coastal applications)
 
 7. Create a new folder (i.e. `tide_models/fes2014/`) to store the model files in an accessible location. Extract `ocean_tide.tar.xz` into this folder (e.g. `tar -xf ocean_tide.tar.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
 
