@@ -1,6 +1,6 @@
 <div style="display: flex; align-items: center; justify-content: space-between;">
   <h1 style="margin-right: 20px;"><code>eo-tides</code>: Tide modelling tools for large-scale satellite earth observation analysis</h1>
-  <img src="docs/assets/eo-tides-logo.jpg" alt="Your image description" style="max-width: 150px; height: auto;">
+  <img src="docs/assets/eo-tides-logo.jpg" alt="Your image description" style="max-width: 100px; height: auto;">
 </div>
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
