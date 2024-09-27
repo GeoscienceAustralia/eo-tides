@@ -70,7 +70,7 @@ theme:
         name: Switch to light mode
   icon:
     repo: fontawesome/brands/github
-  logo: assets/eo-tides-logo.jpg
+  logo: assets/eo-tides-logo-128.png
   # features:
   #   - navigation.instant
   #   - navigation.tracking

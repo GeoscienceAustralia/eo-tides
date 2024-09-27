@@ -1,4 +1,4 @@
-<img style="float: left; margin: 0 50px 0 0;" src="assets/eo-tides-logo.jpg" width="136">
+<img style="float: left; margin: 0 50px 0 0;" src="assets/eo-tides-logo-256.png" width="136">
 # `eo-tides:` Tide modelling tools for large-scale satellite earth observation analysis
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)
@@ -17,8 +17,9 @@ The `eo-tides` package provides tools for analysing coastal and ocean satellite 
 Some key functionality includes the ability to:
 
 - Model tides from multiple global ocean tide models in parallel, and return tide heights in standardised `pandas.DataFrame` format for further analysis
-- "Tag" satellite data timeseries with tide data based on the exact moment of each satellite acquisition
+- "Tag" satellite data with tide height and stage based on the exact moment of image acquisition
 - Model tides for every individual satellite pixel, producing three-dimensional "tide height" `xarray`-format datacubes that can be combined with satellite data
+- Combine multiple tide models into a single locally-optimised "ensemble" model informed by satellite altimetry and satellite-observed patterns of tidal inundation
 - Calculate statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits
 - Validate modelled tides using measured sea levels from coastal tide gauges (e.g. GESLA)
 
@@ -28,8 +29,8 @@ These tools can be applied directly to petabytes of freely available satellite d
 
 `eo-tides` supports [all ocean tide models supported by `pyTMD`](https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#model-database). These include:
 
-- FES2022, FES2014, FES2012
-- TPXO10, TPXO9, TPXO8
-- GOT5.6, GOT5.5, GOT4.10
-- EOT20
-- HAMTIDE11
+- [Finite Element Solution tide models](https://doi.org/10.5194/os-2020-96) (FES2022, FES2014, FES2012)
+- [TOPEX/POSEIDON global tide models](<https://doi.org/10.1175/1520-0426(2002)019<0183:EIMOBO>2.0.CO;2>) (`TPXO10`, `TPXO9`, `TPXO8`)
+- [Global Ocean Tide models](https://doi.org/10.1002/2016RG000546) (`GOT5.6`, `GOT5.5`, `GOT4.10`)
+- [Empirical Ocean Tide models](https://doi.org/10.5194/essd-13-3869-2021) (`EOT20`)
+- [Hamburg direct data Assimilation Methods for Tides models](https://doi.org/10.1002/2013JC009766) (`HAMTIDE11`)
