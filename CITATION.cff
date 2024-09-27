@@ -26,5 +26,5 @@ keywords:
 license: "Apache-2.0"
 message: "Please cite `eo-tides` using the citation below:"
 repository-code: "https://github.com/GeoscienceAustralia/eo-tides"
-title: "eo-tides"
-version: "1.0.0"
+title: "eo-tides: Tide modelling tools for large-scale satellite earth observation analysis"
+# version: "1.0.0"
