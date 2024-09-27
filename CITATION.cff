@@ -7,13 +7,8 @@ authors:
     given-names: Robbi
     orcid: "https://orcid.org/0000-0002-1533-2599"
   - affiliation: "Geoscience Australia"
-    family-names: Dunn
-    given-names: Bex
-    orcid: "https://orcid.org/0000-0001-7747-8246"
-  - affiliation: "Geoscience Australia"
-    family-names: "Bishop-Taylor"
-    given-names: Robbi
-    orcid: "https://orcid.org/0000-0002-1533-2599"
+    family-names: Sagar
+    given-names: Stephen
   - affiliation: "Geoscience Australia"
     family-names: Phillips
     given-names: Claire
@@ -21,9 +16,6 @@ authors:
     family-names: Newey
     given-names: Vanessa
     orcid: "https://orcid.org/0000-0003-3705-5665"
-  - affiliation: "Geoscience Australia"
-    family-names: Sagar
-    given-names: Stephen
 cff-version: "1.1.0"
 date-released: 2024-10-30
 doi: ""
