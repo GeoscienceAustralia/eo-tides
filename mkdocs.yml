@@ -12,10 +12,12 @@ nav:
   - Installation: install.md
   - Setting up tide models: setup.md
   - Usage examples:
-      # - Overview: usage.md
       - notebooks/Model_tides.ipynb
-      # - notebooks/Tidal_modelling.ipynb
-  - API reference: api.md
+  - Package:
+      - API reference: api.md
+  - Reference:
+      - Changelog: changelog.md
+      - Citations and credits: credits.md
 
 plugins:
   - search
@@ -72,6 +74,14 @@ theme:
     repo: fontawesome/brands/github
   logo: assets/eo-tides-logo-128.png
   favicon: assets/eo-tides-logo-128.png
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+
+  # features:
+  #   - announce.dismiss
   # features:
   #   - navigation.instant
   #   - navigation.tracking
@@ -88,6 +98,8 @@ extra:
       link: https://github.com/GeoscienceAustralia/eo-tides
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/eo-tides
+  announce:
+    content: Your announcement text goes here
 
 markdown_extensions:
   - toc:

@@ -1,6 +1,6 @@
 # Setting up tide models
 
-## Getting started with the [FES2014 Finite Element Solution tide model](https://www.aviso.altimetry.fr/es/data/products/auxiliary-products/global-tide-fes/description-fes2014.html)
+## [FES2014 Finite Element Solution tide model](https://www.aviso.altimetry.fr/es/data/products/auxiliary-products/global-tide-fes/description-fes2014.html)
 
 1. [Register with AVISO+](https://www.aviso.altimetry.fr/en/data/data-access/registration-form.html), and select `FES2014 / FES2012 (Oceanic Tides Heights)` from the `PRODUCT SELECTION` section:
 

@@ -13,3 +13,8 @@
 .md-search__icon.md-icon svg {
   color: #ffffff !important;
 }
+
+/* Increase content width */
+.md-grid {
+  max-width: 1200px;
+}
