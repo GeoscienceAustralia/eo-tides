@@ -29,8 +29,10 @@ These tools can be applied directly to petabytes of freely available satellite d
 
 `eo-tides` supports [all ocean tide models supported by `pyTMD`](https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#model-database). These include:
 
-- [Finite Element Solution tide models](https://doi.org/10.5194/os-2020-96) (FES2022, FES2014, FES2012)
+- [Finite Element Solution tide models](https://doi.org/10.5194/os-2020-96) (`FES2022`, `FES2014`, `FES2012`)
 - [TOPEX/POSEIDON global tide models](<https://doi.org/10.1175/1520-0426(2002)019<0183:EIMOBO>2.0.CO;2>) (`TPXO10`, `TPXO9`, `TPXO8`)
 - [Global Ocean Tide models](https://doi.org/10.1002/2016RG000546) (`GOT5.6`, `GOT5.5`, `GOT4.10`)
 - [Empirical Ocean Tide models](https://doi.org/10.5194/essd-13-3869-2021) (`EOT20`)
 - [Hamburg direct data Assimilation Methods for Tides models](https://doi.org/10.1002/2013JC009766) (`HAMTIDE11`)
+
+For instructions on how to set up these models for use in `eo-tides`, refer to [Setting up tide models](setup.md).

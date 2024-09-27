@@ -1,11 +1,11 @@
 site_name: eo-tides
 repo_url: https://github.com/GeoscienceAustralia/eo-tides
 site_url: https://GeoscienceAustralia.github.io/eo-tides
-site_description: A sample docs page
+site_description: eo-tides - Tide modelling tools for large-scale satellite earth observation analysis
 site_author: Robbi Bishop-Taylor
 edit_uri: edit/main/docs/
 repo_name: GeoscienceAustralia/eo-tides
-copyright: Maintained by Robbi Bishop-Taylor (@satellitesci).
+copyright: Maintained by Robbi Bishop-Taylor (@satellitesci)
 
 nav:
   - Home: index.md
@@ -55,28 +55,32 @@ theme:
     tabs: true
   palette:
     - media: "(prefers-color-scheme: light)"
-      scheme: default
+      scheme: eotides
       primary: white
       accent: deep orange
       toggle:
-        icon: material/brightness-7
+        icon: material/lightbulb
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: black
       accent: deep orange
       toggle:
-        icon: material/brightness-4
+        icon: material/lightbulb-outline
         name: Switch to light mode
   icon:
     repo: fontawesome/brands/github
   logo: assets/eo-tides-logo-128.png
+  favicon: assets/eo-tides-logo-128.png
   # features:
   #   - navigation.instant
   #   - navigation.tracking
   #   - navigation.tabs
   #   - navigation.sections
   #   - navigation.expand
+
+extra_css:
+  - stylesheets/extra.css
 
 extra:
   social:

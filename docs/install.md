@@ -12,4 +12,4 @@ By default, only essential package dependencies are installed. To install all pa
 pip install eo-tides[notebooks]
 ```
 
-Once you have installed `eo-tides`, you will need to [download and set up at least one tide model](../setup/) before you can model tides.
+Once you have installed `eo-tides`, you will need to [download and set up at least one tide model](setup.md) before you can model tides.
