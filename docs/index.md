@@ -36,3 +36,11 @@ These tools can be applied directly to petabytes of freely available satellite d
 - [Hamburg direct data Assimilation Methods for Tides models](https://doi.org/10.1002/2013JC009766) (`HAMTIDE11`)
 
 For instructions on how to set up these models for use in `eo-tides`, refer to [Setting up tide models](setup.md).
+
+## Citing `eo-tides`
+
+To cite `eo-tides` in your work, please use the following citation:
+
+```
+Bishop-Taylor, R., Sagar, S., Phillips, C., & Newey, V. (2024). eo-tides: Tide modelling tools for large-scale satellite earth observation analysis [Computer software]. https://github.com/GeoscienceAustralia/eo-tides
+```

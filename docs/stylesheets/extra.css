@@ -18,3 +18,8 @@
 .md-grid {
   max-width: 1200px;
 }
+
+/* Add wrapping to code blocks */
+code {
+  white-space: pre-wrap !important;
+}

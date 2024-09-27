@@ -79,6 +79,7 @@ theme:
     - navigation.expand
     - navigation.path
     - navigation.top
+    - content.code.copy
 
   # features:
   #   - announce.dismiss
@@ -109,3 +110,9 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
