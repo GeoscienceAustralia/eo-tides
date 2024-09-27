@@ -1,0 +1,15 @@
+[data-md-color-scheme="eotides"] {
+  --md-primary-fg-color: #215f9a;
+  --md-primary-fg-color--light: #4a7dbe;
+  --md-primary-fg-color--dark: #184878;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: #ffffff;
+  --md-default-fg-color--lighter: #ffffff;
+  --md-footer-bg-color: #113457;
+  --md-footer-bg-color--dark: #113457;
+}
+
+/* Target the search input placeholder icon */
+.md-search__icon.md-icon svg {
+  color: #ffffff !important;
+}
