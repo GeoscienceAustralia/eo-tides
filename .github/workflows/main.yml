@@ -47,9 +47,6 @@ jobs:
           # Extract tide modelling test files
           tar -xvzf ./tests/data/tide_models_tests.tar.gz -C ./tests/data
 
-          # Add environment variable to allow functions to locate data
-          # echo "DEA_TOOLS_TIDE_MODELS=./tests/data/tide_models_tests" >> $GITHUB_ENV
-
       - name: Set up the environment
         uses: ./.github/actions/setup-python-env
         with:
