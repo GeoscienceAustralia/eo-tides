@@ -79,6 +79,7 @@ theme:
     - navigation.expand
     - navigation.path
     - navigation.top
+    - navigation.footer
     - content.code.copy
 
   # features:
