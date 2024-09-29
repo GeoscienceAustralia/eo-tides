@@ -44,3 +44,7 @@ To cite `eo-tides` in your work, please use the following citation:
 ```
 Bishop-Taylor, R., Sagar, S., Phillips, C., & Newey, V. (2024). eo-tides: Tide modelling tools for large-scale satellite earth observation analysis [Computer software]. https://github.com/GeoscienceAustralia/eo-tides
 ```
+
+## Next steps
+
+To get started, first follow the [guide to installing `eo-tides`](install.md), and then [set up one or multiple global ocean tide models](setup.md).

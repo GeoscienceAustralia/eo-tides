@@ -143,6 +143,48 @@ tide_models/
            |- t2.nc
         ```
 
+??? note "GOT Global Ocean Tide models"
+
+    ### GOT Global Ocean Tide models
+
+    1. Visit [Ocean tide models](https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models)
+    2. Under `Short-period (diurnal/semidiurnal) tides`, click choose your desired GOT model:
+
+        ![image](assets/got_download.jpg)
+
+    3. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called either `GOT4.7/`, `got4.8/`, `GOT4.10c/`, `GOT5.5/` or `GOT5.6/` to store the GOT model files.
+
+    4. Extract your downloaded `.tar.gz` file into this new directory. You should end up with the following directory structure containing the extracted NetCDF files:
+
+        ```
+        tide_models/GOT5.6/ocean_tides/
+           |- ...
+        ```
+        Or:
+        ```
+        tide_models/GOT5.5/ocean_tides/
+           |- ...
+        ```
+        !!! important
+
+            Note that GOT5.6 requires that both GOT5.6 and GOT5.5 model files are downloaded and extracted.
+
+        Or:
+        ```
+        tide_models/GOT4.10c/grids_oceantide/
+           |- ...
+        ```
+        Or:
+        ```
+        tide_models/got4.8/grids_oceantide/
+           |- ...
+        ```
+        Or:
+        ```
+        tide_models/GOT4.7/grids_oceantide/
+           |- ...
+        ```
+
 ## Configuring `eo-tides` to use tide model directory
 
 `eo-tides` can be pointed to the location of your [tide model directory](#setting-up-a-tide-model-directory) and your downloaded tide model data in two ways:
@@ -182,3 +224,7 @@ All tide modelling functions from `eo-tides` will check for the presence of the 
 !!! tip
 
     Setting the `EO_TIDES_TIDE_MODELS` environment variable can be useful when the location of your tide model directory might change between different environments, and you want to avoid hard-coding a single location via the `directory` parameter.
+
+## Next steps
+
+Now that you have [installed `eo-tides`](install.md) and set up some tide models, you can learn how to use `eo-tides` for [modelling tides and analysing satellite data!](notebooks/Model_tides.ipynb)
