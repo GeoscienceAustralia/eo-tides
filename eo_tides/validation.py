@@ -158,7 +158,7 @@ def _load_gesla_dataset(site, path, na_value):
             path,
             skiprows=41,
             names=["date", "time", "sea_level", "qc_flag", "use_flag"],
-            sep="\s+",
+            sep=r"\s+",  # sep="\s+",
             parse_dates=[[0, 1]],
             index_col=0,
             na_values=na_value,

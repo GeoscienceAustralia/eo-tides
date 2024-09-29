@@ -11,8 +11,10 @@ nav:
   - Home: index.md
   - Installation: install.md
   - Setting up tide models: setup.md
-  - Usage examples:
+  - Usage:
       - notebooks/Model_tides.ipynb
+      - notebooks/Satellite_data.ipynb
+      - notebooks/Tide_statistics.ipynb
   - Package:
       - API reference: api.md
   - Reference:
