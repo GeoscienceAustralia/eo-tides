@@ -1,43 +1,158 @@
 # Setting up tide models
 
-## [FES2014 Finite Element Solution tide model](https://www.aviso.altimetry.fr/es/data/products/auxiliary-products/global-tide-fes/description-fes2014.html)
+!!! important
 
-1. [Register with AVISO+](https://www.aviso.altimetry.fr/en/data/data-access/registration-form.html), and select `FES2014 / FES2012 (Oceanic Tides Heights)` from the `PRODUCT SELECTION` section:
+    `eo-tides` provides tools for modelling tides using global ocean tide models but does not host or maintain the models themselves. **Users are responsible for accessing, using, and citing ocean tide models in compliance with each model's licensing terms.**
 
-   ![image](https://user-images.githubusercontent.com/17680388/160057710-dbb0c8b9-56e9-451a-91c3-d90e503d8512.png)
+Once you [have installed `eo-tides`](install.md), we need to download and set up the external global ocean tide models required for `eo-tides` to work.
+The following documentation provides instructions for getting started with [several commonly used global ocean tide models](#downloading-tide-model-data).
 
-2. Once your registration is complete, login to [MY AVISO+](https://www.aviso.altimetry.fr/en/my-aviso-plus.html).
-3. Once logged in, select [My products](https://www.aviso.altimetry.fr/en/my-aviso-plus/my-products.html) in the left-hand menu:
+!!! tip
 
-   ![image](https://user-images.githubusercontent.com/17680388/160057999-381fb818-e379-46cb-a3c4-a836308a96d8.png)
+    Please refer to the [`pyTMD` documentation](https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories) for additional instructions covering all other supported tide models.
 
-4. `FES2014 / FES2012 (Oceanic Tides Heights)` should appear under `Your current subscriptions.` Right click on `Ftp`, and copy the FTP address.
+## Setting up a tide model directory
 
-   ![image](https://user-images.githubusercontent.com/17680388/160058064-77430ddf-1939-449d-86e7-f05b27ca768a.png)
-
-5. Using an FTP client like FileZilla, log in to the FTP using your AVISO+ username and password:
-
-   ![image](https://user-images.githubusercontent.com/17680388/160058263-b0b1da72-e5ac-47ca-b1d0-544569d3f06a.png)
-
-6. Navigate to `/auxiliary/tide_model/fes2014_elevations_and_load/`, and download one of the following files:
-
-   - `fes2014b_elevations/ocean_tide.tar.xz`, _or_
-   - `fes2014b_elevations_extrapolated/ocean_tide_extrapolated.tar.xz` (this extrapolated version includes additional coverage of the coastal zone, which can be useful for coastal applications)
-
-7. Create a new folder (i.e. `tide_models/fes2014/`) to store the model files in an accessible location. Extract `ocean_tide.tar.xz` into this folder (e.g. `tar -xf ocean_tide.tar.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
+As a first step, we need to create a directory that will contain our tide model data.
+This directory will be accessed by all `eo-tides` functions.
+For example, we might want to store our tide models in a directory called `tide_models/`:
 
 ```
-tide_models/fes2014/ocean_tide/
-    |- 2n2.nc
-    |- ...
-    |- t2.nc
+tide_models/
 ```
 
-### Modelling tides
+!!! tip
 
-Tides can now be modelled using the `model_tides` function from the `eo_tides.model` module:
+    This directory doesn't need to be called `tide_models`; use any name and/or location that is convenient to you and accessible from your Python environment. Please refer to [the documentation below](#configuring-eo-tides-to-use-tide-model-directory) for further details on configuring `eo-tides` to use this directory.
 
-```
+## Downloading tide model data
+
+??? note "EOT20 Empirical Ocean Tide model"
+
+    ### EOT20 Empirical Ocean Tide model
+
+    1. Visit [EOT20 - A global Empirical Ocean Tide model from multi-mission satellite altimetry](https://doi.org/10.17882/79489)
+    2. Under `Data`, click `Download`:
+
+        ![image](assets/eot20_download.jpg)
+
+    3. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called `EOT20/` to store the EOT20 model files.
+
+    4. Extract the `85762.zip` and then `ocean_tides.zip` into this new directory. You should end up with the following directory structure containing the extracted NetCDF files:
+
+        ```
+        tide_models/EOT20/ocean_tides/
+           |- 2N2_ocean_eot20.nc
+           |- ...
+           |- T2_ocean_eot20.nc
+        ```
+
+??? note "FES2022 Finite Element Solution tide models"
+
+    ### FES2022 Finite Element Solution tide models
+
+    1. [Register with AVISO+](https://www.aviso.altimetry.fr/en/data/data-access/registration-form.html), and select `FES (Finite Element Solution - Oceanic Tides Heights)` from the `Licence Agreement and product selection` section:
+
+        ![image](assets/fes_productselection.jpg)
+
+    2. Once your registration is complete, login to [MY AVISO+](https://www.aviso.altimetry.fr/en/my-aviso-plus.html).
+    3. Once logged in, select [My products](https://www.aviso.altimetry.fr/en/my-aviso-plus/my-products.html) in the left-hand menu:
+
+        ![image](https://user-images.githubusercontent.com/17680388/160057999-381fb818-e379-46cb-a3c4-a836308a96d8.png)
+
+    4. `FES (Finite Element Solution - Oceanic Tides Heights)` should appear under `Your current subscriptions.` Right click on `Ftp`, and copy the FTP address.
+
+        ![image](https://user-images.githubusercontent.com/17680388/160058064-77430ddf-1939-449d-86e7-f05b27ca768a.png)
+
+    5. Using an FTP client like FileZilla, log in to the FTP using your AVISO+ username and password:
+
+        ![image](https://user-images.githubusercontent.com/17680388/160058263-b0b1da72-e5ac-47ca-b1d0-544569d3f06a.png)
+
+    6. Navigate to `/auxiliary/tide_model/`, and download the contents of one or more of the following directories:
+
+        - `fes2022b/ocean_tide/`
+        - `fes2022b/ocean_tide_extrapolated/`
+
+        !!! tip
+
+            The "extrapolated" version of FES models have been extended inland using a simple "nearest" extrapolation method to ensure data coverage across the entire coastal zone. This can be useful for ensuring you always return a modelled tide, but can also introduce uncertainty into your modelling (particularly in complex regions such as narrow peninsulas or inlets/embayments).
+
+    7. Create new nested directories inside your [tide model directory](#setting-up-a-tide-model-directory) called `fes2022b/ocean_tide/` (if using standard model data) or `fes2022b/ocean_tide_extrapolated/` (if using extrapolated model data) to store the FES2022 model files.
+
+    8. Extract your `...nc.xz` files into this directory (e.g. `tar -xf m2_fes2022.nc.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
+
+        ```
+        tide_models/fes2022b/ocean_tide/
+           |- 2n2_fes2022.nc
+           |- ...
+           |- t2_fes2022.nc
+        ```
+        Or:
+        ```
+        tide_models/fes2022b/ocean_tide_extrapolated/
+           |- 2n2_fes2022.nc
+           |- ...
+           |- t2_fes2022.nc
+        ```
+
+??? note "FES2014 Finite Element Solution tide models"
+
+    ### FES2014 Finite Element Solution tide models
+
+    1. [Register with AVISO+](https://www.aviso.altimetry.fr/en/data/data-access/registration-form.html), and select `FES (Finite Element Solution - Oceanic Tides Heights)` from the `Licence Agreement and product selection` section:
+
+        ![image](assets/fes_productselection.jpg)
+
+    2. Once your registration is complete, login to [MY AVISO+](https://www.aviso.altimetry.fr/en/my-aviso-plus.html).
+    3. Once logged in, select [My products](https://www.aviso.altimetry.fr/en/my-aviso-plus/my-products.html) in the left-hand menu:
+
+        ![image](https://user-images.githubusercontent.com/17680388/160057999-381fb818-e379-46cb-a3c4-a836308a96d8.png)
+
+    4. `FES (Finite Element Solution - Oceanic Tides Heights)` should appear under `Your current subscriptions.` Right click on `Ftp`, and copy the FTP address.
+
+        ![image](https://user-images.githubusercontent.com/17680388/160058064-77430ddf-1939-449d-86e7-f05b27ca768a.png)
+
+    5. Using an FTP client like FileZilla, log in to the FTP using your AVISO+ username and password:
+
+        ![image](https://user-images.githubusercontent.com/17680388/160058263-b0b1da72-e5ac-47ca-b1d0-544569d3f06a.png)
+
+    6. Navigate to `/auxiliary/tide_model/`, and download the contents of one or more of the following directories:
+
+        - `fes2014_elevations_and_load/fes2014b_elevations/`
+        - `fes2014_elevations_and_load/fes2014b_elevations_extrapolated/`
+
+        !!! tip
+
+            The "extrapolated" version of FES have been extended inland using a simple "nearest" extrapolation method to ensure data coverage across the entire coastal zone. This can be useful for ensuring you always return a modelled tide, but can also introduce uncertainty into your modelling (particularly in complex regions such as narrow peninsulas or inlets/embayments).
+
+    7. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called `fes2014/` to store the FES2014 model files.
+
+    8. Extract `ocean_tide.tar.xz` or `ocean_tide_extrapolated.tar.xz` into this directory (e.g. `tar -xf ocean_tide.tar.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
+
+        ```
+        tide_models/fes2014/ocean_tide/
+           |- 2n2.nc
+           |- ...
+           |- t2.nc
+        ```
+        Or:
+        ```
+        tide_models/fes2014/ocean_tide_extrapolated/
+           |- 2n2.nc
+           |- ...
+           |- t2.nc
+        ```
+
+## Configuring `eo-tides` to use tide model directory
+
+`eo-tides` can be pointed to the location of your [tide model directory](#setting-up-a-tide-model-directory) and your downloaded tide model data in two ways:
+
+### Using the `directory` function parameter
+
+All tide modelling functions from `eo-tides` provide a `directory` parameter that can be used to specify the location of your tide model directory.
+For example, using `model_tides` from the `eo_tides.model` module:
+
+```py hl_lines="12"
 import pandas as pd
 from eo_tides.model import model_tides
 
@@ -53,4 +168,17 @@ model_tides(
 )
 ```
 
-Depending on where you created the `tide_models` directory, you may need to update the `directory` parameter of the `model_tides` function to point to the location of the FES2014 model files.
+### Setting the `EO_TIDES_TIDE_MODELS` environmental variable
+
+For more advanced usage, you can set the path to your [tide model directory](#setting-up-a-tide-model-directory) by setting the `EO_TIDES_TIDE_MODELS` environment variable:
+
+```py hl_lines="2"
+import os
+os.environ["EO_TIDES_TIDE_MODELS"] = "tide_models/"
+```
+
+All tide modelling functions from `eo-tides` will check for the presence of the `EO_TIDES_TIDE_MODELS` environment variable, and use it as the default `directory` path if available (the `EO_TIDES_TIDE_MODELS` environment variable will be overuled by the `directory` parameter if provided).
+
+!!! tip
+
+    Setting the `EO_TIDES_TIDE_MODELS` environment variable can be useful when the location of your tide model directory might change between different environments, and you want to avoid hard-coding a single location via the `directory` parameter.

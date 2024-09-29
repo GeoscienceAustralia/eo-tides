@@ -476,7 +476,7 @@ def model_tides(
     directory : string, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
-        `DEA_TOOLS_TIDE_MODELS` if set, otherwise "/var/share/tide_models".
+        `EO_TIDES_TIDE_MODELS` if set, otherwise "/var/share/tide_models".
         Tide modelling files should be stored in sub-folders for each
         model that match the structure provided by `pyTMD`.
 
@@ -564,8 +564,8 @@ def model_tides(
     # Set tide modelling files directory. If no custom path is provided,
     # first try global environmental var, then "/var/share/tide_models"
     if directory is None:
-        if "DEA_TOOLS_TIDE_MODELS" in os.environ:
-            directory = os.environ["DEA_TOOLS_TIDE_MODELS"]
+        if "EO_TIDES_TIDE_MODELS" in os.environ:
+            directory = os.environ["EO_TIDES_TIDE_MODELS"]
         else:
             directory = "/var/share/tide_models"
 
