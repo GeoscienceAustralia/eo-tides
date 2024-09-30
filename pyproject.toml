@@ -98,5 +98,5 @@ skip_empty = true
 branch = true
 source = ["eo_tides"]
 
-[tool.setuptools]
-py-modules = ["eo_tides"]
+# [tool.setuptools]
+# py-modules = ["eo_tides"]
