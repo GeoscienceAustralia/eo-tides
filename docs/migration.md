@@ -1,7 +1,7 @@
 # Migrating from `dea_tools`
 
 The `eo-tides` package contains functions that were previously available in the [`Digital Earth Australia Notebooks and Tools` repository](https://github.com/GeoscienceAustralia/dea-notebooks/).
-To migrate your code from `dea-tools` to `eo-tides`, please be aware of the following breaking changes:
+To migrate your code from DEA Tools to `eo-tides`, please be aware of the following breaking changes:
 
 ## Breaking changes
 
