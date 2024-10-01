@@ -411,6 +411,7 @@ def model_tides(
 
     This function is parallelised to improve performance, and
     supports all tidal models supported by `pyTMD`, including:
+
         - Empirical Ocean Tide model (`EOT20`)
         - Finite Element Solution tide models (`FES2022`, `FES2014`, `FES2012`)
         - TOPEX/POSEIDON global tide models (`TPXO10`, `TPXO9`, `TPXO8`)
