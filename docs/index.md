@@ -18,10 +18,10 @@ The `eo-tides` package provides tools for analysing coastal and ocean satellite 
 
 - 🌊 Model tides from multiple global ocean tide models in parallel, and return tide heights in standardised `pandas.DataFrame` format for further analysis
 - 🛰️ "Tag" satellite data with tide height and stage based on the exact moment of image acquisition
-- 🧊 Model tides for every individual satellite pixel, producing three-dimensional "tide height" `xarray`-format datacubes that can be combined with satellite data
-- ⚙️ Combine multiple tide models into a single locally-optimised "ensemble" model informed by satellite altimetry and satellite-observed patterns of tidal inundation
-- 📊 Calculate statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits
-- 📏 Validate modelled tides using measured sea levels from coastal tide gauges (e.g. GESLA)
+- 🌐 Model tides for every individual satellite pixel, producing three-dimensional "tide height" `xarray`-format datacubes that can be combined with satellite data
+- 🎯 Combine multiple tide models into a single locally-optimised "ensemble" model informed by satellite altimetry and satellite-observed patterns of tidal inundation
+- 📈 Calculate statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits
+- 🛠️ Validate modelled tides using measured sea levels from coastal tide gauges (e.g. GESLA)
 
 These tools can be applied directly to petabytes of freely available satellite data (e.g. from Digital Earth Australia or Microsoft Planetary Computer) loaded via Open Data Cube's `odc-stac` or `datacube` packages, supporting coastal and ocean earth observation analysis for any time period or location globally.
 
