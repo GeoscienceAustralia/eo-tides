@@ -34,7 +34,7 @@ def measured_tides_ds():
 
     # Update index and column names
     measured_tides_df.index.name = "time"
-    measured_tides_df.columns = ["tide_m"]
+    measured_tides_df.columns = ["tide_height"]
 
     # Apply station AHD offset
     measured_tides_df += ahd_offset
@@ -115,12 +115,12 @@ def test_model_tides(measured_tides_ds, x, y, crs, method):
     )
 
     # Compare measured and modelled tides
-    val_stats = eval_metrics(x=measured_tides_ds.tide_m, y=modelled_tides_df.tide_m)
+    val_stats = eval_metrics(x=measured_tides_ds.tide_height, y=modelled_tides_df.tide_height)
 
     # Test that modelled tides contain correct headings and have same
     # number of timesteps
     assert modelled_tides_df.index.names == ["time", "x", "y"]
-    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
+    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
     assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
 
     # Test that modelled tides meet expected accuracy
@@ -159,7 +159,7 @@ def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
     if output_format == "long":
         # Verify output has correct columns
         assert modelled_tides_df.index.names == ["time", "x", "y"]
-        assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
+        assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
 
         # Verify tide model column contains correct values
         assert modelled_tides_df.tide_model.unique().tolist() == models
@@ -193,11 +193,11 @@ def test_model_tides_units(measured_tides_ds, units, expected_range, expected_dt
     )
 
     # Calculate tide range
-    tide_range = modelled_tides_df.tide_m.max() - modelled_tides_df.tide_m.min()
+    tide_range = modelled_tides_df.tide_height.max() - modelled_tides_df.tide_height.min()
 
     # Verify tide range and dtypes are as expected for unit
     assert np.isclose(tide_range, expected_range, rtol=0.01)
-    assert modelled_tides_df.tide_m.dtype == expected_dtype
+    assert modelled_tides_df.tide_height.dtype == expected_dtype
 
 
 # Run test for each combination of mode, output format, and one or
@@ -290,7 +290,7 @@ def test_model_tides_ensemble():
     )
 
     assert modelled_tides_df.index.names == ["time", "x", "y"]
-    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
+    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
     assert all(modelled_tides_df.tide_model == "ensemble")
 
     # Default, ensemble + other models requested
@@ -304,10 +304,10 @@ def test_model_tides_ensemble():
     )
 
     assert modelled_tides_df.index.names == ["time", "x", "y"]
-    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
+    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
     assert set(modelled_tides_df.tide_model) == set(models)
     assert np.allclose(
-        modelled_tides_df.tide_m,
+        modelled_tides_df.tide_height,
         [
             -2.831,
             -1.897,
@@ -336,7 +336,7 @@ def test_model_tides_ensemble():
     )
 
     assert modelled_tides_df.index.names == ["time", "x", "y"]
-    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
+    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
     assert set(modelled_tides_df.tide_model) == set(models)
 
     # Wide mode, default
@@ -487,7 +487,7 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
         )
 
     # Calculate accuracy stats
-    gauge_stats = eval_metrics(x=measured_tides_ds.tide_m, y=modelled_tides_gauge)
+    gauge_stats = eval_metrics(x=measured_tides_ds.tide_height, y=modelled_tides_gauge)
 
     # Assert pixel_tide outputs are accurate
     assert gauge_stats["Correlation"] > 0.99

@@ -207,16 +207,16 @@ def _model_tides(
         "x": np.repeat(x, time_repeat),
         "y": np.repeat(y, time_repeat),
         "tide_model": model,
-        "tide_m": tide,
+        "tide_height": tide,
     }).set_index(["time", "x", "y"])
 
     # Optionally convert outputs to integer units (can save memory)
     if output_units == "m":
-        tide_df["tide_m"] = tide_df.tide_m.astype(np.float32)
+        tide_df["tide_height"] = tide_df.tide_height.astype(np.float32)
     elif output_units == "cm":
-        tide_df["tide_m"] = (tide_df.tide_m * 100).astype(np.int16)
+        tide_df["tide_height"] = (tide_df.tide_height * 100).astype(np.int16)
     elif output_units == "mm":
-        tide_df["tide_m"] = (tide_df.tide_m * 1000).astype(np.int16)
+        tide_df["tide_height"] = (tide_df.tide_height * 1000).astype(np.int16)
 
     return tide_df
 
@@ -261,7 +261,7 @@ def _ensemble_model(
         to ensure that interpolations are performed in the correct CRS.
     tide_df : pandas.DataFrame
         DataFrame containing tide model predictions with columns
-        `["time", "x", "y", "tide_m", "tide_model"]`.
+        `["time", "x", "y", "tide_height", "tide_model"]`.
     ensemble_models : list
         A list of models to include in the ensemble modelling process.
         All values must exist as columns with the prefix "rank_" in
@@ -298,7 +298,7 @@ def _ensemble_model(
     pandas.DataFrame
         DataFrame containing the ensemble model predictions, matching
         the format of the input `tide_df` (e.g. columns `["time", "x",
-        "y", "tide_m", "tide_model"]`. By default the 'tide_model'
+        "y", "tide_height", "tide_model"]`. By default the 'tide_model'
         column will be labeled "ensemble" for the combined model
         predictions (but if a custom dictionary of ensemble functions is
         provided via `ensemble_func`, each ensemble will be named using
@@ -362,7 +362,7 @@ def _ensemble_model(
             # Add temp columns containing weightings and weighted values
             .assign(
                 weights=ensemble_f,  # use custom func to compute weights
-                weighted=lambda i: i.tide_m * i.weights,
+                weighted=lambda i: i.tide_height * i.weights,
             )
             # Groupby is specified in a weird order here as this seems
             # to be the easiest way to preserve correct index sorting
@@ -374,7 +374,7 @@ def _ensemble_model(
             # Calculate weighted mean and convert back to dataframe
             grouped.weighted.sum()
             .div(grouped.weights.sum())
-            .to_frame("tide_m")
+            .to_frame("tide_height")
             # Label ensemble model and ensure indexes are in expected order
             .assign(tide_model=ensemble_n)
             .reorder_levels(["time", "x", "y"], axis=0)
@@ -405,46 +405,23 @@ def model_tides(
     ensemble_models=None,
     **ensemble_kwargs,
 ):
-    """Compute tides at multiple points and times using tidal harmonics.
+    """
+    Compute tide heights from multiple tide models and for
+    multiple coordinates and/or timesteps.
 
-    This function supports all tidal models supported by `pyTMD`,
-    including FES Finite Element Solution models, TPXO TOPEX/POSEIDON
-    models, EOT Empirical Ocean Tide models, GOT Global Ocean Tide
-    models, and HAMTIDE Hamburg direct data Assimilation Methods for
-    Tides models.
+    This function is parallelised to improve performance, and
+    supports all tidal models supported by `pyTMD`, including:
+        - Empirical Ocean Tide model (`EOT20`)
+        - Finite Element Solution tide models (`FES2022`, `FES2014`, `FES2012`)
+        - TOPEX/POSEIDON global tide models (`TPXO10`, `TPXO9`, `TPXO8`)
+        - Global Ocean Tide models (`GOT5.6`, `GOT5.5`, `GOT4.10`, `GOT4.8`, `GOT4.7`)
+        - Hamburg direct data Assimilation Methods for Tides models (`HAMTIDE11`)
 
     This function requires access to tide model data files.
     These should be placed in a folder with subfolders matching
-    the formats specified by `pyTMD`:
+    the structure required by `pyTMD`. For more details:
+    <https://geoscienceaustralia.github.io/eo-tides/setup/>
     <https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories>
-
-    For FES2014 (<https://www.aviso.altimetry.fr/es/data/products/auxiliary-products/global-tide-fes/description-fes2014.html>):
-
-    - `{directory}/fes2014/ocean_tide/`
-
-    For FES2022 (<https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html>):
-
-    - `{directory}/fes2022b/ocean_tide/`
-
-    For TPXO8-atlas (<https://www.tpxo.net/tpxo-products-and-registration>):
-
-    - `{directory}/tpxo8_atlas/`
-
-    For TPXO9-atlas-v5 (<https://www.tpxo.net/tpxo-products-and-registration>):
-
-    - `{directory}/TPXO9_atlas_v5/`
-
-    For EOT20 (<https://www.seanoe.org/data/00683/79489/>):
-
-    - `{directory}/EOT20/ocean_tides/`
-
-    For GOT4.10c (<https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models>):
-
-    - `{directory}/GOT4.10c/grids_oceantide_netcdf/`
-
-    For HAMTIDE (<https://www.cen.uni-hamburg.de/en/icdc/data/ocean/hamtide.html>):
-
-    - `{directory}/hamtide/`
 
     This function is a modification of the `pyTMD` package's
     `compute_tide_corrections` function. For more info:
@@ -514,9 +491,10 @@ def model_tides(
         want to model tides for a specific list of timesteps across
         multiple spatial points (e.g. for the same set of satellite
         acquisition times at various locations across your study area).
-        - "one-to-one": Model tides using a different timestep for each
-        x and y coordinate point. In this mode, the number of x and
+        - "one-to-one": Model tides using a unique timestep for each
+        set of x and y coordinates. In this mode, the number of x and
         y points must equal the number of timesteps provided in "time".
+
     parallel : boolean, optional
         Whether to parallelise tide modelling using `concurrent.futures`.
         If multiple tide models are requested, these will be run in
@@ -538,7 +516,7 @@ def model_tides(
         for millimetres.
     output_format : str, optional
         Whether to return the output dataframe in long format (with
-        results stacked vertically along "tide_model" and "tide_m"
+        results stacked vertically along "tide_model" and "tide_height"
         columns), or wide format (with a column for each tide model).
         Defaults to "long".
     ensemble_models : list, optional
@@ -734,7 +712,7 @@ def model_tides(
     if output_format == "wide":
         # Pivot into wide format with each time model as a column
         print("Converting to a wide format dataframe")
-        tide_df = tide_df.pivot(columns="tide_model", values="tide_m")
+        tide_df = tide_df.pivot(columns="tide_model", values="tide_height")
 
         # If in 'one-to-one' mode, reindex using our input time/x/y
         # values to ensure the output is sorted the same as our inputs
@@ -812,7 +790,7 @@ def _pixel_tides_resample(
         how=ds.odc.geobox,
         chunks=dask_chunks,
         resampling=resample_method,
-    ).rename("tide_m")
+    ).rename("tide_height")
 
     # Optionally process and load into memory with Dask
     if dask_compute:
@@ -1064,7 +1042,7 @@ def pixel_tides(
         .set_index("tide_model", append=True)
         # Convert to xarray and select our tide modelling xr.DataArray
         .to_xarray()
-        .tide_m
+        .tide_height
         # Re-index and transpose into our input coordinates and dim order
         .reindex_like(rescaled_ds)
         .transpose("tide_model", "time", y_dim, x_dim)

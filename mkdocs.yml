@@ -15,6 +15,7 @@ nav:
       - notebooks/Model_tides.ipynb
       - notebooks/Satellite_data.ipynb
       - notebooks/Tide_statistics.ipynb
+      - notebooks/Validating_tides.ipynb
   - Package:
       - API reference: api.md
   - Reference:
