@@ -198,14 +198,10 @@ For example, using `model_tides` from the `eo_tides.model` module:
 import pandas as pd
 from eo_tides.model import model_tides
 
-lons=[155, 160]
-lats=[-35, -36]
-example_times = pd.date_range("2022-01-01", "2022-01-04", freq="1D")
-
 model_tides(
-        x=lons,
-        y=lats,
-        time=example_times,
+        x=155,
+        y=-35,
+        time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
         directory='tide_models/'
 )
 ```

@@ -19,6 +19,7 @@ nav:
       - API reference: api.md
   - Reference:
       - Changelog: changelog.md
+      - Migrating from `dea_tools`: migration.md
       - Citations and credits: credits.md
 
 plugins:

@@ -1,5 +1,7 @@
 # This will install eo-tides and all required dependencies specified in
 # `uv.lock`. To install optional dependencies, run `uv sync --all-extras`
+# If running locally, can set `export VIRTUAL_ENV="path"` to control
+# location of resulting virtual environm
 .PHONY: install
 install: ## Install the virtual environment and install the pre-commit hooks
 	@echo "🚀 Creating virtual environment using uv"
@@ -21,8 +23,10 @@ check: ## Run code quality tools.
 test: ## Test the code with pytest
 	@echo "🚀 Testing code: Running pytest"
 	@tar -xvzf ./tests/data/tide_models_tests.tar.gz -C ./tests/data
-	@export DEA_TOOLS_TIDE_MODELS=./tests/data/tide_models_tests && \
+	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models_tests && \
 	uv run python -m pytest --cov --cov-config=pyproject.toml --cov-report=xml
+	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models_tests && \
+    uv run python -m pytest --nbval-lax docs/notebooks/
 
 .PHONY: build
 build: clean-build ## Build wheel file
