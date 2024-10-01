@@ -14,14 +14,14 @@ The `eo-tides` package provides tools for analysing coastal and ocean satellite 
 
 `eo-tides` combines advanced tide modelling functionality from the [`pyTMD`](https://pytmd.readthedocs.io/en/latest/) package and integrates it with `pandas`, `xarray` and `odc-geo` to provide a powerful set of parallelised tools for integrating satellite imagery with tide data – from local, regional to continental scale.
 
-Some key functionality includes the ability to:
+## Highlights
 
-- Model tides from multiple global ocean tide models in parallel, and return tide heights in standardised `pandas.DataFrame` format for further analysis
-- "Tag" satellite data with tide height and stage based on the exact moment of image acquisition
-- Model tides for every individual satellite pixel, producing three-dimensional "tide height" `xarray`-format datacubes that can be combined with satellite data
-- Combine multiple tide models into a single locally-optimised "ensemble" model informed by satellite altimetry and satellite-observed patterns of tidal inundation
-- Calculate statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits
-- Validate modelled tides using measured sea levels from coastal tide gauges (e.g. GESLA)
+- 🌊 Model tides from multiple global ocean tide models in parallel, and return tide heights in standardised `pandas.DataFrame` format for further analysis
+- 🛰️ "Tag" satellite data with tide height and stage based on the exact moment of image acquisition
+- 🧊 Model tides for every individual satellite pixel, producing three-dimensional "tide height" `xarray`-format datacubes that can be combined with satellite data
+- ⚙️ Combine multiple tide models into a single locally-optimised "ensemble" model informed by satellite altimetry and satellite-observed patterns of tidal inundation
+- 📊 Calculate statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits
+- 📏 Validate modelled tides using measured sea levels from coastal tide gauges (e.g. GESLA)
 
 These tools can be applied directly to petabytes of freely available satellite data (e.g. from Digital Earth Australia or Microsoft Planetary Computer) loaded via Open Data Cube's `odc-stac` or `datacube` packages, supporting coastal and ocean earth observation analysis for any time period or location globally.
 
