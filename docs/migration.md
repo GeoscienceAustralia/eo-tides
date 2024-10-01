@@ -5,6 +5,6 @@ To migrate your code from `dea-tools` to `eo-tides`, please be aware of the foll
 
 ## Breaking changes
 
-## Tide model directory environment variable updated
+### Tide model directory environment variable updated
 
 The `DEA_TOOLS_TIDE_MODELS` environmental variable has been renamed to `EO_TIDES_TIDE_MODELS`.
