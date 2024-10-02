@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 from eo_tides.utils import idw
 
