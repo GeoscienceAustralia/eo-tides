@@ -1,5 +1,6 @@
 import os
 import pathlib
+import warnings
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 
@@ -15,65 +16,103 @@ from tqdm import tqdm
 from eo_tides.utils import idw
 
 
-def available_models(directory=None, show_supported=True):
+def _set_directory(directory):
     """
-    Prints a list of all tide models available for tide
-    modelling using `eo-tides`.
+    Set tide modelling files directory. If no custom
+    path is provided, try global environmental variable
+    instead.
+    """
+    if directory is None:
+        if "EO_TIDES_TIDE_MODELS" in os.environ:
+            directory = os.environ["EO_TIDES_TIDE_MODELS"]
+        else:
+            raise Exception(
+                "No tide model directory provided via `directory`, and/or no "
+                "`EO_TIDES_TIDE_MODELS` environment variable found. "
+                "Please provide a valid path to your tide model directory."
+            )
+
+    # Verify path exists
+    directory = pathlib.Path(directory).expanduser()
+    if not directory.exists():
+        raise FileNotFoundError(f"No valid tide model directory found at path `{directory}`")
+    else:
+        return directory
+
+
+def list_models(directory=None, show_available=True, show_supported=True, raise_error=False):
+    """
+    List all tide models available for tide modelling, and
+    all models supported by `eo-tides` and `pyTMD`.
 
     This function scans the specified tide model directory
-    for tide models supported by the `pyTMD` package, and
-    prints a list of models that are available in the
-    directory as well as the full list of supported models.
+    and returns a list of models that are available in the
+    directory as well as the full list of all supported models.
 
     For instructions on setting up tide models, see:
     <https://geoscienceaustralia.github.io/eo-tides/setup/>
 
     Parameters
     ----------
-    directory : str
-        Path to the directory containing tide model files.
+    directory : string, optional
+        The directory containing tide model data files. If no path is
+        provided, this will default to the environment variable
+        `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
+        Tide modelling files should be stored in sub-folders for each
+        model that match the structure required by `pyTMD`
+        (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
+    show_available : bool, optional
+        Whether to print a list of locally available models.
+    show_supported : bool, optional
+        Whether to print a list of all supported models, in
+        addition to models available locally.
 
     Returns
     -------
-    available_m : list
-        A list of all available tide models within
-        `directory`.
+    available_models : list
+        A list of alltide models available within `directory`.
+    supported_models : list
+        A list of all tide models supported by `eo-tides`.
     """
-    # TODO: Pull directory code into re-usable function
+    # Set tide modelling files directory. If no custom path is
+    # provided, try global environment variable.
+    directory = _set_directory(directory)
 
-    # Set tide modelling files directory. If no custom path is provided,
-    # first try global environmental var, then "/var/share/tide_models"
-    if directory is None:
-        if "EO_TIDES_TIDE_MODELS" in os.environ:
-            directory = os.environ["EO_TIDES_TIDE_MODELS"]
-        else:
-            directory = "/var/share/tide_models"
-
-    # Verify path exists
-    directory = pathlib.Path(directory).expanduser()
-    if not directory.exists():
-        raise FileNotFoundError("Invalid tide directory")
-
-    # Get full list of supported models from the database
-    supported_models = load_database()["elevation"].keys()
+    # Get full list of supported models from pyTMD database
+    supported_models = list(load_database()["elevation"].keys())
 
     # Print list of supported models, marking available and
     # unavailable models and appending available to list
-    print(f"Tide models available in `{directory}`:")
-    available_m = []
+    if show_available or show_supported:
+        print(f"Tide models available in `{directory}`:")
+    available_models = []
     for m in supported_models:
         try:
             model(directory=directory).elevation(m=m)
-            # Mark available models with a green tick
-            print(f" ✅ {m}")
-            available_m.append(m)
+            if show_available:
+                # Mark available models with a green tick
+                print(f" ✅ {m}")
+            available_models.append(m)
         except:
             if show_supported:
                 # Mark unavailable models with a red cross
                 print(f" ❌ {m}")
 
-    # Return list of available models
-    return available_m
+    # Raise error or warning if no models are available
+    if not available_models:
+        warning_text = (
+            f"No valid tide models are available in `{directory}`. "
+            "Verify that you have provided the correct `directory` path, "
+            "or set the `EO_TIDES_TIDE_MODELS` environment variable "
+            "to point to the location of your tide model directory."
+        )
+        if raise_error:
+            raise Exception(warning_text)
+        else:
+            warnings.warn(warning_text, UserWarning)
+
+    # Return list of available and supported models
+    return available_models, supported_models
 
 
 def _model_tides(
@@ -94,34 +133,7 @@ def _model_tides(
     extraction of tide modelling constituents and tide modelling using
     `pyTMD`.
     """
-    # import pyTMD.eop
-    # import pyTMD.io
-    # import pyTMD.io.model
-    # import pyTMD.predict
-    # import pyTMD.spatial
-    # import pyTMD.time
-    # import pyTMD.utilities
-
-    # Get parameters for tide model; use custom definition file for
-    # FES2012 (leave this as an undocumented feature for now)
-    # if model == "FES2012":
-    #     pytmd_model = pyTMD.io.model(directory).from_file(
-    #         directory / "model_FES2012.def"
-    #     )
-    # elif model == "TPXO8-atlas-v1":
-    #     pytmd_model = pyTMD.io.model(directory).from_file(directory / "model_TPXO8.def")
-    # else:
-    #     pytmd_model = pyTMD.io.model(
-    #         directory, format="netcdf", compressed=False
-    #     ).elevation(model)
-
-    #     if model in NONSTANDARD_MODELS:
-    #         model_params = NONSTANDARD_MODELS[model]
-    #         model_params_bytes = io.BytesIO(json.dumps(model_params).encode("utf-8"))
-    #         pytmd_model = pyTMD.io.model(directory).from_file(definition_file=model_params_bytes)
-
-    #     else:
-
+    # Obtain model details
     pytmd_model = pyTMD.io.model(directory).elevation(model)
 
     # Convert x, y to latitude/longitude
@@ -474,11 +486,11 @@ def model_tides(
     This function is parallelised to improve performance, and
     supports all tidal models supported by `pyTMD`, including:
 
-        - Empirical Ocean Tide model (`EOT20`)
-        - Finite Element Solution tide models (`FES2022`, `FES2014`, `FES2012`)
-        - TOPEX/POSEIDON global tide models (`TPXO10`, `TPXO9`, `TPXO8`)
-        - Global Ocean Tide models (`GOT5.6`, `GOT5.5`, `GOT4.10`, `GOT4.8`, `GOT4.7`)
-        - Hamburg direct data Assimilation Methods for Tides models (`HAMTIDE11`)
+    - Empirical Ocean Tide model (`EOT20`)
+    - Finite Element Solution tide models (`FES2022`, `FES2014`, `FES2012`)
+    - TOPEX/POSEIDON global tide models (`TPXO10`, `TPXO9`, `TPXO8`)
+    - Global Ocean Tide models (`GOT5.6`, `GOT5.5`, `GOT4.10`, `GOT4.8`, `GOT4.7`)
+    - Hamburg direct data Assimilation Methods for Tides models (`HAMTIDE11`)
 
     This function requires access to tide model data files.
     These should be placed in a folder with subfolders matching
@@ -504,11 +516,11 @@ def model_tides(
     model : string, optional
         The tide model used to model tides. Options include:
 
-        - "FES2014" (pre-configured on DEA Sandbox)
+        - "EOT20"
+        - "FES2014"
         - "FES2022"
         - "TPXO9-atlas-v5"
         - "TPXO8-atlas"
-        - "EOT20"
         - "HAMTIDE11"
         - "GOT4.10"
         - "ensemble" (advanced ensemble tide model functionality;
@@ -516,7 +528,7 @@ def model_tides(
     directory : string, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
-        `EO_TIDES_TIDE_MODELS` if set, otherwise "/var/share/tide_models".
+        `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
         Tide modelling files should be stored in sub-folders for each
         model that match the structure provided by `pyTMD`.
 
@@ -602,23 +614,6 @@ def model_tides(
         A dataframe containing modelled tide heights.
 
     """
-    # Set tide modelling files directory. If no custom path is provided,
-    # first try global environmental var, then "/var/share/tide_models"
-    if directory is None:
-        if "EO_TIDES_TIDE_MODELS" in os.environ:
-            directory = os.environ["EO_TIDES_TIDE_MODELS"]
-        else:
-            directory = "/var/share/tide_models"
-
-    # Verify path exists
-    directory = pathlib.Path(directory).expanduser()
-    if not directory.exists():
-        raise FileNotFoundError("Invalid tide directory")
-
-    # If time passed as a single Timestamp, convert to datetime64
-    if isinstance(time, pd.Timestamp):
-        time = time.to_datetime64()
-
     # Turn inputs into arrays for consistent handling
     models_requested = np.atleast_1d(model)
     x = np.atleast_1d(x)
@@ -644,32 +639,40 @@ def model_tides(
             "you intended to model multiple timesteps at each point."
         )
 
-    # Verify that all provided models are supported
-    valid_models = [
-        # Standard built-in pyTMD models
-        "EOT20",
-        "FES2014",
-        "FES2022",
-        "GOT4.10",
-        "HAMTIDE11",
-        "TPXO8-atlas",  # binary version, not suitable for clipping
-        "TPXO9-atlas-v5",
-        # Non-standard models, defined internally
-        "FES2012",
-        "FES2014_extrapolated",
-        "FES2022_extrapolated",
-        "GOT5.6",
-        "GOT5.6_extrapolated",
-        "TPXO8-atlas-v1",  # netCDF version
-        # Advanced ensemble model functionality
-        "ensemble",
-    ]
+    # If time passed as a single Timestamp, convert to datetime64
+    if isinstance(time, pd.Timestamp):
+        time = time.to_datetime64()
+
+    # Set tide modelling files directory. If no custom path is
+    # provided, try global environment variable.
+    directory = _set_directory(directory)
+
+    # Get full list of supported models from pyTMD database;
+    # add ensemble option to list of supported models
+    available_models, valid_models = list_models(
+        directory, show_available=False, show_supported=False, raise_error=True
+    )
+    valid_models = valid_models + ["ensemble"]
+
+    # Error if any models are not supported
     if not all(m in valid_models for m in models_requested):
-        raise ValueError(
-            f"One or more of the models requested {models_requested} is "
-            f"not valid. The following models are currently supported: "
-            f"{valid_models}",
+        error_text = (
+            f"One or more of the requested models are not valid:\n"
+            f"{models_requested}\n\n"
+            "The following models are supported:\n"
+            f"{valid_models}"
         )
+        raise ValueError(error_text)
+
+    # Error if any models are not available in `directory`
+    if not all(m in available_models for m in models_requested):
+        error_text = (
+            f"One or more of the requested models are valid, but not available in `{directory}`:\n"
+            f"{models_requested}\n\n"
+            f"The following models are available in `{directory}`:\n"
+            f"{available_models}"
+        )
+        raise ValueError(error_text)
 
     # If ensemble modelling is requested, use a custom list of models
     # for subsequent processing

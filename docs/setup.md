@@ -194,7 +194,7 @@ tide_models/
 All tide modelling functions from `eo-tides` provide a `directory` parameter that can be used to specify the location of your tide model directory.
 For example, using `model_tides` from the `eo_tides.model` module:
 
-```py hl_lines="12"
+```py hl_lines="8"
 import pandas as pd
 from eo_tides.model import model_tides
 

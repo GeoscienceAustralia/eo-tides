@@ -6,7 +6,7 @@ import pystac_client
 import pytest
 import xarray as xr
 
-from eo_tides.model import available_models, model_tides, pixel_tides
+from eo_tides.model import list_models, model_tides, pixel_tides
 from eo_tides.validation import eval_metrics
 
 GAUGE_X = 122.2183
@@ -91,9 +91,12 @@ def satellite_ds(request):
 
 
 # Test available tide models
-def test_available_models():
-    available_m = available_models()
-    assert available_m == ["FES2014", "HAMTIDE11"]
+def test_list_models():
+    available_models, supported_models = list_models()
+    assert available_models == ["FES2014", "HAMTIDE11"]
+
+    available_models, supported_models = list_models(show_available=False, show_supported=False)
+    assert available_models == ["FES2014", "HAMTIDE11"]
 
 
 # Run test for multiple input coordinates, CRSs and interpolation methods
