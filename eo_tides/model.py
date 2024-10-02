@@ -652,6 +652,9 @@ def model_tides(
     available_models, valid_models = list_models(
         directory, show_available=False, show_supported=False, raise_error=True
     )
+    # TODO: This is hacky, find a better way. Perhaps a kwarg that
+    # turns ensemble functionality on, and checks that supplied
+    # models match models expected for ensemble?
     available_models = available_models + ["ensemble"]
     valid_models = valid_models + ["ensemble"]
 
