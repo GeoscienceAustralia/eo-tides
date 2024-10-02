@@ -80,7 +80,7 @@ jobs:
         run: uv run mkdocs build -s
 
   deploy-docs:
-    needs: check-docs
+    needs: [check-docs, run-tests]
     runs-on: ubuntu-latest
     steps:
       - name: Check out
