@@ -10,6 +10,7 @@ import odc.geo.xr
 import pandas as pd
 import pyproj
 import pyTMD
+from odc.geo.geobox import GeoBox
 from pyTMD.io.model import load_database, model
 from tqdm import tqdm
 
@@ -483,8 +484,8 @@ def model_tides(
     **ensemble_kwargs,
 ):
     """
-    Compute tide heights from multiple tide models and for
-    multiple coordinates and/or timesteps.
+    Model tide heights at multiple coordinates and/or timesteps
+    using using one or more ocean tide models.
 
     This function is parallelised to improve performance, and
     supports all tidal models supported by `pyTMD`, including:
@@ -885,16 +886,39 @@ def pixel_tides(
     dask_compute=True,
     **model_tides_kwargs,
 ):
-    """Obtain tide heights for each pixel in a dataset by modelling
-    tides into a low-resolution grid surrounding the dataset,
-    then (optionally) spatially resample this low-res data back
-    into the original higher resolution dataset extent and resolution.
+    """
+    Model tide heights for every pixel in a multi-dimensional
+    satellite dataset, using one or more ocean tide models.
+
+    This function models tides into a low-resolution tide
+    modelling grid covering the spatial extent of the input
+    satellite data (buffered to reduce potential edge effects.
+    These modelled tides are then (optionally) resampled back
+    into the original higher resolution dataset's extent and
+    resolution - resulting in a modelled tide height for every
+    satellite pixel through time.
+
+    This function uses the parallelised `model_tides` function
+    under the hood. It supports all tidal models supported by
+    `pyTMD`, including:
+
+    - Empirical Ocean Tide model (`EOT20`)
+    - Finite Element Solution tide models (`FES2022`, `FES2014`, `FES2012`)
+    - TOPEX/POSEIDON global tide models (`TPXO10`, `TPXO9`, `TPXO8`)
+    - Global Ocean Tide models (`GOT5.6`, `GOT5.5`, `GOT4.10`, `GOT4.8`, `GOT4.7`)
+    - Hamburg direct data Assimilation Methods for Tides models (`HAMTIDE11`)
+
+    This function requires access to tide model data files.
+    These should be placed in a folder with subfolders matching
+    the structure required by `pyTMD`. For more details:
+    <https://geoscienceaustralia.github.io/eo-tides/setup/>
+    <https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories>
 
     Parameters
     ----------
     ds : xarray.Dataset
-        A dataset whose geobox (`ds.odc.geobox`) will be used to define
-        the spatial extent of the low resolution tide modelling grid.
+        A dataset whose GeoBox (`ds.odc.geobox`) will be used to define
+        the spatial extent of the low-resolution tide modelling grid.
     times : pandas.DatetimeIndex or list of pandas.Timestamps, optional
         By default, the function will model tides using the times
         contained in the `time` dimension of `ds`. Alternatively, this
@@ -937,15 +961,17 @@ def pixel_tides(
         resolution pixels. Defaults to "bilinear"; valid options include
         "nearest", "cubic", "min", "max", "average" etc.
     model : string or list of strings
-        The tide model or a list of models used to model tides, as
-        supported by the `pyTMD` Python package. Options include:
-        - "FES2014" (default; pre-configured on DEA Sandbox)
-        - "FES2022"
-        - "TPXO8-atlas"
-        - "TPXO9-atlas-v5"
+        The tide model used to model tides. Options include:
+
         - "EOT20"
+        - "FES2014"
+        - "FES2022"
+        - "TPXO9-atlas-v5"
+        - "TPXO8-atlas"
         - "HAMTIDE11"
         - "GOT4.10"
+        - "ensemble" (advanced ensemble tide model functionality;
+          combining multiple models based on external model rankings)
     dask_chunks : str or tuple, optional
         Can be used to configure custom Dask chunking for the final
         resampling step. The default of "auto" will automatically set
@@ -985,8 +1011,6 @@ def pixel_tides(
             `calculate_quantiles`.
 
     """
-    from odc.geo.geobox import GeoBox
-
     # First test if no time dimension and nothing passed to `times`
     if ("time" not in ds.dims) & (times is None):
         raise ValueError(
