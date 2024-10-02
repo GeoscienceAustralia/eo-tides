@@ -506,6 +506,22 @@ def test_tag_tides(satellite_ds, measured_tides_ds, ebb_flow, swap_dims, tidepos
         assert abs(val_stats["Bias"]) < 0.20
 
 
+def test_tag_tides_multiple(satellite_ds):
+    # Model multiple models at once
+    tagged_tides_ds = tag_tides(satellite_ds, model=["FES2014", "HAMTIDE11"], ebb_flow=True)
+
+    assert "tide_model" in tagged_tides_ds.dims
+    assert tagged_tides_ds.tide_height.dims == ("time", "tide_model")
+    assert tagged_tides_ds.ebb_flow.dims == ("time", "tide_model")
+
+    # Test that multiple tide models are correlated
+    val_stats = eval_metrics(
+        x=tagged_tides_ds.sel(tide_model="FES2014").tide_height,
+        y=tagged_tides_ds.sel(tide_model="HAMTIDE11").tide_height,
+    )
+    assert val_stats["Correlation"] > 0.99
+
+
 # Run tests for default and custom resolutions
 @pytest.mark.parametrize("resolution", [None, "custom"])
 def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):

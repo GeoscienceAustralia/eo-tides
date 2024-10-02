@@ -885,10 +885,9 @@ def tag_tides(
     **model_tides_kwargs,
 ):
     """
-    Model tide heights for every timestep in a multi-
-    dimensional dataset, and add them as a new `tide_height`
-    variable giving the height of the tide at the exact
-    moment of each acquisition.
+    Model tide heights for every timestep in a multi-dimensional
+    dataset, and add them as a new `tide_height` (and optionally,
+    `ebb_flow`) variable that "tags" each observation with tide data.
 
     The function models tides at the centroid of the dataset
     by default, but a custom tidal modelling location can
