@@ -66,11 +66,14 @@ def list_models(directory=None, show_available=True, show_supported=True, raise_
     show_supported : bool, optional
         Whether to print a list of all supported models, in
         addition to models available locally.
+    raise_error : bool, optional
+        If True, raise an error if no available models are found.
+        If False, raise a warning.
 
     Returns
     -------
     available_models : list
-        A list of alltide models available within `directory`.
+        A list of all tide models available within `directory`.
     supported_models : list
         A list of all tide models supported by `eo-tides`.
     """
