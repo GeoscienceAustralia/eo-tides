@@ -6,7 +6,7 @@ import pystac_client
 import pytest
 import xarray as xr
 
-from eo_tides.model import list_models, model_tides, pixel_tides
+from eo_tides.model import list_models, model_tides, pixel_tides, tag_tides
 from eo_tides.validation import eval_metrics
 
 GAUGE_X = 122.2183
@@ -450,6 +450,60 @@ def test_model_tides_ensemble():
         "ensemble-mean-weighted",
         "ensemble-mean",
     ])
+
+
+@pytest.mark.parametrize(
+    "ebb_flow, swap_dims, tidepost_lat, tidepost_lon",
+    [
+        (False, False, None, None),  # Run with default settings
+        (True, False, None, None),  # Run with ebb_flow on
+        (False, True, None, None),  # Run with swap_dims on
+        (False, False, GAUGE_Y, GAUGE_X),  # Run with custom tide posts
+    ],
+)
+def test_tag_tides(satellite_ds, measured_tides_ds, ebb_flow, swap_dims, tidepost_lat, tidepost_lon):
+    # Use tag_tides to assign a "tide_height" variable to each observation
+    tagged_tides_ds = tag_tides(
+        satellite_ds,
+        ebb_flow=ebb_flow,
+        swap_dims=swap_dims,
+        tidepost_lat=tidepost_lat,
+        tidepost_lon=tidepost_lon,
+    )
+
+    # Verify tide_height variable was added
+    assert "tide_height" in tagged_tides_ds
+
+    # Verify ebb_flow variable was added if requested
+    if ebb_flow:
+        assert "ebb_flow" in tagged_tides_ds
+
+    if swap_dims:
+        # Verify "tide_height" is now a dimension
+        assert "tide_height" in tagged_tides_ds.dims
+
+        # Test that "tide_height" dim is same length as satellite "time" dim
+        assert len(tagged_tides_ds.tide_height) == len(satellite_ds.time)
+
+        # Test that first value on "tide_height" dim is lower than last
+        # (data should be sorted in increasing tide height order)
+        assert tagged_tides_ds.isel(tide_height=0).tide_height < tagged_tides_ds.isel(tide_height=-1).tide_height
+
+    else:
+        # Test that tagged tides have same timesteps as satellite data
+        assert len(tagged_tides_ds.tide_height.time) == len(satellite_ds.time)
+
+        # Interpolate measured tide data to same timesteps
+        measured_tides_ds = measured_tides_ds.interp(time=satellite_ds.time, method="linear")
+
+        # Compare measured and modelled tides
+        val_stats = eval_metrics(x=measured_tides_ds.tide_height, y=tagged_tides_ds.tide_height)
+
+        # Test that modelled tides meet expected accuracy
+        assert val_stats["Correlation"] > 0.99
+        assert val_stats["RMSE"] < 0.26
+        assert val_stats["R-squared"] > 0.96
+        assert abs(val_stats["Bias"]) < 0.20
 
 
 # Run tests for default and custom resolutions
