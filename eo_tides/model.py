@@ -648,10 +648,11 @@ def model_tides(
     directory = _set_directory(directory)
 
     # Get full list of supported models from pyTMD database;
-    # add ensemble option to list of supported models
+    # add ensemble option to list of models
     available_models, valid_models = list_models(
         directory, show_available=False, show_supported=False, raise_error=True
     )
+    available_models = available_models + ["ensemble"]
     valid_models = valid_models + ["ensemble"]
 
     # Error if any models are not supported
