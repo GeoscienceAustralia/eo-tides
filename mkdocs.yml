@@ -16,7 +16,8 @@ nav:
       - notebooks/Satellite_data.ipynb
       - notebooks/Tide_statistics.ipynb
       - notebooks/Validating_tides.ipynb
-  - API docs: api.md
+  - Developer guide:
+      - API reference: api.md
   - Reference:
       - Changelog: changelog.md
       - Migrating from DEA Tools: migration.md
