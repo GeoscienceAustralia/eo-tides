@@ -79,8 +79,9 @@ jobs:
       - name: Check if documentation can be built
         run: uv run mkdocs build -s
 
+  # Only deploy docs if all tests pass
   deploy-docs:
-    needs: [check-docs, run-tests]
+    needs: [quality, check-docs, run-tests]
     runs-on: ubuntu-latest
     steps:
       - name: Check out
