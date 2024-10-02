@@ -82,4 +82,3 @@ def test_idw():
     assert input_z.shape == out.shape
     assert np.allclose(out[:, 0], [1, 2, 3, 4])
     assert np.allclose(out[:, 1], [10, 20, 30, 40])
-
