@@ -9,9 +9,71 @@ import odc.geo.xr
 import pandas as pd
 import pyproj
 import pyTMD
+from pyTMD.io.model import load_database, model
 from tqdm import tqdm
 
 from eo_tides.utils import idw
+
+
+def available_models(directory=None, show_supported=True):
+    """
+    Prints a list of all tide models available for tide
+    modelling using `eo-tides`.
+
+    This function scans the specified tide model directory
+    for tide models supported by the `pyTMD` package, and
+    prints a list of models that are available in the
+    directory as well as the full list of supported models.
+
+    For instructions on setting up tide models, see:
+    <https://geoscienceaustralia.github.io/eo-tides/setup/>
+
+    Parameters
+    ----------
+    directory : str
+        Path to the directory containing tide model files.
+
+    Returns
+    -------
+    available_m : list
+        A list of all available tide models within
+        `directory`.
+    """
+    # TODO: Pull directory code into re-usable function
+
+    # Set tide modelling files directory. If no custom path is provided,
+    # first try global environmental var, then "/var/share/tide_models"
+    if directory is None:
+        if "EO_TIDES_TIDE_MODELS" in os.environ:
+            directory = os.environ["EO_TIDES_TIDE_MODELS"]
+        else:
+            directory = "/var/share/tide_models"
+
+    # Verify path exists
+    directory = pathlib.Path(directory).expanduser()
+    if not directory.exists():
+        raise FileNotFoundError("Invalid tide directory")
+
+    # Get full list of supported models from the database
+    supported_models = load_database()["elevation"].keys()
+
+    # Print list of supported models, marking available and
+    # unavailable models and appending available to list
+    print(f"Tide models available in `{directory}`:")
+    available_m = []
+    for m in supported_models:
+        try:
+            model(directory=directory).elevation(m=m)
+            # Mark available models with a green tick
+            print(f" ✅ {m}")
+            available_m.append(m)
+        except:
+            if show_supported:
+                # Mark unavailable models with a red cross
+                print(f" ❌ {m}")
+
+    # Return list of available models
+    return available_m
 
 
 def _model_tides(
