@@ -221,7 +221,7 @@ All tide modelling functions from `eo-tides` will check for the presence of the 
 
     Setting the `EO_TIDES_TIDE_MODELS` environment variable can be useful when the location of your tide model directory might change between different environments, and you want to avoid hard-coding a single location via the `directory` parameter.
 
-### Verifying available and supported models
+## Verifying available and supported models
 
 You can check what tide models have been correctly set up for use by `eo-tides` using the [`eo_tides.model.list_models`](../api/#eo_tides.model.list_models) function:
 
@@ -231,7 +231,7 @@ from eo_tides.model import list_models
 available_models, supported_models = list_models(directory="tide_models/")
 ```
 
-This will print out a useful summary:
+This will print out a useful summary, with available models marked with a ✅:
 
 ```
 ─────────────────────────────────────────────────────────────────────────────────────
