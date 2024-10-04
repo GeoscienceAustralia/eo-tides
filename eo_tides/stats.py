@@ -32,7 +32,7 @@ def tide_stats(
 
     For more information about the tidal statistics computed by this
     function, refer to Figure 8 in Bishop-Taylor et al. 2018:
-    https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8
+    <https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8>
 
     Parameters
     ----------
@@ -99,34 +99,26 @@ def tide_stats(
 
     Returns
     -------
-    A pandas.Series object containing the following statistics:
+    A `pandas.Series` containing the following statistics:
 
-        tidepost_lat: latitude used for modelling tide heights
-        tidepost_lon: longitude used for modelling tide heights
-        observed_min_m: minimum tide height observed by the satellite
-        all_min_m: minimum tide height from all available tides
-        observed_max_m: maximum tide height observed by the satellite
-        all_max_m: maximum tide height from all available tides
-        observed_range_m: tidal range observed by the satellite
-        all_range_m: full astronomical tidal range based on all
-                  available tides
-        spread_m: proportion of the full astronomical tidal range observed
-                  by the satellite (see Bishop-Taylor et al. 2018)
-        low_tide_offset: proportion of the lowest tides never observed
-                  by the satellite (see Bishop-Taylor et al. 2018)
-        high_tide_offset: proportion of the highest tides never observed
-                  by the satellite (see Bishop-Taylor et al. 2018)
+        - `tidepost_lat`: latitude used for modelling tide heights
+        - `tidepost_lon`: longitude used for modelling tide heights
+        - `observed_min_m`: minimum tide height observed by the satellite
+        - `all_min_m`: minimum tide height from all available tides
+        - `observed_max_m`: maximum tide height observed by the satellite
+        - `all_max_m`: maximum tide height from all available tides
+        - `observed_range_m`: tidal range observed by the satellite
+        - `all_range_m`: full astronomical tidal range based on all available tides
+        - `spread_m`: proportion of the full astronomical tidal range observed by the satellite (see Bishop-Taylor et al. 2018)
+        - `low_tide_offset`: proportion of the lowest tides never observed by the satellite (see Bishop-Taylor et al. 2018)
+        - `high_tide_offset`: proportion of the highest tides never observed by the satellite (see Bishop-Taylor et al. 2018)
 
     If `linear_reg = True`, the output will also contain:
 
-        observed_slope: slope of any relationship between observed tide
-                  heights and time
-        all_slope: slope of any relationship between all available tide
-                  heights and time
-        observed_pval: significance/p-value of any relationship between
-                  observed tide heights and time
-        all_pval: significance/p-value of any relationship between
-                  all available tide heights and time
+        - `observed_slope`: slope of any relationship between observed tide heights and time
+        - `all_slope`: slope of any relationship between all available tide heights and time
+        - `observed_pval`: significance/p-value of any relationship between observed tide heights and time
+        - `all_pval`: significance/p-value of any relationship between all available tide heights and time
 
     """
     # Verify that only one tide model is provided
