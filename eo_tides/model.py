@@ -10,6 +10,7 @@ import odc.geo.xr
 import pandas as pd
 import pyproj
 import pyTMD
+from colorama import Fore, Style, init
 from odc.geo.geobox import GeoBox
 from pyTMD.io.model import load_database, model
 from tqdm import tqdm
@@ -78,37 +79,68 @@ def list_models(directory=None, show_available=True, show_supported=True, raise_
     supported_models : list
         A list of all tide models supported by `eo-tides`.
     """
+    init()  # Initialize colorama
+
     # Set tide modelling files directory. If no custom path is
     # provided, try global environment variable.
     directory = _set_directory(directory)
 
     # Get full list of supported models from pyTMD database
-    supported_models = list(load_database()["elevation"].keys())
+    model_database = load_database()["elevation"]
+    supported_models = list(model_database.keys())
+
+    # Extract expected model paths
+    expected_paths = {}
+    for m in supported_models:
+        model_file = model_database[m]["model_file"]
+        model_file = model_file[0] if isinstance(model_file, list) else model_file
+        expected_paths[m] = str(directory / pathlib.Path(model_file).expanduser().parent)
+
+    # Define column widths
+    status_width = 4  # Width for emoji
+    name_width = max(len(name) for name in supported_models)
+    path_width = max(len(path) for path in expected_paths.values())
 
     # Print list of supported models, marking available and
     # unavailable models and appending available to list
     if show_available or show_supported:
-        print(f"Tide models available in `{directory}`:")
+        total_width = status_width + name_width + path_width + 6
+        print("─" * total_width)
+        print(f"{'󠀠🌊':^{status_width}} | {'Model':<{name_width}} | {'Expected path':<{path_width}}")
+        print("─" * total_width)
+
     available_models = []
     for m in supported_models:
         try:
-            model(directory=directory).elevation(m=m)
+            model_file = model(directory=directory).elevation(m=m)
+            available_models.append(m)
+
             if show_available:
                 # Mark available models with a green tick
-                print(f" ✅ {m}")
-            available_models.append(m)
+                status = "✅"
+                print(f"{status:^{status_width}}│ {m:<{name_width}} │ {expected_paths[m]:<{path_width}}")
         except:
             if show_supported:
                 # Mark unavailable models with a red cross
-                print(f" ❌ {m}")
+                status = "❌"
+                print(
+                    f"{status:^{status_width}}│ {Style.DIM}{m:<{name_width}} │ {expected_paths[m]:<{path_width}}{Style.RESET_ALL}"
+                )
+
+    if show_available or show_supported:
+        print("─" * total_width)
+
+        # Print summary
+        print(f"\n{Style.BRIGHT}Summary:{Style.RESET_ALL}")
+        print(f"Available models: {len(available_models)}/{len(supported_models)}")
 
     # Raise error or warning if no models are available
     if not available_models:
         warning_text = (
             f"No valid tide models are available in `{directory}`. "
-            "Verify that you have provided the correct `directory` path, "
+            "Are you sure you have provided the correct `directory` path, "
             "or set the `EO_TIDES_TIDE_MODELS` environment variable "
-            "to point to the location of your tide model directory."
+            "to point to the location of your tide model directory?"
         )
         if raise_error:
             raise Exception(warning_text)
