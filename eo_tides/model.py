@@ -104,7 +104,7 @@ def list_models(directory=None, show_available=True, show_supported=True, raise_
     # Print list of supported models, marking available and
     # unavailable models and appending available to list
     if show_available or show_supported:
-        total_width = status_width + name_width + path_width + 6
+        total_width = min(status_width + name_width + path_width + 6, 85)
         print("─" * total_width)
         print(f"{'󠀠🌊':^{status_width}} | {'Model':<{name_width}} | {'Expected path':<{path_width}}")
         print("─" * total_width)
