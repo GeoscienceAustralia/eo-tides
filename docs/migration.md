@@ -16,11 +16,9 @@ This more clearly describes the data, particularly when used in combination with
 
 ### Default model changed to "EOT20"
 
-The default model has been changed from "FES2014" to the open soyurce "EOT20" [Empirical Ocean Tide tide model (CC BY 4.0)](https://doi.org/10.17882/79489):
+The default model has been changed from "FES2014" to the open source "EOT20" [Empirical Ocean Tide tide model (CC BY 4.0)](https://doi.org/10.17882/79489):
 
-```
-Hart-Davis Michael, Piccioni Gaia, Dettmering Denise, Schwatke Christian, Passaro Marcello, Seitz Florian (2021). EOT20 - A global Empirical Ocean Tide model from multi-mission satellite altimetry. SEANOE. https://doi.org/10.17882/79489
-```
+> Hart-Davis Michael, Piccioni Gaia, Dettmering Denise, Schwatke Christian, Passaro Marcello, Seitz Florian (2021). EOT20 - A global Empirical Ocean Tide model from multi-mission satellite altimetry. SEANOE. https://doi.org/10.17882/79489
 
 !!! tip "Action"
 
