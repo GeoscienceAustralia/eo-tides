@@ -15,7 +15,7 @@ from odc.geo.geobox import GeoBox
 from pyTMD.io.model import load_database, model
 from tqdm import tqdm
 
-from eo_tides.utils import idw
+from .utils import idw
 
 
 def _set_directory(directory):
@@ -928,9 +928,9 @@ def tag_tides(
     Parameters
     ----------
     ds : xarray.Dataset
-        A multi-dimensional dataset (e.g. "x", "y", "time") that will be
-        used to define the tide modelling grid. This dataset
-        must contain a "time" dimension.
+        A multi-dimensional dataset (e.g. "x", "y", "time") to
+        tag with tide heights. This dataset must contain a "time"
+        dimension.
     model : string or list, optional
         The tide model (or models) used to model tides. If a list is
         provided, a new "tide_model" dimension will be added to `ds`.
@@ -1000,7 +1000,7 @@ def tag_tides(
         print(f"Setting tide modelling location from dataset centroid: " f"{tidepost_lon:.2f}, {tidepost_lat:.2f}")
 
     else:
-        print(f"Using user-supplied tide modelling location: " f"{tidepost_lon:.2f}, {tidepost_lat:.2f}")
+        print(f"Using tide modelling location: " f"{tidepost_lon:.2f}, {tidepost_lat:.2f}")
 
     # Model tide heights for each observation:
     tide_df = model_tides(
