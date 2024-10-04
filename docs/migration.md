@@ -16,13 +16,15 @@ This more clearly describes the data, particularly when used in combination with
 
 ### Default model changed to "EOT20"
 
-The default model has been changed from "FES2014" to the open source "EOT20" [Empirical Ocean Tide tide model (CC BY 4.0)](https://doi.org/10.17882/79489):
+The default tide model has been changed from "FES2014" to the open source "EOT20" [Empirical Ocean Tide tide model (CC BY 4.0)](https://doi.org/10.17882/79489):
 
-> Hart-Davis Michael, Piccioni Gaia, Dettmering Denise, Schwatke Christian, Passaro Marcello, Seitz Florian (2021). EOT20 - A global Empirical Ocean Tide model from multi-mission satellite altimetry. SEANOE. https://doi.org/10.17882/79489
+> Hart-Davis Michael, Piccioni Gaia, Dettmering Denise, Schwatke Christian, Passaro Marcello, Seitz Florian (2021). EOT20 - A global Empirical Ocean Tide model from multi-mission satellite altimetry. SEANOE. <https://doi.org/10.17882/79489>
+
+Note that this change in default is primarily due to the permissive license of this model; the choice of optimal model will vary by study area and application.
 
 !!! tip "Action"
 
-    To use FES2014, set `model="FES2014" instead of leaving `model=None`.
+    To use FES2014, set `model="FES2014"` instead of leaving the default `model=None`.
 
 ### Tide model directory environment variable updated
 
@@ -30,7 +32,7 @@ The `DEA_TOOLS_TIDE_MODELS` environmental variable has been renamed to `EO_TIDES
 
 !!! tip "Action"
 
-    Set the `EO_TIDES_TIDE_MODELS` environment variable instead of `DEA_TOOLS_TIDE_MODELS`
+    Set the `EO_TIDES_TIDE_MODELS` environment variable instead of `DEA_TOOLS_TIDE_MODELS`.
 
 ### Error raised if both `directory` parameter and environment variable are missing
 
