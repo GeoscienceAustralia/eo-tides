@@ -8,7 +8,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 env:
-  EO_TIDES_TIDE_MODELS: ./tests/data/tide_models_tests
+  EO_TIDES_TIDE_MODELS: ./tests/data/tide_models
 
 jobs:
   quality:
