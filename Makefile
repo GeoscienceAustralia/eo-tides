@@ -22,10 +22,10 @@ check: ## Run code quality tools.
 .PHONY: test
 test: ## Test the code with pytest
 	@echo "🚀 Testing code: Running pytest"
-	@tar -xvzf ./tests/data/tide_models_tests.tar.gz -C ./tests/data
-	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models_tests && \
+	@tar -xvzf ./tests/data/tide_models.tar.gz -C ./tests/data
+	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
 	uv run python -m pytest --cov --cov-config=pyproject.toml --cov-report=xml
-	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models_tests && \
+	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
     uv run python -m pytest --nbval-lax docs/notebooks/
 
 .PHONY: build

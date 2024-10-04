@@ -1,5 +1,5 @@
 # Ignore project-specific directories
-tests/data/tide_models_tests
+tests/data/tide_models
 docs/source
 
 # From https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore

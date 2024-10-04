@@ -11,7 +11,7 @@ from eo_tides.validation import eval_metrics
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
-ENSEMBLE_MODELS = ["FES2014", "HAMTIDE11"]  # simplified for tests
+ENSEMBLE_MODELS = ["EOT20", "HAMTIDE11"]  # simplified for tests
 
 
 @pytest.fixture()
@@ -93,10 +93,10 @@ def satellite_ds(request):
 # Test available tide models
 def test_list_models():
     available_models, supported_models = list_models()
-    assert available_models == ["FES2014", "HAMTIDE11"]
+    assert available_models == ["EOT20", "HAMTIDE11"]
 
     available_models, supported_models = list_models(show_available=False, show_supported=False)
-    assert available_models == ["FES2014", "HAMTIDE11"]
+    assert available_models == ["EOT20", "HAMTIDE11"]
 
 
 # Run test for multiple input coordinates, CRSs and interpolation methods
@@ -114,7 +114,7 @@ def test_list_models():
     ],
 )
 def test_model_tides(measured_tides_ds, x, y, crs, method):
-    # Run FES2014 tidal model for locations and timesteps in tide gauge data
+    # Run EOT20 tidal model for locations and timesteps in tide gauge data
     modelled_tides_df = model_tides(
         x=[x],
         y=[y],
@@ -134,7 +134,7 @@ def test_model_tides(measured_tides_ds, x, y, crs, method):
 
     # Test that modelled tides meet expected accuracy
     assert val_stats["Correlation"] > 0.99
-    assert val_stats["RMSE"] < 0.26
+    assert val_stats["RMSE"] < 0.27
     assert val_stats["R-squared"] > 0.96
     assert abs(val_stats["Bias"]) < 0.20
 
@@ -143,10 +143,10 @@ def test_model_tides(measured_tides_ds, x, y, crs, method):
 @pytest.mark.parametrize(
     "models, output_format",
     [
-        (["FES2014"], "long"),
-        (["FES2014"], "wide"),
-        (["FES2014", "HAMTIDE11"], "long"),
-        (["FES2014", "HAMTIDE11"], "wide"),
+        (["EOT20"], "long"),
+        (["EOT20"], "wide"),
+        (["EOT20", "HAMTIDE11"], "long"),
+        (["EOT20", "HAMTIDE11"], "wide"),
     ],
     ids=[
         "single_model_long",
@@ -214,14 +214,14 @@ def test_model_tides_units(measured_tides_ds, units, expected_range, expected_dt
 @pytest.mark.parametrize(
     "mode, models, output_format",
     [
-        ("one-to-many", ["FES2014"], "long"),
-        ("one-to-one", ["FES2014"], "long"),
-        ("one-to-many", ["FES2014"], "wide"),
-        ("one-to-one", ["FES2014"], "wide"),
-        ("one-to-many", ["FES2014", "HAMTIDE11"], "long"),
-        ("one-to-one", ["FES2014", "HAMTIDE11"], "long"),
-        ("one-to-many", ["FES2014", "HAMTIDE11"], "wide"),
-        ("one-to-one", ["FES2014", "HAMTIDE11"], "wide"),
+        ("one-to-many", ["EOT20"], "long"),
+        ("one-to-one", ["EOT20"], "long"),
+        ("one-to-many", ["EOT20"], "wide"),
+        ("one-to-one", ["EOT20"], "wide"),
+        ("one-to-many", ["EOT20", "HAMTIDE11"], "long"),
+        ("one-to-one", ["EOT20", "HAMTIDE11"], "long"),
+        ("one-to-many", ["EOT20", "HAMTIDE11"], "wide"),
+        ("one-to-one", ["EOT20", "HAMTIDE11"], "wide"),
     ],
 )
 def test_model_tides_mode(mode, models, output_format):
@@ -285,8 +285,11 @@ def test_model_tides_mode(mode, models, output_format):
 # Test ensemble modelling functionality
 def test_model_tides_ensemble():
     # Input params
-    x = [122.14, 144.910368]
-    y = [-17.91, -37.919491]
+    good_hamtide11 = -17.58549, 123.59414
+    good_eot20 = -17.1611, 123.3406
+    y = [good_eot20[0], good_hamtide11[0]]
+    x = [good_eot20[1], good_hamtide11[1]]
+
     times = pd.date_range("2020", "2021", periods=2)
 
     # Default, only ensemble requested
@@ -303,7 +306,7 @@ def test_model_tides_ensemble():
     assert all(modelled_tides_df.tide_model == "ensemble")
 
     # Default, ensemble + other models requested
-    models = ["FES2014", "HAMTIDE11", "ensemble"]
+    models = ["EOT20", "HAMTIDE11", "ensemble"]
     modelled_tides_df = model_tides(
         x=x,
         y=y,
@@ -316,20 +319,20 @@ def test_model_tides_ensemble():
     assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
     assert set(modelled_tides_df.tide_model) == set(models)
     assert np.allclose(
-        modelled_tides_df.tide_height,
+        modelled_tides_df.tide_height.values,
         [
-            -2.831,
-            -1.897,
-            -0.207,
-            0.035,
-            -2.655,
-            -1.772,
-            0.073,
-            -0.071,
-            -2.743,
-            -1.835,
-            -0.067,
-            -0.018,
+            0.094,
+            -3.202,
+            0.409,
+            -3.098,
+            0.803,
+            0.664,
+            0.989,
+            1.011,
+            0.449,
+            -1.269,
+            0.699,
+            -1.043,
         ],
         atol=0.02,
     )
@@ -362,7 +365,7 @@ def test_model_tides_ensemble():
     # of other two models
     assert set(modelled_tides_df.columns) == set(models)
     assert np.allclose(
-        0.5 * (modelled_tides_df.FES2014 + modelled_tides_df.HAMTIDE11),
+        0.5 * (modelled_tides_df.EOT20 + modelled_tides_df.HAMTIDE11),
         modelled_tides_df.ensemble,
     )
 
@@ -381,23 +384,21 @@ def test_model_tides_ensemble():
     # least one of the other models
     assert set(modelled_tides_df.columns) == set(models)
     assert all(
-        (modelled_tides_df.FES2014 == modelled_tides_df.ensemble)
+        (modelled_tides_df.EOT20 == modelled_tides_df.ensemble)
         | (modelled_tides_df.HAMTIDE11 == modelled_tides_df.ensemble)
     )
 
     # Check that correct model is the closest at each row
     closer_model = modelled_tides_df.apply(
         lambda row: (
-            "FES2014"
-            if abs(row["ensemble"] - row["FES2014"]) < abs(row["ensemble"] - row["HAMTIDE11"])
-            else "HAMTIDE11"
+            "EOT20" if abs(row["ensemble"] - row["EOT20"]) < abs(row["ensemble"] - row["HAMTIDE11"]) else "HAMTIDE11"
         ),
         axis=1,
     ).tolist()
-    assert closer_model == ["FES2014", "HAMTIDE11", "FES2014", "HAMTIDE11"]
+    assert closer_model == ["EOT20", "HAMTIDE11", "EOT20", "HAMTIDE11"]
 
     # Check values are expected
-    assert np.allclose(modelled_tides_df.ensemble, [-2.830, 0.073, -1.900, -0.072], atol=0.02)
+    assert np.allclose(modelled_tides_df.ensemble, [0.09, 0.98, -3.20, 1.01], atol=0.02)
 
     # Wide mode, custom functions
     ensemble_funcs = {
@@ -419,7 +420,7 @@ def test_model_tides_ensemble():
 
     # Check that expected models exist, and that valid data is produced
     assert set(modelled_tides_df.columns) == set([
-        "FES2014",
+        "EOT20",
         "HAMTIDE11",
         "ensemble-best",
         "ensemble-worst",
@@ -442,7 +443,7 @@ def test_model_tides_ensemble():
 
     # Check that expected models exist in "tide_model" column
     assert set(modelled_tides_df.tide_model) == set([
-        "FES2014",
+        "EOT20",
         "HAMTIDE11",
         "ensemble-best",
         "ensemble-worst",
@@ -508,7 +509,7 @@ def test_tag_tides(satellite_ds, measured_tides_ds, ebb_flow, swap_dims, tidepos
 
 def test_tag_tides_multiple(satellite_ds):
     # Model multiple models at once
-    tagged_tides_ds = tag_tides(satellite_ds, model=["FES2014", "HAMTIDE11"], ebb_flow=True)
+    tagged_tides_ds = tag_tides(satellite_ds, model=["EOT20", "HAMTIDE11"], ebb_flow=True)
 
     assert "tide_model" in tagged_tides_ds.dims
     assert tagged_tides_ds.tide_height.dims == ("time", "tide_model")
@@ -516,10 +517,10 @@ def test_tag_tides_multiple(satellite_ds):
 
     # Test that multiple tide models are correlated
     val_stats = eval_metrics(
-        x=tagged_tides_ds.sel(tide_model="FES2014").tide_height,
+        x=tagged_tides_ds.sel(tide_model="EOT20").tide_height,
         y=tagged_tides_ds.sel(tide_model="HAMTIDE11").tide_height,
     )
-    assert val_stats["Correlation"] > 0.99
+    assert val_stats["Correlation"] >= 0.99
 
 
 # Run tests for default and custom resolutions
@@ -594,6 +595,6 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
             longitude=x_coords, latitude=y_coords, time="2020-01-29", method="nearest"
         )
 
-    # Test if extracted tides match expected results (to within ~3 cm)
-    expected_tides = [-0.66, -0.76, -0.75, -0.82]
-    assert np.allclose(extracted_tides.values, expected_tides, atol=0.03)
+    # Test if extracted tides match expected results (to within ~5 cm)
+    expected_tides = [-0.68, -0.84, -0.80, -0.88]
+    assert np.allclose(extracted_tides.values, expected_tides, atol=0.05)

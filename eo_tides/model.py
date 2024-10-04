@@ -390,7 +390,7 @@ def _ensemble_model(
     ranking_points : str, optional
         Path to the GeoJSON file containing model ranking points. This
         dataset should include columns containing rankings for each tide
-        model, named with the prefix "rank_". e.g. "rank_FES2014".
+        model, named with the prefix "rank_". e.g. "rank_EOT20".
         Low values should represent high rankings (e.g. 1 = top ranked).
     ranking_valid_perc : float, optional
         Minimum percentage of valid data required to include a model
@@ -500,7 +500,7 @@ def model_tides(
     x,
     y,
     time,
-    model="FES2014",
+    model="EOT20",
     directory=None,
     crs="EPSG:4326",
     crop=True,
@@ -522,11 +522,11 @@ def model_tides(
     This function is parallelised to improve performance, and
     supports all tidal models supported by `pyTMD`, including:
 
-    - Empirical Ocean Tide model (`EOT20`)
-    - Finite Element Solution tide models (`FES2022`, `FES2014`, `FES2012`)
-    - TOPEX/POSEIDON global tide models (`TPXO10`, `TPXO9`, `TPXO8`)
-    - Global Ocean Tide models (`GOT5.6`, `GOT5.5`, `GOT4.10`, `GOT4.8`, `GOT4.7`)
-    - Hamburg direct data Assimilation Methods for Tides models (`HAMTIDE11`)
+    - Empirical Ocean Tide model (EOT20)
+    - Finite Element Solution tide models (FES2022, FES2014, FES2012)
+    - TOPEX/POSEIDON global tide models (TPXO10, TPXO9, TPXO8)
+    - Global Ocean Tide models (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
+    - Hamburg direct data Assimilation Methods for Tides models (HAMTIDE11)
 
     This function requires access to tide model data files.
     These should be placed in a folder with subfolders matching
@@ -550,30 +550,16 @@ def model_tides(
         `pandas.DatetimeIndex` providing the times at which to
         model tides in UTC time.
     model : string, optional
-        The tide model (or models) used to model tides.
-        Valid options include:
-
-        - "EOT20"
-        - "FES2014"
-        - "FES2022"
-        - "TPXO9-atlas-v5"
-        - "TPXO8-atlas"
-        - "HAMTIDE11"
-        - "GOT4.10"
-        - "ensemble" (advanced ensemble tide model functionality;
-          combining multiple models based on external model rankings)
+        The tide model (or models) to use to model tides.
+        Defaults to "EOT20"; for a full list of available/supported
+        models, run `eo_tides.model.list_models`.
     directory : string, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
         `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
         Tide modelling files should be stored in sub-folders for each
-        model that match the structure provided by `pyTMD`.
-
-        For example:
-
-        - `{directory}/fes2014/ocean_tide/`
-        - `{directory}/tpxo8_atlas/`
-        - `{directory}/TPXO9_atlas_v5/`
+        model that match the structure required by `pyTMD`
+        (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
     crs : str, optional
         Input coordinate reference system for x and y coordinates.
         Defaults to "EPSG:4326" (WGS84; degrees latitude, longitude).
@@ -908,7 +894,7 @@ def _pixel_tides_resample(
 
 def tag_tides(
     ds,
-    model="FES2014",
+    model="EOT20",
     directory=None,
     ebb_flow=False,
     swap_dims=False,
@@ -925,6 +911,16 @@ def tag_tides(
     by default, but a custom tidal modelling location can
     be specified using `tidepost_lat` and `tidepost_lon`.
 
+    This function uses the parallelised `model_tides` function
+    under the hood. It supports all tidal models supported by
+    `pyTMD`, including:
+
+    - Empirical Ocean Tide model (EOT20)
+    - Finite Element Solution tide models (FES2022, FES2014, FES2012)
+    - TOPEX/POSEIDON global tide models (TPXO10, TPXO9, TPXO8)
+    - Global Ocean Tide models (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
+    - Hamburg direct data Assimilation Methods for Tides models (HAMTIDE11)
+
     Parameters
     ----------
     ds : xarray.Dataset
@@ -932,31 +928,17 @@ def tag_tides(
         tag with tide heights. This dataset must contain a "time"
         dimension.
     model : string or list, optional
-        The tide model (or models) used to model tides. If a list is
+        The tide model (or models) to use to model tides. If a list is
         provided, a new "tide_model" dimension will be added to `ds`.
-        Options include:
-
-        - "EOT20"
-        - "FES2014"
-        - "FES2022"
-        - "TPXO9-atlas-v5"
-        - "TPXO8-atlas"
-        - "HAMTIDE11"
-        - "GOT4.10"
-        - "ensemble" (advanced ensemble tide model functionality;
-          combining multiple models based on external model rankings)
+        Defaults to "EOT20"; for a full list of available/supported
+        models, run `eo_tides.model.list_models`.
     directory : string, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
         `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
         Tide modelling files should be stored in sub-folders for each
-        model that match the structure provided by `pyTMD`.
-
-        For example:
-
-        - `{directory}/fes2014/ocean_tide/`
-        - `{directory}/tpxo8_atlas/`
-        - `{directory}/TPXO9_atlas_v5/`
+        model that match the structure required by `pyTMD`
+        (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
     ebb_flow : bool, optional
         An optional boolean indicating whether to compute if the
         tide phase was ebbing (falling) or flowing (rising) for each
@@ -1071,7 +1053,7 @@ def tag_tides(
 def pixel_tides(
     ds,
     times=None,
-    model="FES2014",
+    model="EOT20",
     directory=None,
     resample=True,
     calculate_quantiles=None,
@@ -1098,11 +1080,11 @@ def pixel_tides(
     under the hood. It supports all tidal models supported by
     `pyTMD`, including:
 
-    - Empirical Ocean Tide model (`EOT20`)
-    - Finite Element Solution tide models (`FES2022`, `FES2014`, `FES2012`)
-    - TOPEX/POSEIDON global tide models (`TPXO10`, `TPXO9`, `TPXO8`)
-    - Global Ocean Tide models (`GOT5.6`, `GOT5.5`, `GOT4.10`, `GOT4.8`, `GOT4.7`)
-    - Hamburg direct data Assimilation Methods for Tides models (`HAMTIDE11`)
+    - Empirical Ocean Tide model (EOT20)
+    - Finite Element Solution tide models (FES2022, FES2014, FES2012)
+    - TOPEX/POSEIDON global tide models (TPXO10, TPXO9, TPXO8)
+    - Global Ocean Tide models (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
+    - Hamburg direct data Assimilation Methods for Tides models (HAMTIDE11)
 
     This function requires access to tide model data files.
     These should be placed in a folder with subfolders matching
@@ -1124,29 +1106,15 @@ def pixel_tides(
     model : string or list, optional
         The tide model (or models) used to model tides. If a list is
         provided, a new "tide_model" dimension will be added to the
-        `xarray.DataArray` outputs. Valid options include:
-
-        - "EOT20"
-        - "FES2014"
-        - "FES2022"
-        - "TPXO9-atlas-v5"
-        - "TPXO8-atlas"
-        - "HAMTIDE11"
-        - "GOT4.10"
-        - "ensemble" (advanced ensemble tide model functionality;
-          combining multiple models based on external model rankings)
+        `xarray.DataArray` outputs. Defaults to "EOT20"; for a full
+        list of available/supported models, run `eo_tides.model.list_models`.
     directory : string, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
         `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
         Tide modelling files should be stored in sub-folders for each
-        model that match the structure provided by `pyTMD`.
-
-        For example:
-
-        - `{directory}/fes2014/ocean_tide/`
-        - `{directory}/tpxo8_atlas/`
-        - `{directory}/TPXO9_atlas_v5/`
+        model that match the structure required by `pyTMD`
+        (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
     resample : bool, optional
         Whether to resample low resolution tides back into `ds`'s original
         higher resolution grid. Set this to `False` if you do not want

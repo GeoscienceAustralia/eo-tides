@@ -9,7 +9,7 @@ from .model import model_tides, tag_tides
 
 def tide_stats(
     ds,
-    model="FES2014",
+    model="EOT20",
     directory=None,
     tidepost_lat=None,
     tidepost_lon=None,
@@ -23,12 +23,12 @@ def tide_stats(
     """
     Takes a multi-dimensional dataset and generate statistics
     about the data's astronomical and satellite-observed tide
-    regime.
+    conditions.
 
-    By comparing tidal conditions observed by satellited against
-    the full astronomical tidal range, we can evaluate whether the
-    tides observed by satellites are biased (e.g. fail to observe
-    either the highest or lowest tides).
+    By comparing the subset of tides observed by satellites
+    against the full astronomical tidal range, we can evaluate
+    whether the tides observed by satellites are biased
+    (e.g. fail to observe either the highest or lowest tides).
 
     For more information about the tidal statistics computed by this
     function, refer to Figure 8 in Bishop-Taylor et al. 2018:
@@ -41,30 +41,16 @@ def tide_stats(
         use to calculate tide statistics. This dataset must contain
         a "time" dimension.
     model : string, optional
-        The tide model used to model tides.
-        Options include:
-
-        - "EOT20"
-        - "FES2014"
-        - "FES2022"
-        - "TPXO9-atlas-v5"
-        - "TPXO8-atlas"
-        - "HAMTIDE11"
-        - "GOT4.10"
-        - "ensemble" (advanced ensemble tide model functionality;
-          combining multiple models based on external model rankings)
+        The tide model to use to model tides. Defaults to "EOT20";
+        for a full list of available/supported models, run
+        `eo_tides.model.list_models`.
     directory : string, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
         `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
         Tide modelling files should be stored in sub-folders for each
-        model that match the structure provided by `pyTMD`.
-
-        For example:
-
-        - `{directory}/fes2014/ocean_tide/`
-        - `{directory}/tpxo8_atlas/`
-        - `{directory}/TPXO9_atlas_v5/`
+        model that match the structure required by `pyTMD`
+        (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
     tidepost_lat, tidepost_lon : float or int, optional
         Optional coordinates used to model tides. The default is None,
         which uses the centroid of the dataset as the tide modelling
