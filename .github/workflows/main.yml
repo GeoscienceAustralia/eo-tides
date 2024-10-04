@@ -45,7 +45,7 @@ jobs:
       - name: Extract model data
         run: |
           # Extract tide modelling test files
-          tar -xvzf ./tests/data/tide_models_tests.tar.gz -C ./tests/data
+          tar -xvzf ./tests/data/tide_models.tar.gz -C ./tests/data
 
       - name: Set up the environment
         uses: ./.github/actions/setup-python-env
