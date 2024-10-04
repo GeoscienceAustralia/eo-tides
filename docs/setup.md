@@ -202,7 +202,7 @@ model_tides(
         x=155,
         y=-35,
         time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
-        directory='tide_models/'
+        directory="tide_models/"
 )
 ```
 
@@ -220,6 +220,33 @@ All tide modelling functions from `eo-tides` will check for the presence of the 
 !!! tip
 
     Setting the `EO_TIDES_TIDE_MODELS` environment variable can be useful when the location of your tide model directory might change between different environments, and you want to avoid hard-coding a single location via the `directory` parameter.
+
+### Verifying available and supported models
+
+You can check what tide models have been correctly set up for use by `eo-tides` using the [`eo_tides.model.list_models`](../api/#eo_tides.model.list_models) function:
+
+```py
+from eo_tides.model import list_models
+
+available_models, supported_models = list_models(directory="tide_models/")
+```
+
+This will print out a useful summary:
+
+```
+─────────────────────────────────────────────────────────────────────────────────────
+ 󠀠🌊  | Model                | Expected path
+─────────────────────────────────────────────────────────────────────────────────────
+ ✅  │ EOT20                │ tests/data/tide_models_tests/EOT20/ocean_tides
+ ❌  │ FES2014              │ tests/data/tide_models_tests/fes2014/ocean_tide
+ ✅  │ HAMTIDE11            │ tests/data/tide_models_tests/hamtide
+ ❌  │ TPXO9.1              │ tests/data/tide_models_tests/TPXO9.1/DATA
+ ...   ...                    ...
+─────────────────────────────────────────────────────────────────────────────────────
+
+Summary:
+Available models: 2/50
+```
 
 ## Next steps
 
