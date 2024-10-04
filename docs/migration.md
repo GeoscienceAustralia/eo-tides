@@ -14,6 +14,18 @@ This more clearly describes the data, particularly when used in combination with
 
     Update any references of `tide_m` to `tide_height`
 
+### Default model changed to "EOT20"
+
+The default model has been changed from "FES2014" to the CC BY 4.0 Empirical Ocean Tide "EOT20" tide model:
+
+```
+Hart-Davis Michael, Piccioni Gaia, Dettmering Denise, Schwatke Christian, Passaro Marcello, Seitz Florian (2021). EOT20 - A global Empirical Ocean Tide model from multi-mission satellite altimetry. SEANOE. https://doi.org/10.17882/79489
+```
+
+!!! tip "Action"
+
+    To use FES2014, set `model="FES2014" instead of leaving `model=None`.
+
 ### Tide model directory environment variable updated
 
 The `DEA_TOOLS_TIDE_MODELS` environmental variable has been renamed to `EO_TIDES_TIDE_MODELS`.

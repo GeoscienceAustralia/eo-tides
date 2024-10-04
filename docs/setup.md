@@ -27,9 +27,9 @@ tide_models/
 
 ## Downloading tide model data
 
-??? note "EOT20 Empirical Ocean Tide model"
+??? note "EOT20 Empirical Ocean Tide model (default)"
 
-    ### EOT20 Empirical Ocean Tide model
+    ### EOT20 Empirical Ocean Tide model (default)
 
     1. Visit [EOT20 - A global Empirical Ocean Tide model from multi-mission satellite altimetry](https://doi.org/10.17882/79489)
     2. Under `Data`, click `Download`:
