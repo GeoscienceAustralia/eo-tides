@@ -10,7 +10,7 @@
 
     Note: This package is a work in progress, and not currently ready for operational use.
 
-The `eo-tides` package provides powerful parallelized tools for integrating satellite Earth observation data with tide modelling.
+`eo-tides` provides provides powerful parallelized tools for integrating satellite Earth observation data with tide modelling.
 
 `eo-tides` combines advanced tide modelling functionality from the [`pyTMD`](https://pytmd.readthedocs.io/en/latest/) package with [`pandas`](https://pandas.pydata.org/docs/index.html), [`xarray`](https://docs.xarray.dev/en/stable/) and [`odc-geo`](https://odc-geo.readthedocs.io/en/latest/), providing a suite of flexible tools for efficient analysis of coastal and ocean Earth observation data – from regional, continental, to global scale.
 
