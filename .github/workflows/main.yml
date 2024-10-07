@@ -81,6 +81,7 @@ jobs:
 
   # Only deploy docs if all tests pass
   deploy-docs:
+    if: github.event_name == 'push'
     needs: [quality, check-docs, run-tests]
     runs-on: ubuntu-latest
     steps:
