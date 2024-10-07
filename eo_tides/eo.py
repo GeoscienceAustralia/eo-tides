@@ -250,7 +250,7 @@ def tag_tides(
 
 
 def pixel_tides(
-    ds: Union[xr.Dataset, xr.DataArray],
+    ds: xr.Dataset,
     times=None,
     model: Union[str, List[str]] = "EOT20",
     directory: Optional[str] = None,
@@ -293,10 +293,10 @@ def pixel_tides(
 
     Parameters
     ----------
-    ds : xarray.Dataset or xarray.DataArray
+    ds : xarray.Dataset
         A multi-dimensional dataset (e.g. "x", "y", "time") that will
         be used to define the tide modelling grid.
-    times : pandas.DatetimeIndex or list of pandas.Timestamps, optional
+    times : pd.DatetimeIndex or list of pd.Timestamp, optional
         By default, the function will model tides using the times
         contained in the `time` dimension of `ds`. Alternatively, this
         param can be used to model tides for a custom set of times
