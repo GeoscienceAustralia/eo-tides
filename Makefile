@@ -24,9 +24,9 @@ test: ## Test the code with pytest
 	@echo "🚀 Testing code: Running pytest"
 	@tar -xvzf ./tests/data/tide_models.tar.gz -C ./tests/data
 	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
-	uv run python -m pytest --cov --cov-config=pyproject.toml --cov-report=xml
+	uv run python -m pytest --cov --cov-config=pyproject.toml --cov-report=xml --verbose
 	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
-    uv run python -m pytest --nbval-lax docs/notebooks/
+    uv run python -m pytest --nbval-lax docs/notebooks/ --verbose
 
 .PHONY: build
 build: clean-build ## Build wheel file

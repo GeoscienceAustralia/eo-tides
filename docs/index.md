@@ -1,5 +1,7 @@
-<img style="float: left; margin: 0 50px 0 0;" src="assets/eo-tides-logo-256.png" width="136">
-# `eo-tides`: Tide modelling tools for large-scale satellite Earth observation analysis
+![Alt text](assets/eo-tides-logo-256.png#only-dark){: align=left style="margin-right: 20px; margin-top: -12px;" width="155"}
+![Alt text](assets/eo-tides-logo.gif#only-light){: align=left style="margin-right: 20px; margin-top: -12px;" width="155"}
+
+# `eo-tides`: Tide modelling tools for large-scale satellite Earth observation analysis 🌊🛰️🛠️
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)
 [![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/main.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/main.yml?query=branch%3Amain)
@@ -20,7 +22,7 @@ These tools can be applied to petabytes of freely available satellite data (e.g.
 
 - 🌊 Model tides from multiple global ocean tide models in parallel, and return tide heights in standardised `pandas.DataFrame` format for further analysis
 - 🛰️ "Tag" satellite data with tide height and stage based on the exact moment of image acquisition
-- 🌐 Model tides for every individual satellite pixel, producing three-dimensional "tide height" `xarray`-format datacubes that can be combined with satellite data
+- 🌐 Model tides for every individual satellite pixel, producing three-dimensional "tide height" `xarray`-format datacubes that can be integrated with satellite data
 - 🎯 Combine multiple tide models into a single locally-optimised "ensemble" model informed by satellite altimetry and satellite-observed patterns of tidal inundation
 - 📈 Calculate statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits
 - 🛠️ Validate modelled tides using measured sea levels from coastal tide gauges (e.g. [GESLA Global Extreme Sea Level Analysis](https://gesla.org/))

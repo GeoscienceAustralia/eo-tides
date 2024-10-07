@@ -4,7 +4,29 @@ version = "0.0.1"
 description = "Tide modelling tools for large-scale satellite earth observation analysis"
 authors = [{ name = "Robbi Bishop-Taylor", email = "Robbi.BishopTaylor@ga.gov.au" }]
 readme = "README.md"
-keywords = ['python']
+keywords = [
+    "earth observation",
+    "tide modelling",
+    "tide modeling",
+    "satellite data",
+    "coastal analysis",
+    "oceanography",
+    "remote sensing",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Oceanography",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 requires-python = ">=3.9"
 dependencies = [
   "colorama",
@@ -39,7 +61,7 @@ dev-dependencies = [
     "pytest>=7.2.0",
     "nbval>=0.11.0",
     "pre-commit>=2.20.0",
-    "tox>=3.25.1",
+    "tox-uv>=1.11.3",
     "deptry>=0.20.0",
     "mypy>=0.991",
     "pytest-cov>=4.0.0",
@@ -48,9 +70,9 @@ dev-dependencies = [
     "mkdocs-material>=8.5.10",
     "mkdocs-jupyter>=0.25.0",
     "mkdocstrings[python]>=0.19.0",
-    "black",
-    "odc-stac",
-    "pystac-client",
+    "pystac-client>=0.8.3",
+    "odc-stac>=0.3.10",
+    "black>=24.8.0",
 ]
 
 [build-system]
@@ -70,20 +92,21 @@ testpaths = ["tests"]
 target-version = "py310"
 line-length = 120
 fix = true
-lint.ignore = [
-    # LineTooLong
-    "E501",
-    # DoNotAssignLambda
-    "E731",
-    # Unused import
-    "F401"
+
+[tool.ruff.lint]
+ignore = [
+    "E501",  # LineTooLong
+    "E731",  # DoNotAssignLambda
+    "F401"   # Unused import
 ]
 
 [tool.ruff.format]
 preview = true
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]
+"tests/*" = [
+    "S101"   # Assert
+]
 
 [tool.deptry.per_rule_ignores]
 DEP002 = [
@@ -98,6 +121,3 @@ skip_empty = true
 [tool.coverage.run]
 branch = true
 source = ["eo_tides"]
-
-# [tool.setuptools]
-# py-modules = ["eo_tides"]

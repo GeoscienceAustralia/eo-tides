@@ -29,9 +29,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          setup_commands:
-            - import sys
-            - sys.path.append('../')
+          paths: ["eo_tides"]
           options:
             docstring_style: numpy
             # docstring_options:
@@ -92,8 +90,6 @@ theme:
   #   - navigation.instant
   #   - navigation.tracking
   #   - navigation.tabs
-  #   - navigation.sections
-  #   - navigation.expand
 
 extra_css:
   - stylesheets/extra.css
@@ -121,3 +117,4 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - attr_list

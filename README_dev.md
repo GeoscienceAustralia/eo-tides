@@ -1,3 +1,6 @@
+[![Commit activity](https://img.shields.io/github/commit-activity/m/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/commit-activity/m/GeoscienceAustralia/eo-tides)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/eo-tides)
+
 ## Getting started
 
 ### 1. Create a New Repository

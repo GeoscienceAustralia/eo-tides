@@ -223,7 +223,7 @@ All tide modelling functions from `eo-tides` will check for the presence of the 
 
 ## Verifying available and supported models
 
-You can check what tide models have been correctly set up for use by `eo-tides` using the [`eo_tides.model.list_models`](../api/#eo_tides.model.list_models) function:
+You can check what tide models have been correctly set up for use by `eo-tides` using the [`eo_tides.model.list_models`](api.md#eo_tides.model.list_models) function:
 
 ```py
 from eo_tides.model import list_models
@@ -234,15 +234,15 @@ available_models, supported_models = list_models(directory="tide_models/")
 This will print out a useful summary, with available models marked with a ✅:
 
 ```
-─────────────────────────────────────────────────────────────────────────────────────
- 󠀠🌊  | Model                | Expected path
-─────────────────────────────────────────────────────────────────────────────────────
- ✅  │ EOT20                │ tests/data/tide_models_tests/EOT20/ocean_tides
- ❌  │ FES2014              │ tests/data/tide_models_tests/fes2014/ocean_tide
- ✅  │ HAMTIDE11            │ tests/data/tide_models_tests/hamtide
- ❌  │ TPXO9.1              │ tests/data/tide_models_tests/TPXO9.1/DATA
- ...   ...                    ...
-─────────────────────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────────────────
+ 󠀠🌊  | Model        | Expected path
+─────────────────────────────────────────────────────────────────────────────
+ ✅  │ EOT20        │ tests/data/tide_models_tests/EOT20/ocean_tides
+ ❌  │ FES2014      │ tests/data/tide_models_tests/fes2014/ocean_tide
+ ✅  │ HAMTIDE11    │ tests/data/tide_models_tests/hamtide
+ ❌  │ TPXO9.1      │ tests/data/tide_models_tests/TPXO9.1/DATA
+ ...   ...            ...
+─────────────────────────────────────────────────────────────────────────────
 
 Summary:
 Available models: 2/50

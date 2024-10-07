@@ -9,6 +9,12 @@
   --md-footer-bg-color--dark: #113457;
 }
 
+/* Hide dark images in light mode */
+[data-md-color-scheme="eotides"] img[src$="#only-dark"],
+[data-md-color-scheme="eotides"] img[src$="#gh-dark-mode-only"] {
+  display: none;
+}
+
 /* Target the search input placeholder icon */
 .md-search__icon.md-icon svg {
   color: #ffffff !important;

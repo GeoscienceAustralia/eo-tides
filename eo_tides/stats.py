@@ -4,7 +4,8 @@ import odc.geo.xr
 import pandas as pd
 from scipy import stats
 
-from .model import model_tides, tag_tides
+from .eo import tag_tides
+from .model import model_tides
 
 
 def tide_stats(
