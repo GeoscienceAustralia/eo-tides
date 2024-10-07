@@ -16,6 +16,7 @@ nav:
       - notebooks/Satellite_data.ipynb
       - notebooks/Tide_statistics.ipynb
       - notebooks/Validating_tides.ipynb
+  - Case study examples:
       - notebooks/Example_analysis.ipynb
   - Developer guide:
       - API reference: api.md
