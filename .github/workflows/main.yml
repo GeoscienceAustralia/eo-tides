@@ -79,7 +79,7 @@ jobs:
       - name: Check if documentation can be built
         run: uv run mkdocs build -s
 
-  # Only deploy docs if all tests pass
+  # Only deploy docs if on push and if all tests pass
   deploy-docs:
     if: github.event_name == 'push'
     needs: [quality, check-docs, run-tests]
