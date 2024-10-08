@@ -26,8 +26,9 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.9,<4.0"
 dependencies = [
   "colorama",
   "geopandas>=1.0.0",
@@ -66,7 +67,7 @@ dev-dependencies = [
     "deptry>=0.20.0",
     "mypy>=0.991",
     "pytest-cov>=4.0.0",
-    "ruff>=0.0.235",
+    "ruff>=0.6.9",
     "mkdocs>=1.4.2",
     "mkdocs-material>=8.5.10",
     "mkdocs-jupyter>=0.25.0",

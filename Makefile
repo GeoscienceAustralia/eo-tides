@@ -11,7 +11,7 @@ install: ## Install the virtual environment and install the pre-commit hooks
 .PHONY: check
 check: ## Run code quality tools.
 	@echo "🚀 Checking lock file consistency with 'pyproject.toml'"
-	@uv sync --locked
+	@uv lock --locked
 	@echo "🚀 Linting code: Running pre-commit"
 	@uv run pre-commit run -a
 	@echo "🚀 Static type checking: Running mypy"
@@ -39,8 +39,6 @@ clean-build: ## clean build artifacts
 
 .PHONY: publish
 publish: ## Publish a release to PyPI.
-	@echo "🚀 Publishing: Dry run."
-	@uvx --from build pyproject-build --installer uv
 	@echo "🚀 Publishing."
 	@uvx twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
 
