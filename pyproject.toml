@@ -84,8 +84,8 @@ build-backend = "setuptools.build_meta"
 [tool.mypy]
 files = ["eo_tides"]
 python_version = "3.10"
-ignore_missing_imports = "True"
-allow_redefinition = "True"
+ignore_missing_imports = true
+allow_redefinition = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -119,6 +119,10 @@ DEP002 = [
 
 [tool.coverage.report]
 skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
 
 [tool.coverage.run]
 branch = true
