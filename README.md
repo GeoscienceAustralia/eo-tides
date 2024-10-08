@@ -1,5 +1,3 @@
-<img align="left" width="100" src="docs/assets/eo-tides-logo.gif" alt="eo-tides logo" style="margin-right: 40px;">
-
 # `eo-tides`: Tide modelling tools for large-scale satellite earth observation analysis
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
@@ -7,6 +5,8 @@
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FGeoscienceAustralia%2Feo-tides%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
 [![codecov](https://codecov.io/gh/GeoscienceAustralia/eo-tides/branch/main/graph/badge.svg)](https://codecov.io/gh/GeoscienceAustralia/eo-tides)
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
+
+<img align="right" width="100" src="docs/assets/eo-tides-logo.gif" alt="eo-tides logo" style="margin-right: 40px;">
 
 - **Github repository**: <https://github.com/GeoscienceAustralia/eo-tides/>
 - **Documentation** <https://GeoscienceAustralia.github.io/eo-tides/>
