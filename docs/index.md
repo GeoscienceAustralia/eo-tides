@@ -1,7 +1,7 @@
-![Alt text](assets/eo-tides-logo-256.png#only-dark){: align=left style="margin-right: 20px; margin-top: -12px;" width="155"}
-![Alt text](assets/eo-tides-logo.gif#only-light){: align=left style="margin-right: 20px; margin-top: -12px;" width="155"}
+![eo-tides logo](assets/eo-tides-logo-256.png#only-dark){: align=left style="margin-right: 20px; margin-top: -12px;" width="155"}
+![eo-tides logo](assets/eo-tides-logo.gif#only-light){: align=left style="margin-right: 20px; margin-top: -12px;" width="155"}
 
-# `eo-tides`: Tide modelling tools for large-scale satellite Earth observation analysis 🌊🛰️🛠️
+# `eo-tides`: Tide modelling tools for large-scale satellite Earth observation analysis
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)
 [![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/main.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/main.yml?query=branch%3Amain)
@@ -12,11 +12,13 @@
 
     Note: This package is a work in progress, and not currently ready for operational use.
 
-`eo-tides` provides provides powerful parallelized tools for integrating satellite Earth observation data with tide modelling.
+`eo-tides` provides provides powerful parallelized tools for integrating satellite Earth observation data with tide modelling. 🛠️🌊🛰️
 
 `eo-tides` combines advanced tide modelling functionality from the [`pyTMD`](https://pytmd.readthedocs.io/en/latest/) package with [`pandas`](https://pandas.pydata.org/docs/index.html), [`xarray`](https://docs.xarray.dev/en/stable/) and [`odc-geo`](https://odc-geo.readthedocs.io/en/latest/), providing a suite of flexible tools for efficient analysis of coastal and ocean Earth observation data – from regional, continental, to global scale.
 
 These tools can be applied to petabytes of freely available satellite data (e.g. from [Digital Earth Australia](https://knowledge.dea.ga.gov.au/) or [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/)) loaded via Open Data Cube's [`odc-stac`](https://odc-stac.readthedocs.io/en/latest/) or [`datacube`](https://opendatacube.readthedocs.io/en/latest/) packages, supporting coastal and ocean earth observation analysis for any time period or location globally.
+
+![eo-tides abstract showing satellite data, tide data array and tide animation](assets/eo-tides-abstract.gif)
 
 ## Highlights
 
