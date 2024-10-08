@@ -18,7 +18,10 @@ GAUGE_Y = -18.0008
 )
 def test_tidal_stats(satellite_ds, modelled_freq):
     # Calculate tidal stats
-    tidal_stats_df = tide_stats(satellite_ds, modelled_freq=modelled_freq)
+    tidal_stats_df = tide_stats(
+        satellite_ds,
+        modelled_freq=modelled_freq,
+    )
 
     # Compare outputs to expected results (within 2% or 0.02 m)
     expected_results = pd.Series({
@@ -43,7 +46,6 @@ def test_tidal_stats(satellite_ds, modelled_freq):
         satellite_ds,
         modelled_freq=modelled_freq,
         linear_reg=True,
-        plain_english=False,
     )
 
     # Compare outputs to expected results (within 2% or 0.02 m)
