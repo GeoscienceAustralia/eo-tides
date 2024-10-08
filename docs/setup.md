@@ -27,6 +27,9 @@ tide_models/
 
 ## Downloading tide model data
 
+Now we need to download some data from one or more models, and save this into our tide model directory.
+Follow the guides below for some of the most commonly used global ocean tide models:
+
 ??? note "EOT20 Empirical Ocean Tide model (default)"
 
     ### EOT20 Empirical Ocean Tide model (default)
