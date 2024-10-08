@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/GeoscienceAustralia/eo-tides/branch/main/graph/badge.svg)](https://codecov.io/gh/GeoscienceAustralia/eo-tides)
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
 
-<img align="right" width="100" src="docs/assets/eo-tides-logo.gif" alt="eo-tides logo" style="margin-right: 40px;">
+<img align="right" width="150" src="docs/assets/eo-tides-logo.gif" alt="eo-tides logo" style="margin-right: 40px;">
 
 - **Github repository**: <https://github.com/GeoscienceAustralia/eo-tides/>
 - **Documentation** <https://GeoscienceAustralia.github.io/eo-tides/>
