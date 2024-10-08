@@ -5,7 +5,7 @@
     `eo-tides` provides tools for modelling tides using global ocean tide models but does not host or maintain the models themselves. **Users are responsible for accessing, using, and citing ocean tide models in compliance with each model's licensing terms.**
 
 Once you [have installed `eo-tides`](install.md), we need to download and set up the external global ocean tide models required for `eo-tides` to work.
-The following documentation provides instructions for getting started with [several commonly used global ocean tide models](#downloading-tide-model-data).
+The following documentation provides instructions for getting started with several common global ocean tide models.
 
 !!! tip
 
