@@ -1,60 +1,11 @@
 import numpy as np
-import odc.stac
 import pandas as pd
-import pystac_client
 import pytest
 
 from eo_tides.stats import tide_stats
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
-
-
-# Create test data in different CRSs and resolutions
-@pytest.fixture(
-    params=[
-        ("EPSG:3577", 30),  # Australian Albers 30 m pixels
-        ("EPSG:4326", 0.00025),  # WGS84, 0.0025 degree pixels
-    ],
-    ids=["satellite_ds_epsg3577", "satellite_ds_epsg4326"],
-)
-def satellite_ds(request):
-    """
-    Load a sample timeseries of Landsat 8 data using odc-stac
-    """
-    # Obtain CRS and resolution params
-    crs, res = request.param
-
-    # Connect to stac catalogue
-    catalog = pystac_client.Client.open("https://explorer.dea.ga.gov.au/stac")
-
-    # Set cloud defaults
-    odc.stac.configure_rio(
-        cloud_defaults=True,
-        aws={"aws_unsigned": True},
-    )
-
-    # Build a query with the parameters above
-    bbox = [GAUGE_X - 0.08, GAUGE_Y - 0.08, GAUGE_X + 0.08, GAUGE_Y + 0.08]
-    query = catalog.search(
-        bbox=bbox,
-        collections=["ga_ls8c_ard_3"],
-        datetime="2020-01/2020-02",
-    )
-
-    # Search the STAC catalog for all items matching the query
-    ds = odc.stac.load(
-        list(query.items()),
-        bands=["nbart_red"],
-        crs=crs,
-        resolution=res,
-        groupby="solar_day",
-        bbox=bbox,
-        fail_on_error=False,
-        chunks={},
-    )
-
-    return ds
 
 
 # Run test for multiple modelled frequencies
