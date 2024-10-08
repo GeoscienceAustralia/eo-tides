@@ -75,7 +75,7 @@ def eval_metrics(x, y, round=3, all_regress=False):
     return pd.Series(stats_dict).round(round)
 
 
-def round_date_strings(date, round_type="end"):
+def _round_date_strings(date, round_type="end"):
     """
     Round a date string up or down to the start or end of a given time
     period.
@@ -286,8 +286,8 @@ def load_gauge_gesla(
     if time is None:
         time = ["1800", str(datetime.datetime.now().year)]
     time = [time] if not isinstance(time, (list, tuple)) else time
-    start_time = round_date_strings(time[0], round_type="start")
-    end_time = round_date_strings(time[-1], round_type="end")
+    start_time = _round_date_strings(time[0], round_type="start")
+    end_time = _round_date_strings(time[-1], round_type="end")
 
     # Identify paths to load and nodata values for each site
     metadata_df["file_name"] = data_path + metadata_df["file_name"]
