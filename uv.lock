@@ -716,7 +716,7 @@ requires-dist = [
     { name = "matplotlib", marker = "extra == 'notebooks'" },
     { name = "numpy" },
     { name = "odc-geo" },
-    { name = "odc-stac", marker = "extra == 'notebooks'" },
+    { name = "odc-stac", marker = "extra == 'notebooks'", specifier = ">=0.3.10" },
     { name = "pandas" },
     { name = "pyproj" },
     { name = "pystac-client", marker = "extra == 'notebooks'" },

@@ -235,13 +235,13 @@ def tag_tides(
     # Convert to xarray format
     tide_xr = tide_df.reset_index().set_index(["time", "tide_model"]).drop(["x", "y"], axis=1).to_xarray()
 
+    # If only one tidal model exists, squeeze out "tide_model" dim
+    if len(tide_xr.tide_model) == 1:
+        tide_xr = tide_xr.squeeze("tide_model", drop=True)
+
     # Add each array into original dataset
     for var in tide_xr.data_vars:
         ds[var] = tide_xr[var]
-
-    # If only one tidal model exists, squeeze out "tide_model" dim
-    if len(ds.tide_model) == 1:
-        ds = ds.squeeze("tide_model")
 
     # Swap dimensions and sort by tide height
     if swap_dims:
@@ -521,7 +521,7 @@ def pixel_tides(
 
     # If only one tidal model exists, squeeze out "tide_model" dim
     if len(tides_lowres.tide_model) == 1:
-        tides_lowres = tides_lowres.squeeze("tide_model")
+        tides_lowres = tides_lowres.squeeze("tide_model", drop=True)
 
     # Ensure CRS is present before we apply any resampling
     tides_lowres = tides_lowres.odc.assign_crs(ds.odc.geobox.crs)
