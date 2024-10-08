@@ -1,3 +1,5 @@
+<img align="right" width="150" src="docs/assets/eo-tides-logo.gif" alt="">
+
 # `eo-tides`: Tide modelling tools for large-scale satellite earth observation analysis
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
