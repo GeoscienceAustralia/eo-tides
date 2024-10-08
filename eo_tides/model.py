@@ -546,8 +546,8 @@ def model_tides(
     <https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories>
 
     This function is a modification of the `pyTMD` package's
-    `compute_tide_corrections` function. For more info:
-    <https://pytmd.readthedocs.io/en/stable/user_guide/compute_tide_corrections.html>
+    `compute_tidal_elevations` function. For more info:
+    <https://pytmd.readthedocs.io/en/latest/api_reference/compute_tidal_elevations.html>
 
     Parameters
     ----------
