@@ -79,11 +79,11 @@ def tide_stats(
         which computes a tide height for every two hours across the
         temporal extent of `ds`.
     linear_reg: bool, optional
-        Experimental: whether to return linear regression stats that
-        assess whether dstellite-observed and all available tides show
-        any decreasing or increasing trends over time. Not currently
-        recommended as all observed regressions always return as
-        significant due to far larger sample size.
+        Whether to return linear regression statistics that assess
+        whether satellite-observed tides show any decreasing  or
+        increasing trends over time. This may indicate whether your
+        satellite data may produce misleading trends based on uneven
+        sampling of the local tide regime.
     round_stats : int, optional
         The number of decimal places used to round the output statistics.
         Defaults to 3.
@@ -113,9 +113,7 @@ def tide_stats(
     If `linear_reg = True`, the output will also contain:
 
         - `observed_slope`: slope of any relationship between observed tide heights and time
-        - `all_slope`: slope of any relationship between all available tide heights and time
         - `observed_pval`: significance/p-value of any relationship between observed tide heights and time
-        - `all_pval`: significance/p-value of any relationship between all available tide heights and time
 
     """
     # Verify that only one tide model is provided
@@ -177,7 +175,6 @@ def tide_stats(
     # Extract x (time in decimal years) and y (distance) values
     all_times = all_tides_df.index.get_level_values("time")
     all_x = all_times.year + ((all_times.dayofyear - 1) / 365) + ((all_times.hour - 1) / 24)
-    all_y = all_tides_df.tide_height.values.astype(np.float32)
     time_period = all_x.max() - all_x.min()
 
     # Extract x (time in decimal years) and y (distance) values
@@ -186,7 +183,6 @@ def tide_stats(
 
     # Compute linear regression
     obs_linreg = stats.linregress(x=obs_x, y=obs_y)
-    all_linreg = stats.linregress(x=all_x, y=all_y)
 
     if plain_english:
         print(
@@ -207,18 +203,6 @@ def tide_stats(
                     f"{obs_linreg.slope:.03f} m per year (i.e. a "
                     f"~{time_period * obs_linreg.slope:.2f} m "
                     f"{obs_slope_desc} over the ~{time_period:.0f} year period)."
-                )
-
-            if all_linreg.pvalue > 0.05:
-                print(f"All tides show no significant trends " f"over the ~{time_period:.0f} year period.")
-            else:
-                all_slope_desc = "decrease" if all_linreg.slope < 0 else "increase"
-                print(
-                    f"All tides {all_slope_desc} significantly "
-                    f"(p={all_linreg.pvalue:.3f}) over time by "
-                    f"{all_linreg.slope:.03f} m per year (i.e. a "
-                    f"~{time_period * all_linreg.slope:.2f} m "
-                    f"{all_slope_desc} over the ~{time_period:.0f} year period)."
                 )
 
     if plot:
@@ -276,9 +260,7 @@ def tide_stats(
     if linear_reg:
         output_stats.update({
             "observed_slope": obs_linreg.slope,
-            "all_slope": all_linreg.slope,
             "observed_pval": obs_linreg.pvalue,
-            "all_pval": all_linreg.pvalue,
         })
 
     return pd.Series(output_stats).round(round_stats)

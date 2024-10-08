@@ -39,7 +39,12 @@ def test_tidal_stats(satellite_ds, modelled_freq):
     assert np.allclose(tidal_stats_df, expected_results, atol=0.02)
 
     # Test linear regression
-    tidal_stats_linreg_df = tide_stats(satellite_ds, modelled_freq=modelled_freq, linear_reg=True)
+    tidal_stats_linreg_df = tide_stats(
+        satellite_ds,
+        modelled_freq=modelled_freq,
+        linear_reg=True,
+        plain_english=False,
+    )
 
     # Compare outputs to expected results (within 2% or 0.02 m)
     expected_results = pd.Series({
@@ -57,8 +62,6 @@ def test_tidal_stats(satellite_ds, modelled_freq):
         "low_tide_offset": 0.254,
         "high_tide_offset": 0.301,
         "observed_slope": 6.952,
-        "all_slope": -1.472,
         "observed_pval": 0.573,
-        "all_pval": 0.000,
     })
     assert np.allclose(tidal_stats_linreg_df, expected_results, atol=0.02)
