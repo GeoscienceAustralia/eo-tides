@@ -406,29 +406,6 @@ def pixel_tides(
     # Standardise model into a list for easy handling
     model = [model] if isinstance(model, str) else model
 
-    # Test if no time dimension and nothing passed to `times`
-    if ("time" not in ds.dims) & (times is None):
-        raise ValueError(
-            "`ds` does not contain a 'time' dimension. Times are required "
-            "for modelling tides: please pass in a set of custom tides "
-            "using the `times` parameter. For example: "
-            "`times=pd.date_range(start='2000', end='2001', freq='5h')`",
-        )
-
-    # If custom times are provided, convert them to a consistent
-    # pandas.DatatimeIndex format
-    if times is not None:
-        if isinstance(times, list):
-            time_coords = pd.DatetimeIndex(times)
-        elif isinstance(times, pd.Timestamp):
-            time_coords = pd.DatetimeIndex([times])
-        else:
-            time_coords = times
-
-    # Otherwise, use times from `ds` directly
-    else:
-        time_coords = ds.coords["time"]
-
     # Determine spatial dimensions
     y_dim, x_dim = ds.odc.spatial_dims
 

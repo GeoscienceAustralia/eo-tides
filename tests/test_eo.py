@@ -238,3 +238,34 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
     # Test if extracted tides match expected results (to within ~5 cm)
     expected_tides = [-0.68, -0.84, -0.80, -0.88]
     assert np.allclose(extracted_tides.values, expected_tides, atol=0.05)
+
+
+# Run tests for default and custom resolutions
+def test_pixel_tides_times(satellite_ds, measured_tides_ds):
+    custom_times = pd.date_range(
+        start="2022-01-01",
+        end="2022-01-05",
+        freq="6H",
+    )
+
+    # Verify that correct times are included on output
+    measured_tides_ds = pixel_tides(satellite_ds, times=custom_times)
+    assert all(measured_tides_ds.time.values == custom_times)
+    assert len(measured_tides_ds.time) == len(custom_times)
+
+    # Verify passing a list
+    measured_tides_ds = pixel_tides(satellite_ds, times=custom_times.tolist())
+    assert len(measured_tides_ds.time) == len(custom_times)
+
+    # Verify passing a single timestamp
+    measured_tides_ds = pixel_tides(satellite_ds, times=custom_times.tolist()[0])
+    assert len(measured_tides_ds) == 1
+
+    # Verify that passing a dataset without time leads to error
+    satellite_ds_notime = satellite_ds.isel(time=0)
+    with pytest.raises(ValueError):
+        pixel_tides(satellite_ds_notime)
+
+    # Verify passing a dataset without time and custom times
+    measured_tides_ds = pixel_tides(satellite_ds_notime, times=custom_times)
+    assert len(measured_tides_ds.time) == len(custom_times)
