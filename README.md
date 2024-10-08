@@ -1,4 +1,4 @@
-<img align="right" width="150" src="docs/assets/eo-tides-logo.gif" alt="">
+<img align="left" width="150" src="docs/assets/eo-tides-logo.gif" alt="eo-tides logo" style="margin-right: 10px;">
 
 # `eo-tides`: Tide modelling tools for large-scale satellite earth observation analysis
 
