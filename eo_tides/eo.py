@@ -1,16 +1,17 @@
 # Used to postpone evaluation of type annotations
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
+import os
+from typing import TYPE_CHECKING
 
 import odc.geo.xr
 import pandas as pd
+import xarray as xr
 from odc.geo.geobox import GeoBox
 
 # Only import if running type checking
 if TYPE_CHECKING:
     import numpy as np
-    import xarray as xr
 
 from .model import model_tides
 
@@ -92,15 +93,15 @@ def _pixel_tides_resample(
 
 
 def tag_tides(
-    ds: Union[xr.Dataset, xr.DataArray],
-    model: Union[str, List[str]] = "EOT20",
-    directory: Optional[str] = None,
-    tidepost_lat: Optional[float] = None,
-    tidepost_lon: Optional[float] = None,
+    ds: xr.Dataset,
+    model: str | list[str] = "EOT20",
+    directory: str | os.PathLike | None = None,
+    tidepost_lat: float | None = None,
+    tidepost_lon: float | None = None,
     ebb_flow: bool = False,
     swap_dims: bool = False,
     **model_tides_kwargs,
-) -> Union[xr.Dataset, xr.DataArray]:
+) -> xr.Dataset:
     """
     Model tide heights for every timestep in a multi-dimensional
     dataset, and add them as a new `tide_height` (and optionally,
@@ -122,7 +123,7 @@ def tag_tides(
 
     Parameters
     ----------
-    ds : xarray.Dataset or xarray.DataArray
+    ds : xarray.Dataset
         A multi-dimensional dataset (e.g. "x", "y", "time") to
         tag with tide heights. This dataset must contain a "time"
         dimension.
@@ -150,8 +151,8 @@ def tag_tides(
         observation labelled with "Ebb" or "Flow".
     swap_dims : bool, optional
         An optional boolean indicating whether to swap the `time`
-        dimension in the original `xarray.Dataset` to the new
-        "tide_height" variable. Defaults to False.
+        dimension in the original `ds` to the new "tide_height"
+        variable. Defaults to False.
     **model_tides_kwargs :
         Optional parameters passed to the `eo_tides.model.model_tides`
         function. Important parameters include `cutoff` (used to
@@ -167,10 +168,12 @@ def tag_tides(
         for each timestep in the data.
 
     """
-    # Standardise model into a list for easy handling
-    model = [model] if isinstance(model, str) else model
+    # Only datasets are supported
+    if not isinstance(ds, xr.Dataset):
+        raise TypeError("Input must be an xarray.Dataset, not an xarray.DataArray or other data type.")
 
-    # Test if no time dimension and nothing passed to `times`
+    # Standardise model into a list for easy handling. and verify only one
+    model = [model] if isinstance(model, str) else model
     if (len(model) > 1) & swap_dims:
         raise ValueError("Can only swap dimensions when a single tide model is passed to `model`.")
 
@@ -250,19 +253,19 @@ def tag_tides(
 
 
 def pixel_tides(
-    ds: xr.Dataset,
+    ds: xr.Dataset | xr.DataArray,
     times=None,
-    model: Union[str, List[str]] = "EOT20",
-    directory: Optional[str] = None,
+    model: str | list[str] = "EOT20",
+    directory: str | os.PathLike | None = None,
     resample: bool = True,
-    calculate_quantiles: Optional[Union[np.ndarray, Tuple[float, float]]] = None,
-    resolution: Optional[float] = None,
-    buffer: Optional[float] = None,
+    calculate_quantiles: np.ndarray | tuple[float, float] | None = None,
+    resolution: float | None = None,
+    buffer: float | None = None,
     resample_method: str = "bilinear",
-    dask_chunks: Union[str, Tuple[float, float]] = "auto",
+    dask_chunks: str | tuple[float, float] = "auto",
     dask_compute: bool = True,
     **model_tides_kwargs,
-) -> tuple[Any, Any]:
+) -> xr.DataArray:
     """
     Model tide heights for every pixel in a multi-dimensional
     dataset, using one or more ocean tide models.
@@ -293,7 +296,7 @@ def pixel_tides(
 
     Parameters
     ----------
-    ds : xarray.Dataset
+    ds : xarray.Dataset or xarray.DataArray
         A multi-dimensional dataset (e.g. "x", "y", "time") that will
         be used to define the tide modelling grid.
     times : pd.DatetimeIndex or list of pd.Timestamp, optional

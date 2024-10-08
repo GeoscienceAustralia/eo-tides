@@ -1,3 +1,5 @@
+import pathlib
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -41,10 +43,22 @@ def measured_tides_ds():
 
 # Test available tide models
 def test_list_models():
+    # Using env var
     available_models, supported_models = list_models()
     assert available_models == ["EOT20", "HAMTIDE11"]
+    assert len(supported_models) > 2
 
+    # Not printing outputs
     available_models, supported_models = list_models(show_available=False, show_supported=False)
+    assert available_models == ["EOT20", "HAMTIDE11"]
+
+    # Providing a string path
+    available_models, supported_models = list_models(directory="./tests/data/tide_models")
+    assert available_models == ["EOT20", "HAMTIDE11"]
+
+    # Providing a pathlib
+    path = pathlib.Path("./tests/data/tide_models")
+    available_models, supported_models = list_models(directory=path)
     assert available_models == ["EOT20", "HAMTIDE11"]
 
 

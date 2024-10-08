@@ -32,7 +32,7 @@ dependencies = [
   "colorama",
   "geopandas>=1.0.0",
   "numpy",
-  "odc-geo[xr]",
+  "odc-geo",
   "pandas",
   "pyproj",
   "pyTMD==2.1.6",
@@ -41,6 +41,7 @@ dependencies = [
   "scipy",
   "shapely",
   "tqdm",
+  "xarray",
 ]
 
 [project.urls]

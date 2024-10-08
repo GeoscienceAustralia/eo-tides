@@ -1,26 +1,36 @@
+# Used to postpone evaluation of type annotations
+from __future__ import annotations
+
+import os
+from typing import TYPE_CHECKING
+
 import matplotlib.pyplot as plt
 import numpy as np
 import odc.geo.xr
 import pandas as pd
 from scipy import stats
 
+# Only import if running type checking
+if TYPE_CHECKING:
+    import xarray as xr
+
 from .eo import tag_tides
 from .model import model_tides
 
 
 def tide_stats(
-    ds,
-    model="EOT20",
-    directory=None,
-    tidepost_lat=None,
-    tidepost_lon=None,
-    plain_english=True,
-    plot=True,
-    modelled_freq="2h",
-    linear_reg=False,
-    round_stats=3,
+    ds: xr.Dataset,
+    model: str = "EOT20",
+    directory: str | os.PathLike | None = None,
+    tidepost_lat: float | None = None,
+    tidepost_lon: float | None = None,
+    plain_english: bool = True,
+    plot: bool = True,
+    modelled_freq: str = "2h",
+    linear_reg: bool = False,
+    round_stats: int = 3,
     **model_tides_kwargs,
-):
+) -> pd.Series:
     """
     Takes a multi-dimensional dataset and generate statistics
     about the data's astronomical and satellite-observed tide
@@ -122,8 +132,8 @@ def tide_stats(
         ds,
         model=model,
         directory=directory,
-        tidepost_lat=tidepost_lat,
-        tidepost_lon=tidepost_lon,
+        tidepost_lat=tidepost_lat,  # type: ignore
+        tidepost_lon=tidepost_lon,  # type: ignore
         return_tideposts=True,
         **model_tides_kwargs,
     )
@@ -140,8 +150,8 @@ def tide_stats(
 
     # Model tides for each timestep
     all_tides_df = model_tides(
-        x=tidepost_lon,
-        y=tidepost_lat,
+        x=tidepost_lon,  # type: ignore
+        y=tidepost_lat,  # type: ignore
         time=all_timerange,
         model=model,
         directory=directory,

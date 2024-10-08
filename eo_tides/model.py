@@ -6,7 +6,7 @@ import pathlib
 import warnings
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 # Only import if running type checking
 if TYPE_CHECKING:
@@ -49,11 +49,11 @@ def _set_directory(directory):
 
 
 def list_models(
-    directory: Optional[str] = None,
+    directory: str | os.PathLike | None = None,
     show_available: bool = True,
     show_supported: bool = True,
     raise_error: bool = False,
-) -> Tuple[List[str], List[str]]:
+) -> tuple[list[str], list[str]]:
     """
     List all tide models available for tide modelling, and
     all models supported by `eo-tides` and `pyTMD`.
@@ -508,22 +508,22 @@ def _ensemble_model(
 
 
 def model_tides(
-    x: Union[float, List[float], xr.DataArray],
-    y: Union[float, List[float], xr.DataArray],
-    time: Union[np.ndarray, pd.DatetimeIndex],
-    model: Union[str, List[str]] = "EOT20",
-    directory: Optional[str] = None,
+    x: float | list[float] | xr.DataArray,
+    y: float | list[float] | xr.DataArray,
+    time: np.ndarray | pd.DatetimeIndex,
+    model: str | list[str] = "EOT20",
+    directory: str | os.PathLike | None = None,
     crs: str = "EPSG:4326",
     crop: bool = True,
     method: str = "spline",
     extrapolate: bool = True,
-    cutoff: Optional[float] = None,
+    cutoff: float | None = None,
     mode: str = "one-to-many",
     parallel: bool = True,
     parallel_splits: int = 5,
     output_units: str = "m",
     output_format: str = "long",
-    ensemble_models: Optional[List[str]] = None,
+    ensemble_models: list[str] | None = None,
     **ensemble_kwargs,
 ) -> pd.DataFrame:
     """
