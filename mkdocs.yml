@@ -17,7 +17,7 @@ nav:
       - notebooks/Tide_statistics.ipynb
       - notebooks/Validating_tides.ipynb
   - Case study examples:
-      - notebooks/Example_analysis.ipynb
+      - notebooks/Case_study_intertidal.ipynb
   - Developer guide:
       - API reference: api.md
   - Reference:
@@ -85,10 +85,7 @@ theme:
     - navigation.top
     - navigation.footer
     - content.code.copy
-
-  # features:
   #   - announce.dismiss
-  # features:
   #   - navigation.instant
   #   - navigation.tracking
   #   - navigation.tabs
