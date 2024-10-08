@@ -88,7 +88,7 @@ def _pixel_tides_resample(
     if dask_compute:
         tides_highres.load()
 
-    return tides_highres, tides_lowres
+    return tides_highres
 
 
 def tag_tides(
@@ -367,25 +367,15 @@ def pixel_tides(
         on-the-fly to improve performance) etc.
     Returns
     -------
-    If `resample` is False:
-
-        tides_lowres : xr.DataArray
-            A low resolution data array giving either tide heights every
-            timestep in `ds` (if `times` is None), tide heights at every
-            time in `times` (if `times` is not None), or tide height quantiles
-            for every quantile provided by `calculate_quantiles`.
-
-    If `resample` is True:
-
-        tides_highres, tides_lowres : tuple of xr.DataArrays
-            In addition to `tides_lowres` (see above), a high resolution
-            array of tide heights will be generated that matches the
-            exact spatial resolution and extent of `ds`. This will contain
-            either tide heights every timestep in `ds` (if `times` is None),
-            tide heights at every time in `times` (if `times` is not None),
-            or tide height quantiles for every quantile provided by
-            `calculate_quantiles`.
-
+    tides_da : xr.DataArray
+        If `resample=True` (default), a high-resolution array
+        of tide heights matching the exact spatial resolution and
+        extents of `ds`. This will contain either tide heights every
+        timestep in `ds` (if `times` is None), tide heights at every
+        time in `times` (if `times` is not None), or tide height
+        quantiles for every quantile provided by `calculate_quantiles`.
+        If `resample=False`, results for the intermediate low-resolution
+        tide modelling grid will be returned instead.
     """
     # First test if no time dimension and nothing passed to `times`
     if ("time" not in ds.dims) & (times is None):
@@ -535,15 +525,15 @@ def pixel_tides(
 
     # Reproject into original high resolution grid
     if resample:
-        print("Reprojecting tides into original array")
-        tides_highres, tides_lowres = _pixel_tides_resample(
+        print("Reprojecting tides into original resolution")
+        tides_highres = _pixel_tides_resample(
             tides_lowres,
             ds,
             resample_method,
             dask_chunks,
             dask_compute,
         )
-        return tides_highres, tides_lowres
+        return tides_highres
 
     print("Returning low resolution tide array")
     return tides_lowres

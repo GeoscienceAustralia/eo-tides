@@ -34,6 +34,14 @@ Renamed for consistency with `model_tides` and `pixel_tides`.
 
     Update references to `tidal_tag` to `tag_tides`.
 
+### `pixel_tides` only returns a single array
+
+The `pixel_tides` function has been updated to only ever return a single array as an output: a high-resolution tide height array matching the resolution of the input `ds` by default, and a low-resolution tide height array if `resample=False`.
+
+!!! tip "Action required"
+
+    Update code to handle a single tide height array output from `pixel_tides`, instead of a tuple of high-resolution and low-resolution modelled tide height arrays.
+
 ### Tide model directory environment variable updated
 
 The `DEA_TOOLS_TIDE_MODELS` environmental variable has been renamed to `EO_TIDES_TIDE_MODELS`.

@@ -168,7 +168,10 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
         resolution = 0.1 if satellite_ds.odc.geobox.crs.geographic else 10000
 
     # Model tides using `pixel_tides`
-    modelled_tides_ds, modelled_tides_lowres = pixel_tides(satellite_ds, resolution=resolution)
+    modelled_tides_ds = pixel_tides(satellite_ds, resolution=resolution)
+
+    # Model tides using `pixel_tides` with resample=False
+    modelled_tides_lowres = pixel_tides(satellite_ds, resample=False)
 
     # Interpolate measured tide data to same timesteps
     measured_tides_ds = measured_tides_ds.interp(time=satellite_ds.time, method="linear")
