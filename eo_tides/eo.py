@@ -498,7 +498,7 @@ def pixel_tides(
 
     # If only one tidal model exists, squeeze out "tide_model" dim
     if len(tides_lowres.tide_model) == 1:
-        tides_lowres = tides_lowres.squeeze("tide_model", drop=True)
+        tides_lowres = tides_lowres.squeeze("tide_model")
 
     # Ensure CRS is present before we apply any resampling
     tides_lowres = tides_lowres.odc.assign_crs(ds.odc.geobox.crs)
