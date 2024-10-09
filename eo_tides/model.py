@@ -423,8 +423,8 @@ def _ensemble_model(
 
     """
     # Extract x and y coords from dataframe
-    x = tide_df.index.get_level_values("x")
-    y = tide_df.index.get_level_values("y")
+    x = tide_df.index.get_level_values(level="x")
+    y = tide_df.index.get_level_values(level="y")
 
     # Load model ranks points and reproject to same CRS as x and y
     model_ranking_cols = [f"rank_{m}" for m in ensemble_models]
@@ -804,7 +804,7 @@ def model_tides(
 
     # Optionally compute ensemble model and add to dataframe
     if "ensemble" in models_requested:
-        ensemble_df = _ensemble_model(crs, tide_df, models_to_process, **ensemble_kwargs)
+        ensemble_df = _ensemble_model(tide_df, crs, models_to_process, **ensemble_kwargs)
 
         # Update requested models with any custom ensemble models, then
         # filter the dataframe to keep only models originally requested
