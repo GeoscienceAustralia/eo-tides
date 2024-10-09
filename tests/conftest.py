@@ -2,6 +2,8 @@
 This module contains shared fixtures for eo_tides tests.
 """
 
+from copy import deepcopy
+
 import odc.stac
 import pandas as pd
 import pystac_client
@@ -47,8 +49,9 @@ def measured_tides_ds():
         ("EPSG:4326", 0.00025),  # WGS84, 0.0025 degree pixels
     ],
     ids=["satellite_ds_epsg3577", "satellite_ds_epsg4326"],
+    scope="session",  # only load data once, but copy for each test
 )
-def satellite_ds(request):
+def satellite_ds_load(request):
     """
     Load a sample timeseries of Landsat 8 data using odc-stac
     """
@@ -85,3 +88,12 @@ def satellite_ds(request):
     )
 
     return ds
+
+
+@pytest.fixture
+def satellite_ds(satellite_ds_load):
+    """
+    Make a copy of the previously loaded satellite data for
+    each test to ensure each test is independent
+    """
+    return deepcopy(satellite_ds_load)

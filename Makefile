@@ -33,14 +33,14 @@ test-model: ## Test model module with pytest
 	@echo "🚀 Testing model module: Running pytest"
 	@tar --skip-old-files -xzf ./tests/data/tide_models.tar.gz -C ./tests/data
 	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
-	uv run python -m pytest tests/test_model.py
+	uv run python -m pytest tests/test_model.py --verbose
 
 .PHONY: test-eo
 test-eo: ## Test eo module with pytest
 	@echo "🚀 Testing eo module: Running pytest"
 	@tar --skip-old-files -xzf ./tests/data/tide_models.tar.gz -C ./tests/data
 	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
-	uv run python -m pytest tests/test_eo.py
+	uv run python -m pytest tests/test_eo.py --verbose
 
 .PHONY: test-notebooks
 test-notebooks: ## Test notebooks with pytest
