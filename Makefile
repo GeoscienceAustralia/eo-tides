@@ -22,9 +22,30 @@ check: ## Run code quality tools.
 .PHONY: test
 test: ## Test the code with pytest
 	@echo "🚀 Testing code: Running pytest"
-	@tar -xvzf ./tests/data/tide_models.tar.gz -C ./tests/data
+	@tar --skip-old-files -xzf ./tests/data/tide_models.tar.gz -C ./tests/data
 	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
 	uv run python -m pytest --cov --cov-config=pyproject.toml --cov-report=xml --verbose
+	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
+    uv run python -m pytest --nbval-lax docs/notebooks/ --verbose
+
+.PHONY: test-model
+test-model: ## Test model module with pytest
+	@echo "🚀 Testing model module: Running pytest"
+	@tar --skip-old-files -xzf ./tests/data/tide_models.tar.gz -C ./tests/data
+	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
+	uv run python -m pytest tests/test_model.py
+
+.PHONY: test-eo
+test-eo: ## Test eo module with pytest
+	@echo "🚀 Testing eo module: Running pytest"
+	@tar --skip-old-files -xzf ./tests/data/tide_models.tar.gz -C ./tests/data
+	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
+	uv run python -m pytest tests/test_eo.py
+
+.PHONY: test-notebooks
+test-notebooks: ## Test notebooks with pytest
+	@echo "🚀 Testing notebooks: Running pytest"
+	@tar --skip-old-files -xzf ./tests/data/tide_models.tar.gz -C ./tests/data
 	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
     uv run python -m pytest --nbval-lax docs/notebooks/ --verbose
 

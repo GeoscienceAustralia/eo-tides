@@ -343,10 +343,8 @@ def _model_tides(
 
 
 def _ensemble_model(
-    x,
-    y,
-    crs,
     tide_df,
+    crs,
     ensemble_models,
     ensemble_func=None,
     ensemble_top_n=3,
@@ -360,29 +358,27 @@ def _ensemble_model(
     to inform the selection of the best local models.
 
     This function performs the following steps:
+    1. Takes a dataframe of tide heights from multiple tide models, as
+       produced by `eo_tides.model.model_tides`
     1. Loads model ranking points from a GeoJSON file, filters them
        based on the valid data percentage, and retains relevant columns
-    2. Interpolates the model rankings into the requested x and y
-       coordinates using Inverse Weighted Interpolation (IDW)
+    2. Interpolates the model rankings into the "x" and "y" coordinates
+       of the original dataframe using Inverse Weighted Interpolation (IDW)
     3. Uses rankings to combine multiple tide models into a single
        optimised ensemble model (by default, by taking the mean of the
        top 3 ranked models)
-    4. Returns a DataFrame with the combined ensemble model predictions
+    4. Returns a new dataFrame with the combined ensemble model predictions
 
     Parameters
     ----------
-    x : array-like
-        Array of x-coordinates where the ensemble model predictions are
-        required.
-    y : array-like
-        Array of y-coordinates where the ensemble model predictions are
-        required.
-    crs : string
-        Input coordinate reference system for x and y coordinates. Used
-        to ensure that interpolations are performed in the correct CRS.
     tide_df : pandas.DataFrame
-        DataFrame containing tide model predictions with columns
+        DataFrame produced by `eo_tides.model.model_tides`, containing
+        tide model predictions with columns:
         `["time", "x", "y", "tide_height", "tide_model"]`.
+    crs : string
+        Coordinate reference system for the "x" and "y" coordinates in
+        `tide_df`. Used to ensure that interpolations are performed
+        in the correct CRS.
     ensemble_models : list
         A list of models to include in the ensemble modelling process.
         All values must exist as columns with the prefix "rank_" in
@@ -426,6 +422,10 @@ def _ensemble_model(
         the provided dictionary keys).
 
     """
+    # Extract x and y coords from dataframe
+    x = tide_df.index.get_level_values("x")
+    y = tide_df.index.get_level_values("y")
+
     # Load model ranks points and reproject to same CRS as x and y
     model_ranking_cols = [f"rank_{m}" for m in ensemble_models]
     model_ranks_gdf = (
@@ -804,7 +804,7 @@ def model_tides(
 
     # Optionally compute ensemble model and add to dataframe
     if "ensemble" in models_requested:
-        ensemble_df = _ensemble_model(x, y, crs, tide_df, models_to_process, **ensemble_kwargs)
+        ensemble_df = _ensemble_model(crs, tide_df, models_to_process, **ensemble_kwargs)
 
         # Update requested models with any custom ensemble models, then
         # filter the dataframe to keep only models originally requested
