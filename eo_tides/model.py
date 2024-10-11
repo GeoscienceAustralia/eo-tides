@@ -243,7 +243,7 @@ def _model_tides(
             lon,
             lat,
             pytmd_model.model_file,
-            grid=pytmd_model.type,
+            grid=pytmd_model.file_format,
             crop=crop,
             bounds=bounds,
             method=method,

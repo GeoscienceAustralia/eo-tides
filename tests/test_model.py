@@ -45,21 +45,21 @@ def measured_tides_ds():
 def test_list_models():
     # Using env var
     available_models, supported_models = list_models()
-    assert available_models == ["EOT20", "HAMTIDE11"]
-    assert len(supported_models) > 2
+    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
+    assert len(supported_models) > 3
 
     # Not printing outputs
     available_models, supported_models = list_models(show_available=False, show_supported=False)
-    assert available_models == ["EOT20", "HAMTIDE11"]
+    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
 
     # Providing a string path
     available_models, supported_models = list_models(directory="./tests/data/tide_models")
-    assert available_models == ["EOT20", "HAMTIDE11"]
+    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
 
     # Providing a pathlib
     path = pathlib.Path("./tests/data/tide_models")
     available_models, supported_models = list_models(directory=path)
-    assert available_models == ["EOT20", "HAMTIDE11"]
+    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
 
 
 # Run test for multiple input coordinates, CRSs and interpolation methods
@@ -108,8 +108,8 @@ def test_model_tides(measured_tides_ds, x, y, crs, method):
     [
         (["EOT20"], "long"),
         (["EOT20"], "wide"),
-        (["EOT20", "HAMTIDE11"], "long"),
-        (["EOT20", "HAMTIDE11"], "wide"),
+        (["EOT20", "GOT5.5", "HAMTIDE11"], "long"),
+        (["EOT20", "GOT5.5", "HAMTIDE11"], "wide"),
     ],
     ids=[
         "single_model_long",
