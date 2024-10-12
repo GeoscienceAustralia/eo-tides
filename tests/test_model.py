@@ -3,6 +3,7 @@ import pathlib
 import numpy as np
 import pandas as pd
 import pytest
+from pyTMD.compute import tide_elevations
 
 from eo_tides.model import list_models, model_tides
 from eo_tides.validation import eval_metrics
@@ -64,27 +65,48 @@ def test_list_models():
 
 # Run test for multiple input coordinates, CRSs and interpolation methods
 @pytest.mark.parametrize(
-    "x, y, crs, method",
+    "x, y, crs, method, model",
     [
-        (GAUGE_X, GAUGE_Y, "EPSG:4326", "bilinear"),  # WGS84, bilinear interp
-        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline"),  # WGS84, spline interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "bilinear", "EOT20"),  # WGS84, bilinear interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline", "EOT20"),  # WGS84, spline interp
         (
             -1034913,
             -1961916,
             "EPSG:3577",
             "bilinear",
+            "EOT20",
         ),  # Australian Albers, bilinear interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline", "GOT5.5"),
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline", "HAMTIDE11"),
     ],
 )
-def test_model_tides(measured_tides_ds, x, y, crs, method):
-    # Run EOT20 tidal model for locations and timesteps in tide gauge data
+def test_model_tides(measured_tides_ds, x, y, crs, method, model):
+    # Run modelling for locations and timesteps in tide gauge data
     modelled_tides_df = model_tides(
         x=[x],
         y=[y],
         time=measured_tides_ds.time,
         crs=crs,
         method=method,
+        model=model,
     )
+
+    # Run equivalent pyTMD code
+    pytmd_tides = tide_elevations(
+        x=x,
+        y=y,
+        delta_time=measured_tides_ds.time,
+        DIRECTORY="./tests/data/tide_models",
+        MODEL=model,
+        EPSG=int(crs[-4:]),
+        TIME="datetime",
+        EXTRAPOLATE=True,
+        CUTOFF=np.inf,
+        METHOD=method,
+    )
+
+    # Verify that pyTMD produces same results as `model_tides`
+    assert np.allclose(modelled_tides_df.tide_height.values, pytmd_tides.data)
 
     # Compare measured and modelled tides
     val_stats = eval_metrics(x=measured_tides_ds.tide_height, y=modelled_tides_df.tide_height)
@@ -96,10 +118,16 @@ def test_model_tides(measured_tides_ds, x, y, crs, method):
     assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
 
     # Test that modelled tides meet expected accuracy
-    assert val_stats["Correlation"] > 0.99
-    assert val_stats["RMSE"] < 0.27
-    assert val_stats["R-squared"] > 0.96
-    assert abs(val_stats["Bias"]) < 0.20
+    if model == "HAMTIDE11":
+        assert val_stats["Correlation"] > 0.99
+        assert val_stats["RMSE"] < 0.34
+        assert val_stats["R-squared"] > 0.98
+        assert abs(val_stats["Bias"]) < 0.20
+    else:
+        assert val_stats["Correlation"] > 0.99
+        assert val_stats["RMSE"] < 0.27
+        assert val_stats["R-squared"] > 0.99
+        assert abs(val_stats["Bias"]) < 0.20
 
 
 # Run tests for one or multiple models, and long and wide format outputs
