@@ -277,6 +277,10 @@ def _model_tides(
 
         # Delta time (TT - UT1)
         deltat = timescale.tt_ut1
+    else:
+        raise Exception(
+            f"Unsupported model format ({pytmd_model.format}). This may be due to an incompatible version of `pyTMD`."
+        )
 
     # Calculate complex phase in radians for Euler's
     cph = -1j * ph * np.pi / 180.0
