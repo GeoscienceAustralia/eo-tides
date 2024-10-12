@@ -669,6 +669,7 @@ source = { editable = "." }
 dependencies = [
     { name = "colorama" },
     { name = "geopandas" },
+    { name = "matplotlib" },
     { name = "numpy" },
     { name = "odc-geo" },
     { name = "pandas" },
@@ -684,7 +685,6 @@ dependencies = [
 [package.optional-dependencies]
 notebooks = [
     { name = "folium" },
-    { name = "matplotlib" },
     { name = "odc-stac" },
     { name = "pystac-client" },
 ]
@@ -713,7 +713,7 @@ requires-dist = [
     { name = "colorama" },
     { name = "folium", marker = "extra == 'notebooks'" },
     { name = "geopandas", specifier = ">=1.0.0" },
-    { name = "matplotlib", marker = "extra == 'notebooks'" },
+    { name = "matplotlib" },
     { name = "numpy" },
     { name = "odc-geo" },
     { name = "odc-stac", marker = "extra == 'notebooks'", specifier = ">=0.3.10" },

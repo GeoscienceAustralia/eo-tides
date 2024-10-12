@@ -33,6 +33,7 @@ dependencies = [
   "colorama",
   "geopandas>=1.0.0",
   "numpy",
+  "matplotlib",
   "odc-geo",
   "pandas",
   "pyproj",
@@ -55,7 +56,6 @@ notebooks = [
     "odc-stac>=0.3.10",
     "pystac-client",
     "folium",
-    "matplotlib",
 ]
 
 [tool.uv]
