@@ -5,41 +5,12 @@ import pandas as pd
 import pytest
 from pyTMD.compute import tide_elevations
 
-from eo_tides.model import list_models, model_tides
+from eo_tides.model import _set_directory, list_models, model_tides
 from eo_tides.validation import eval_metrics
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
 ENSEMBLE_MODELS = ["EOT20", "HAMTIDE11"]  # simplified for tests
-
-
-@pytest.fixture()
-def measured_tides_ds():
-    """
-    Load measured sea level data from the Broome ABSLMP tidal station:
-    http://www.bom.gov.au/oceanography/projects/abslmp/data/data.shtml
-    """
-    # Metadata for Broome ABSLMP tidal station:
-    # http://www.bom.gov.au/oceanography/projects/abslmp/data/data.shtml
-    ahd_offset = -5.322
-
-    # Load measured tides from ABSLMP tide gauge data
-    measured_tides_df = pd.read_csv(
-        "tests/data/IDO71013_2020.csv",
-        index_col=0,
-        parse_dates=True,
-        na_values=-9999,
-    )[["Sea Level"]]
-
-    # Update index and column names
-    measured_tides_df.index.name = "time"
-    measured_tides_df.columns = ["tide_height"]
-
-    # Apply station AHD offset
-    measured_tides_df += ahd_offset
-
-    # Return as xarray dataset
-    return measured_tides_df.to_xarray()
 
 
 # Test available tide models
@@ -91,12 +62,18 @@ def test_model_tides(measured_tides_ds, x, y, crs, method, model):
         model=model,
     )
 
+    # Test that modelled tides contain correct headings and have same
+    # number of timesteps
+    assert modelled_tides_df.index.names == ["time", "x", "y"]
+    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
+    assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
+
     # Run equivalent pyTMD code
     pytmd_tides = tide_elevations(
         x=x,
         y=y,
         delta_time=measured_tides_ds.time,
-        DIRECTORY="./tests/data/tide_models",
+        DIRECTORY=_set_directory(None),
         MODEL=model,
         EPSG=int(crs[-4:]),
         TIME="datetime",
@@ -110,12 +87,6 @@ def test_model_tides(measured_tides_ds, x, y, crs, method, model):
 
     # Compare measured and modelled tides
     val_stats = eval_metrics(x=measured_tides_ds.tide_height, y=modelled_tides_df.tide_height)
-
-    # Test that modelled tides contain correct headings and have same
-    # number of timesteps
-    assert modelled_tides_df.index.names == ["time", "x", "y"]
-    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
-    assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
 
     # Test that modelled tides meet expected accuracy
     if model == "HAMTIDE11":

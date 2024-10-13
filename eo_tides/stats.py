@@ -26,8 +26,10 @@ def tide_stats(
     tidepost_lon: float | None = None,
     plain_english: bool = True,
     plot: bool = True,
+    plot_col: str | None = None,
     modelled_freq: str = "2h",
     linear_reg: bool = False,
+    min_max_q: tuple = (0.0, 1.0),
     round_stats: int = 3,
     **model_tides_kwargs,
 ) -> pd.Series:
@@ -73,6 +75,10 @@ def tide_stats(
         An optional boolean indicating whether to plot how satellite-
         observed tide heights compare against the full tidal range.
         Defaults to True.
+    plot_col : str, optional
+        Optional name of a coordinate, dimension or variable in the array
+        that will be used to plot observations with unique symbols.
+        Defaults to None, which will plot all observations as circles.
     modelled_freq : str, optional
         An optional string giving the frequency at which to model tides
         when computing the full modelled tidal range. Defaults to '2h',
@@ -84,6 +90,11 @@ def tide_stats(
         increasing trends over time. This may indicate whether your
         satellite data may produce misleading trends based on uneven
         sampling of the local tide regime.
+    min_max_q : tuple, optional
+        Quantiles used to calculate max and min observed and modelled
+        astronomical tides. By default `(0.0, 1.0)` which is equivalent
+        to minimum and maximum; to use a softer threshold that is more
+        robust to outliers, use e.g. `(0.1, 0.9)`.
     round_stats : int, optional
         The number of decimal places used to round the output statistics.
         Defaults to 3.
@@ -135,6 +146,7 @@ def tide_stats(
         return_tideposts=True,
         **model_tides_kwargs,
     )
+    ds_tides = ds_tides.sortby("time")
 
     # Drop spatial ref for nicer plotting
     ds_tides = ds_tides.drop_vars("spatial_ref")
@@ -160,8 +172,8 @@ def tide_stats(
     # Get coarse statistics on all and observed tidal ranges
     obs_mean = ds_tides.tide_height.mean().item()
     all_mean = all_tides_df.tide_height.mean()
-    obs_min, obs_max = ds_tides.tide_height.quantile([0.0, 1.0]).values
-    all_min, all_max = all_tides_df.tide_height.quantile([0.0, 1.0]).values
+    obs_min, obs_max = ds_tides.tide_height.quantile(min_max_q).values
+    all_min, all_max = all_tides_df.tide_height.quantile(min_max_q).values
 
     # Calculate tidal range
     obs_range = obs_max - obs_min
@@ -169,47 +181,89 @@ def tide_stats(
 
     # Calculate Bishop-Taylor et al. 2018 tidal metrics
     spread = obs_range / all_range
-    low_tide_offset = abs(all_min - obs_min) / all_range
-    high_tide_offset = abs(all_max - obs_max) / all_range
+    low_tide_offset_m = abs(all_min - obs_min)
+    high_tide_offset_m = abs(all_max - obs_max)
+    low_tide_offset = low_tide_offset_m / all_range
+    high_tide_offset = high_tide_offset_m / all_range
+
+    # Plain text descriptors
+    mean_diff = "higher" if obs_mean > all_mean else "lower"
+    mean_diff_icon = "⬆️" if obs_mean > all_mean else "⬇️"
+    spread_icon = "🟢" if spread >= 0.9 else "🟡" if 0.7 < spread <= 0.9 else "🔴"
+    low_tide_icon = "🟢" if low_tide_offset <= 0.1 else "🟡" if 0.1 <= low_tide_offset < 0.2 else "🔴"
+    high_tide_icon = "🟢" if high_tide_offset <= 0.1 else "🟡" if 0.1 <= high_tide_offset < 0.2 else "🔴"
 
     # Extract x (time in decimal years) and y (distance) values
     all_times = all_tides_df.index.get_level_values("time")
-    all_x = all_times.year + ((all_times.dayofyear - 1) / 365) + ((all_times.hour - 1) / 24)
+    all_x = all_times.year + ((all_times.dayofyear - 1) / 365) + ((all_times.hour) / 24)
     time_period = all_x.max() - all_x.min()
 
     # Extract x (time in decimal years) and y (distance) values
-    obs_x = ds_tides.time.dt.year + ((ds_tides.time.dt.dayofyear - 1) / 365) + ((ds_tides.time.dt.hour - 1) / 24)
+    obs_x = ds_tides.time.dt.year + ((ds_tides.time.dt.dayofyear - 1) / 365) + ((ds_tides.time.dt.hour) / 24)
     obs_y = ds_tides.tide_height.values.astype(np.float32)
 
     # Compute linear regression
     obs_linreg = stats.linregress(x=obs_x, y=obs_y)
 
+    # return obs_linreg
+
     if plain_english:
+        print(f"\n\n🌊 Modelled astronomical tide range: {all_range:.2f} metres.")
+        print(f"🛰️ Observed tide range: {obs_range:.2f} metres.\n")
+        print(f"    {spread_icon} {spread:.0%} of the modelled astronomical tide range was observed at this location.")
         print(
-            f"\n{spread:.0%} of the {all_range:.2f} m modelled astronomical "
-            f"tidal range is observed at this location.\nThe lowest "
-            f"{low_tide_offset:.0%} and highest {high_tide_offset:.0%} "
-            f"of astronomical tides are never observed.\n"
+            f"    {high_tide_icon} The highest {high_tide_offset:.0%} ({high_tide_offset_m:.2f} metres) of the tide range was never observed."
+        )
+        print(
+            f"    {low_tide_icon} The lowest {low_tide_offset:.0%} ({low_tide_offset_m:.2f} metres) of the tide range was never observed.\n"
+        )
+        print(f"🌊 Mean modelled astronomical tide height: {all_mean:.2f} metres.")
+        print(f"🛰️ Mean observed tide height: {obs_mean:.2f} metres.\n")
+        print(
+            f"    {mean_diff_icon} The mean observed tide height was {obs_mean - all_mean:.2f} metres {mean_diff} than the mean modelled astronomical tide height."
         )
 
         if linear_reg:
-            if obs_linreg.pvalue > 0.05:
-                print(f"Observed tides show no significant trends " f"over the ~{time_period:.0f} year period.")
+            if obs_linreg.pvalue > 0.01:
+                print("    ➖ Observed tides showed no significant trends over time.")
             else:
-                obs_slope_desc = "decrease" if obs_linreg.slope < 0 else "increase"
+                obs_slope_desc = "decreasing" if obs_linreg.slope < 0 else "increasing"
                 print(
-                    f"Observed tides {obs_slope_desc} significantly "
-                    f"(p={obs_linreg.pvalue:.3f}) over time by "
-                    f"{obs_linreg.slope:.03f} m per year (i.e. a "
-                    f"~{time_period * obs_linreg.slope:.2f} m "
-                    f"{obs_slope_desc} over the ~{time_period:.0f} year period)."
+                    f"    ⚠️ Observed tides showed a significant {obs_slope_desc} trend over time (p={obs_linreg.pvalue:.3f}, {obs_linreg.slope:.2f} metres per year)"
                 )
 
     if plot:
         # Create plot and add all time and observed tide data
-        fig, ax = plt.subplots(figsize=(10, 5))
-        all_tides_df.reset_index(["x", "y"]).tide_height.plot(ax=ax, alpha=0.4)
-        ds_tides.tide_height.plot.line(ax=ax, marker="o", linewidth=0.0, color="black", markersize=2)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        all_tides_df.reset_index(["x", "y"]).tide_height.plot(ax=ax, alpha=0.4, label="Modelled tides")
+
+        # Look through custom column values if provided
+        if plot_col is not None:
+            # Create a list of marker styles
+            markers = ["o", "^", "s", "D", "v", "<", ">", "p", "*", "h", "H", "+", "x", "d", "|", "_"]
+            for i, value in enumerate(np.unique(ds_tides[plot_col])):
+                ds_tides.where(ds_tides[plot_col] == value, drop=True).tide_height.plot.line(
+                    ax=ax,
+                    linewidth=0.0,
+                    color="black",
+                    marker=markers[i % len(markers)],
+                    markersize=4,
+                    label=value,
+                )
+        # Otherwise, plot all data at once
+        else:
+            ds_tides.tide_height.plot.line(
+                ax=ax, marker="o", linewidth=0.0, color="black", markersize=3.5, label="Satellite observations"
+            )
+
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.04), ncol=20, borderaxespad=0, frameon=False)
+
+        ax.plot(
+            ds_tides.time.isel(time=[0, -1]),
+            obs_linreg.intercept + obs_linreg.slope * obs_x[[0, -1]],
+            "r",
+            label="fitted line",
+        )
 
         # Add horizontal lines for spread/offsets
         ax.axhline(obs_min, color="black", linestyle=":", linewidth=1)

@@ -56,6 +56,8 @@ notebooks = [
     "odc-stac>=0.3.10",
     "pystac-client",
     "folium",
+    "planetary_computer",
+
 ]
 
 [tool.uv]
