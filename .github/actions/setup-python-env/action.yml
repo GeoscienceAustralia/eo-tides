@@ -26,7 +26,7 @@ runs:
         cache-suffix: ${{ matrix.python-version }}
 
     - name: Install Python dependencies
-      # This will install eo-tides and all required dependencies specified in
-      # uv.lock. To install optional dependencies, include --all-extras
-      run: uv sync --frozen --all-extras
+      # Install eo-tides and all required dependencies.
+      # --all-extras will install all optional dependencies.
+      run: uv sync --all-extras --resolution highest
       shell: bash
