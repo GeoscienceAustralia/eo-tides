@@ -28,5 +28,5 @@ runs:
     - name: Install Python dependencies
       # Install eo-tides and all required dependencies.
       # --all-extras will install all optional dependencies.
-      run: uv sync --all-extras --resolution highest
+      run: uv sync --all-extras --resolution lowest
       shell: bash
