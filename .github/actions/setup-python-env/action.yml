@@ -27,7 +27,7 @@ runs:
       with:
         version: ${{ inputs.uv-version }}
         enable-cache: "true"
-        cache-suffix: ${{ inputs.python-version }}
+        cache-suffix: ${{ inputs.python-version }}-${{ inputs.resolution }}
 
     # - name: Install Python dependencies
     #   # Install eo-tides and all required dependencies.
