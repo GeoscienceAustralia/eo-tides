@@ -199,88 +199,99 @@ def _model_tides(
         lat.max() + buffer,
     ]
 
-    # Read tidal constants and interpolate to grid points
-    if pytmd_model.format in ("OTIS", "ATLAS-compact", "TMD3"):
-        amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
-            lon,
-            lat,
-            pytmd_model.grid_file,
-            pytmd_model.model_file,
-            pytmd_model.projection,
-            type=pytmd_model.type,
-            grid=pytmd_model.file_format,
-            crop=crop,
-            bounds=bounds,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
+    try:
+        # Read tidal constants and interpolate to grid points
+        if pytmd_model.format in ("OTIS", "ATLAS-compact", "TMD3"):
+            amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
+                lon,
+                lat,
+                pytmd_model.grid_file,
+                pytmd_model.model_file,
+                pytmd_model.projection,
+                type=pytmd_model.type,
+                grid=pytmd_model.file_format,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+            )
+
+            # Use delta time at 2000.0 to match TMD outputs
+            deltat = np.zeros((len(timescale)), dtype=np.float64)
+
+        elif pytmd_model.format in ("ATLAS-netcdf",):
+            amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
+                lon,
+                lat,
+                pytmd_model.grid_file,
+                pytmd_model.model_file,
+                type=pytmd_model.type,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+
+            # Use delta time at 2000.0 to match TMD outputs
+            deltat = np.zeros((len(timescale)), dtype=np.float64)
+
+        elif pytmd_model.format in ("GOT-ascii", "GOT-netcdf"):
+            amp, ph, c = pyTMD.io.GOT.extract_constants(
+                lon,
+                lat,
+                pytmd_model.model_file,
+                grid=pytmd_model.file_format,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+
+            # Delta time (TT - UT1)
+            deltat = timescale.tt_ut1
+
+        elif pytmd_model.format in ("FES-ascii", "FES-netcdf"):
+            amp, ph = pyTMD.io.FES.extract_constants(
+                lon,
+                lat,
+                pytmd_model.model_file,
+                type=pytmd_model.type,
+                version=pytmd_model.version,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+
+            # Available model constituents
+            c = pytmd_model.constituents
+
+            # Delta time (TT - UT1)
+            deltat = timescale.tt_ut1
+        else:
+            raise Exception(
+                f"Unsupported model format ({pytmd_model.format}). This may be due to an incompatible version of `pyTMD`."
+            )
+
+    # Raise error if constituent files no not cover analysis extent
+    except IndexError:
+        error_msg = (
+            f"The {model} tide model constituent files do not cover the requested analysis extent. "
+            "This can occur if you are using clipped model files to improve run times. "
+            "Consider using model files that cover your analysis area, or set `crop=False` "
+            "to reduce the extent of tide model constituent files that is loaded."
         )
-
-        # Use delta time at 2000.0 to match TMD outputs
-        deltat = np.zeros((len(timescale)), dtype=np.float64)
-
-    elif pytmd_model.format in ("ATLAS-netcdf",):
-        amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
-            lon,
-            lat,
-            pytmd_model.grid_file,
-            pytmd_model.model_file,
-            type=pytmd_model.type,
-            crop=crop,
-            bounds=bounds,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            scale=pytmd_model.scale,
-            compressed=pytmd_model.compressed,
-        )
-
-        # Use delta time at 2000.0 to match TMD outputs
-        deltat = np.zeros((len(timescale)), dtype=np.float64)
-
-    elif pytmd_model.format in ("GOT-ascii", "GOT-netcdf"):
-        amp, ph, c = pyTMD.io.GOT.extract_constants(
-            lon,
-            lat,
-            pytmd_model.model_file,
-            grid=pytmd_model.file_format,
-            crop=crop,
-            bounds=bounds,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            scale=pytmd_model.scale,
-            compressed=pytmd_model.compressed,
-        )
-
-        # Delta time (TT - UT1)
-        deltat = timescale.tt_ut1
-
-    elif pytmd_model.format in ("FES-ascii", "FES-netcdf"):
-        amp, ph = pyTMD.io.FES.extract_constants(
-            lon,
-            lat,
-            pytmd_model.model_file,
-            type=pytmd_model.type,
-            version=pytmd_model.version,
-            crop=crop,
-            bounds=bounds,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            scale=pytmd_model.scale,
-            compressed=pytmd_model.compressed,
-        )
-
-        # Available model constituents
-        c = pytmd_model.constituents
-
-        # Delta time (TT - UT1)
-        deltat = timescale.tt_ut1
-    else:
-        raise Exception(
-            f"Unsupported model format ({pytmd_model.format}). This may be due to an incompatible version of `pyTMD`."
-        )
+        raise Exception(error_msg)
 
     # Calculate complex phase in radians for Euler's
     cph = -1j * ph * np.pi / 180.0
