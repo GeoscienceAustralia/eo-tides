@@ -40,8 +40,8 @@ runs:
     - name: Install Python dependencies
       run: |
         if [ "${{ inputs.resolution }}" == "lowest-direct" ]; then
-          uv sync --all-extras --resolution lowest-direct
+          run: uv sync --all-extras --resolution lowest-direct
         else
-          uv sync --frozen --all-extras
+          run: uv sync --frozen --all-extras
         fi
       shell: bash
