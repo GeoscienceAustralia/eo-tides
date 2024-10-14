@@ -29,6 +29,6 @@ runs:
       # Install eo-tides and all required dependencies.
       # --all-extras will install all optional dependencies.
       # resolution method will install either "highest""
-      # versions of dependencies, or "lowest" versions
-      run: uv sync --all-extras --resolution lowest
+      # versions of dependencies, or "lowest-direct" versions
+      run: uv sync --all-extras --resolution lowest-direct
       shell: bash

@@ -9,6 +9,13 @@ install: ## Install the virtual environment and install the pre-commit hooks
 	@uv sync --all-extras
 	@uv run pre-commit install
 
+# Install lowest dependencies of eo-tides
+.PHONY: install-lowest
+install-lowest: ## Install the virtual environment and install the pre-commit hooks
+	@echo "🚀 Creating virtual environment using uv"
+	@uv sync --all-extras --resolution lowest-direct
+	@uv run pre-commit install
+
 .PHONY: check
 check: ## Run code quality tools.
 	@echo "🚀 Checking lock file consistency with 'pyproject.toml'"
