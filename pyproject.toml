@@ -33,7 +33,7 @@ dependencies = [
     "colorama>=0.4.3",
     "geopandas>=0.10.0",
     "matplotlib>=3.6.0",
-    "numpy>=1.20.0",
+    "numpy>1.23.2",
     "odc-geo>=0.4.7",
     "pandas>=2.0.0",
     "pyproj>=3.6.1",
