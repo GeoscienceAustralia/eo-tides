@@ -1,7 +1,8 @@
 # This will install eo-tides and all required dependencies specified in
 # `uv.lock`. To install optional dependencies, run `uv sync --all-extras`
 # If running locally, can set `export VIRTUAL_ENV="path"` to control
-# location of resulting virtual environm
+# location of resulting virtual environment
+# Optionally run --resolution lowest-direct
 .PHONY: install
 install: ## Install the virtual environment and install the pre-commit hooks
 	@echo "🚀 Creating virtual environment using uv"

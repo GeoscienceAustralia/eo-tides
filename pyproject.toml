@@ -30,20 +30,18 @@ classifiers = [
 ]
 requires-python = ">=3.9,<4.0"
 dependencies = [
-  "colorama",
-  "geopandas>=1.0.0",
-  "numpy",
-  "matplotlib",
-  "odc-geo",
-  "pandas",
-  "pyproj",
-  "pyTMD==2.1.6",
-  # "pyTMD@git+https://github.com/tsutterley/pyTMD",
-  "scikit-learn",
-  "scipy",
-  "shapely",
-  "tqdm",
-  "xarray",
+    "colorama>=0.4.3",
+    "geopandas>=0.10.0",
+    "matplotlib>=3.6.0",
+    "numpy>=1.20.0",
+    "odc-geo>=0.4.7",
+    "pandas>=2.0.0",
+    "pyproj>=3.4.0",
+    "pyTMD==2.1.6",
+    "scikit-learn>=1.2.0",
+    "scipy>=1.0.0",
+    "tqdm>=4.55.0",
+    "xarray>=2022.3.0",
 ]
 
 [project.urls]
@@ -54,29 +52,27 @@ Documentation = "https://GeoscienceAustralia.github.io/eo-tides/"
 [project.optional-dependencies]
 notebooks = [
     "odc-stac>=0.3.10",
-    "pystac-client",
-    "folium",
-    "planetary_computer",
-
+    "pystac-client>=0.8.3",
+    "folium>=0.16.0",
+    "planetary_computer>=1.0.0",
 ]
 
 [tool.uv]
 dev-dependencies = [
-    "pytest>=7.2.0",
-    "nbval>=0.11.0",
-    "pre-commit>=2.20.0",
-    "tox-uv>=1.11.3",
+    "pytest>=6.0.0",
+    "pre-commit>=0.2.0",
     "deptry>=0.20.0",
-    "mypy>=0.991",
-    "pytest-cov>=4.0.0",
-    "ruff>=0.6.9",
-    "mkdocs>=1.4.2",
-    "mkdocs-material>=8.5.10",
-    "mkdocs-jupyter>=0.25.0",
-    "mkdocstrings[python]>=0.19.0",
+    "mypy>=0.900",
+    "pytest-cov>=0.6",
+    "ruff>=0.0.200",
+    "mkdocs>=1.2",
+    "mkdocs-material>=9.5.0",
+    "mkdocs-jupyter>=0.9.0",
+    "mkdocstrings[python]>=0.20.0",
+    "nbval>=0.10.0",
+    "odc-stac>=0.3.8",
     "pystac-client>=0.8.3",
-    "odc-stac>=0.3.10",
-    "black>=24.8.0",
+    "planetary_computer>=1.0.0",
 ]
 
 [build-system]
