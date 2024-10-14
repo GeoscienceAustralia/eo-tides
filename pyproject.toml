@@ -36,7 +36,7 @@ dependencies = [
     "numpy>=1.20.0",
     "odc-geo>=0.4.7",
     "pandas>=2.0.0",
-    "pyproj>=3.4.0",
+    "pyproj>=3.6.1",
     "pyTMD==2.1.6",
     "scikit-learn>=1.2.0",
     "scipy>=1.0.0",

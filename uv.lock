@@ -701,7 +701,7 @@ requires-dist = [
     { name = "odc-stac", marker = "extra == 'notebooks'", specifier = ">=0.3.10" },
     { name = "pandas", specifier = ">=2.0.0" },
     { name = "planetary-computer", marker = "extra == 'notebooks'", specifier = ">=1.0.0" },
-    { name = "pyproj", specifier = ">=3.4.0" },
+    { name = "pyproj", specifier = ">=3.6.1" },
     { name = "pystac-client", marker = "extra == 'notebooks'", specifier = ">=0.8.3" },
     { name = "pytmd", specifier = "==2.1.6" },
     { name = "scikit-learn", specifier = ">=1.2.0" },
