@@ -30,9 +30,10 @@ runs:
         cache-suffix: ${{ inputs.python-version }}-${{ inputs.resolution }}
 
       # Install eo-tides and all required dependencies.
-      # --all-extras will install all optional dependencies.
-      # resolution method will install either "highest""
-      # versions of dependencies, or "lowest-direct" versions
+      # --all-extras installs all optional dependencies.
+      # If resolution method is "frozen", then use existing lockfile.
+      # Otherwise, pass resolution method to specify "highest"
+      # dependencies or "lowest-direct" dependencies
     - name: Install Python dependencies
       run: |
         if [ "${{ inputs.resolution }}" == "frozen" ]; then

@@ -715,7 +715,7 @@ requires-dist = [
 dev = [
     { name = "deptry", specifier = ">=0.20.0" },
     { name = "mkdocs", specifier = ">=1.2" },
-    { name = "mkdocs-jupyter", specifier = ">=0.9.0" },
+    { name = "mkdocs-jupyter", specifier = ">=0.24.0" },
     { name = "mkdocs-material", specifier = ">=9.5.0" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.20.0" },
     { name = "mypy", specifier = ">=0.900" },
