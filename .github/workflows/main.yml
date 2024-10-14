@@ -51,6 +51,7 @@ jobs:
         uses: ./.github/actions/setup-python-env
         with:
           python-version: ${{ matrix.python-version }}
+          resolution: "highest"
 
       - name: Run Python unit tests
         run: uv run python -m pytest tests --cov --cov-config=pyproject.toml --cov-report=xml --verbose

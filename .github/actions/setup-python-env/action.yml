@@ -6,6 +6,10 @@ inputs:
     description: "Python version to use"
     required: true
     default: "3.10"
+  resolution:
+    description: "Resolution strategy"
+    required: true
+    default: "highest"
   uv-version:
     description: "uv version to use"
     required: true
@@ -25,10 +29,19 @@ runs:
         enable-cache: "true"
         cache-suffix: ${{ inputs.python-version }}
 
+    # - name: Install Python dependencies
+    #   # Install eo-tides and all required dependencies.
+    #   # --all-extras will install all optional dependencies.
+    #   # resolution method will install either "highest""
+    #   # versions of dependencies, or "lowest-direct" versions
+    #   run: uv sync --all-extras --resolution lowest-direct
+    #   shell: bash
+
     - name: Install Python dependencies
-      # Install eo-tides and all required dependencies.
-      # --all-extras will install all optional dependencies.
-      # resolution method will install either "highest""
-      # versions of dependencies, or "lowest-direct" versions
-      run: uv sync --all-extras --resolution lowest-direct
+      run: |
+        if [ "${{ inputs.resolution }}" == "lowest-direct" ]; then
+          uv sync --frozen --all-extras --resolution lowest-direct
+        else
+          uv sync --frozen --all-extras
+        fi
       shell: bash
