@@ -210,26 +210,26 @@ def tide_stats(
     if plain_english:
         print(f"\n\n🌊 Modelled astronomical tide range: {all_range:.2f} metres.")
         print(f"🛰️ Observed tide range: {obs_range:.2f} metres.\n")
-        print(f"    {spread_icon} {spread:.0%} of the modelled astronomical tide range was observed at this location.")
+        print(f"   {spread_icon} {spread:.0%} of the modelled astronomical tide range was observed at this location.")
         print(
-            f"    {high_tide_icon} The highest {high_tide_offset:.0%} ({high_tide_offset_m:.2f} metres) of the tide range was never observed."
+            f"   {high_tide_icon} The highest {high_tide_offset:.0%} ({high_tide_offset_m:.2f} metres) of the tide range was never observed."
         )
         print(
-            f"    {low_tide_icon} The lowest {low_tide_offset:.0%} ({low_tide_offset_m:.2f} metres) of the tide range was never observed.\n"
+            f"   {low_tide_icon} The lowest {low_tide_offset:.0%} ({low_tide_offset_m:.2f} metres) of the tide range was never observed.\n"
         )
         print(f"🌊 Mean modelled astronomical tide height: {all_mean:.2f} metres.")
         print(f"🛰️ Mean observed tide height: {obs_mean:.2f} metres.\n")
         print(
-            f"    {mean_diff_icon} The mean observed tide height was {obs_mean - all_mean:.2f} metres {mean_diff} than the mean modelled astronomical tide height."
+            f"   {mean_diff_icon} The mean observed tide height was {obs_mean - all_mean:.2f} metres {mean_diff} than the mean modelled astronomical tide height."
         )
 
         if linear_reg:
             if obs_linreg.pvalue > 0.01:
-                print("    ➖ Observed tides showed no significant trends over time.")
+                print("   ➖ Observed tides showed no significant trends over time.")
             else:
                 obs_slope_desc = "decreasing" if obs_linreg.slope < 0 else "increasing"
                 print(
-                    f"    ⚠️ Observed tides showed a significant {obs_slope_desc} trend over time (p={obs_linreg.pvalue:.3f}, {obs_linreg.slope:.2f} metres per year)"
+                    f"   ⚠️ Observed tides showed a significant {obs_slope_desc} trend over time (p={obs_linreg.pvalue:.3f}, {obs_linreg.slope:.2f} metres per year)"
                 )
 
     if plot:
@@ -256,14 +256,17 @@ def tide_stats(
                 ax=ax, marker="o", linewidth=0.0, color="black", markersize=3.5, label="Satellite observations"
             )
 
+        # Add legend
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.04), ncol=20, borderaxespad=0, frameon=False)
 
-        ax.plot(
-            ds_tides.time.isel(time=[0, -1]),
-            obs_linreg.intercept + obs_linreg.slope * obs_x[[0, -1]],
-            "r",
-            label="fitted line",
-        )
+        # Add linear regression line
+        if linear_reg:
+            ax.plot(
+                ds_tides.time.isel(time=[0, -1]),
+                obs_linreg.intercept + obs_linreg.slope * obs_x[[0, -1]],
+                "r",
+                label="fitted line",
+            )
 
         # Add horizontal lines for spread/offsets
         ax.axhline(obs_min, color="black", linestyle=":", linewidth=1)
@@ -296,19 +299,19 @@ def tide_stats(
 
     # Export pandas.Series containing tidal stats
     output_stats = {
-        "tidepost_lat": tidepost_lat,
-        "tidepost_lon": tidepost_lon,
-        "observed_mean_m": obs_mean,
-        "all_mean_m": all_mean,
-        "observed_min_m": obs_min,
-        "all_min_m": all_min,
-        "observed_max_m": obs_max,
-        "all_max_m": all_max,
-        "observed_range_m": obs_range,
-        "all_range_m": all_range,
+        "y": tidepost_lat,
+        "x": tidepost_lon,
+        "obs_mean": obs_mean,
+        "all_mean": all_mean,
+        "lot": obs_min,
+        "lat": all_min,
+        "hot": obs_max,
+        "hat": all_max,
+        "otr": obs_range,
+        "tr": all_range,
         "spread": spread,
-        "low_tide_offset": low_tide_offset,
-        "high_tide_offset": high_tide_offset,
+        "offset_low": low_tide_offset,
+        "offset_high": high_tide_offset,
     }
 
     if linear_reg:
