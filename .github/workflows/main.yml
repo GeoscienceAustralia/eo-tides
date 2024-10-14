@@ -33,8 +33,9 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"] # , "3.13" # waiting on pyproj
+        resolution: ["default", "lowest"]
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 10
     defaults:
       run:
         shell: bash
@@ -51,7 +52,7 @@ jobs:
         uses: ./.github/actions/setup-python-env
         with:
           python-version: ${{ matrix.python-version }}
-          resolution: "lowest-direct"
+          resolution: ${{ matrix.resolution }}
 
       - name: Run Python unit tests
         run: uv run python -m pytest tests --cov --cov-config=pyproject.toml --cov-report=xml --verbose
