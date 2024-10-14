@@ -29,6 +29,15 @@ runs:
         enable-cache: "true"
         cache-suffix: ${{ inputs.python-version }}-${{ inputs.resolution }}
 
+    - name: Install Python dependencies
+      run: |
+        if [ "${{ inputs.resolution }}" == "lowest-direct" ]; then
+          uv sync --all-extras --resolution lowest-direct
+        else
+          uv sync --frozen --all-extras
+        fi
+      shell: bash
+
     # - name: Install Python dependencies
     #   # Install eo-tides and all required dependencies.
     #   # --all-extras will install all optional dependencies.
@@ -36,12 +45,3 @@ runs:
     #   # versions of dependencies, or "lowest-direct" versions
     #   run: uv sync --all-extras --resolution lowest-direct
     #   shell: bash
-
-    - name: Install Python dependencies
-      run: |
-        if [ "${{ inputs.resolution }}" == "lowest-direct" ]; then
-          run: uv sync --all-extras --resolution lowest-direct
-        else
-          run: uv sync --frozen --all-extras
-        fi
-      shell: bash
