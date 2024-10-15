@@ -251,11 +251,17 @@ def tide_stats(
         # Otherwise, plot all data at once
         else:
             obs_tides_da.plot.line(
-                ax=ax, marker="o", linewidth=0.0, color="black", markersize=3.5, label="Satellite observations"
+                ax=ax,
+                marker="o",
+                linewidth=0.0,
+                color="black",
+                markersize=3.5,
+                label="Satellite observations",
             )
 
-        # Add legend
+        # Add legend and remove title
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.04), ncol=20, borderaxespad=0, frameon=False)
+        ax.set_title("")
 
         # Add linear regression line
         if linear_reg:
