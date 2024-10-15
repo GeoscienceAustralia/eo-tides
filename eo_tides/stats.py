@@ -137,7 +137,7 @@ def tide_stats(
         tidepost_lon, tidepost_lat = ds.odc.geobox.geographic_extent.centroid.coords[0]
 
     # Model tides for each observation in the supplied xarray object
-    ds_tides = tag_tides(
+    obs_tides_da = tag_tides(
         ds,
         model=model,
         directory=directory,
@@ -146,15 +146,12 @@ def tide_stats(
         return_tideposts=True,
         **model_tides_kwargs,
     )
-    ds_tides = ds_tides.sortby("time")
-
-    # Drop spatial ref for nicer plotting
-    ds_tides = ds_tides.drop_vars("spatial_ref")
+    obs_tides_da = obs_tides_da.sortby("time")
 
     # Generate range of times covering entire period of satellite record
     all_timerange = pd.date_range(
-        start=ds_tides.time.min().item(),
-        end=ds_tides.time.max().item(),
+        start=obs_tides_da.time.min().item(),
+        end=obs_tides_da.time.max().item(),
         freq=modelled_freq,
     )
 
@@ -170,9 +167,9 @@ def tide_stats(
     )
 
     # Get coarse statistics on all and observed tidal ranges
-    obs_mean = ds_tides.tide_height.mean().item()
+    obs_mean = obs_tides_da.mean().item()
     all_mean = all_tides_df.tide_height.mean()
-    obs_min, obs_max = ds_tides.tide_height.quantile(min_max_q).values
+    obs_min, obs_max = obs_tides_da.quantile(min_max_q).values
     all_min, all_max = all_tides_df.tide_height.quantile(min_max_q).values
 
     # Calculate tidal range
@@ -194,13 +191,10 @@ def tide_stats(
     high_tide_icon = "🟢" if high_tide_offset <= 0.1 else "🟡" if 0.1 <= high_tide_offset < 0.2 else "🔴"
 
     # Extract x (time in decimal years) and y (distance) values
-    all_times = all_tides_df.index.get_level_values("time")
-    all_x = all_times.year + ((all_times.dayofyear - 1) / 365) + ((all_times.hour) / 24)
-    time_period = all_x.max() - all_x.min()
-
-    # Extract x (time in decimal years) and y (distance) values
-    obs_x = ds_tides.time.dt.year + ((ds_tides.time.dt.dayofyear - 1) / 365) + ((ds_tides.time.dt.hour) / 24)
-    obs_y = ds_tides.tide_height.values.astype(np.float32)
+    obs_x = (
+        obs_tides_da.time.dt.year + ((obs_tides_da.time.dt.dayofyear - 1) / 365) + ((obs_tides_da.time.dt.hour) / 24)
+    )
+    obs_y = obs_tides_da.values.astype(np.float32)
 
     # Compute linear regression
     obs_linreg = stats.linregress(x=obs_x, y=obs_y)
@@ -210,26 +204,26 @@ def tide_stats(
     if plain_english:
         print(f"\n\n🌊 Modelled astronomical tide range: {all_range:.2f} metres.")
         print(f"🛰️ Observed tide range: {obs_range:.2f} metres.\n")
-        print(f"   {spread_icon} {spread:.0%} of the modelled astronomical tide range was observed at this location.")
+        print(f"{spread_icon} {spread:.0%} of the modelled astronomical tide range was observed at this location.")
         print(
-            f"   {high_tide_icon} The highest {high_tide_offset:.0%} ({high_tide_offset_m:.2f} metres) of the tide range was never observed."
+            f"{high_tide_icon} The highest {high_tide_offset:.0%} ({high_tide_offset_m:.2f} metres) of the tide range was never observed."
         )
         print(
-            f"   {low_tide_icon} The lowest {low_tide_offset:.0%} ({low_tide_offset_m:.2f} metres) of the tide range was never observed.\n"
+            f"{low_tide_icon} The lowest {low_tide_offset:.0%} ({low_tide_offset_m:.2f} metres) of the tide range was never observed.\n"
         )
         print(f"🌊 Mean modelled astronomical tide height: {all_mean:.2f} metres.")
         print(f"🛰️ Mean observed tide height: {obs_mean:.2f} metres.\n")
         print(
-            f"   {mean_diff_icon} The mean observed tide height was {obs_mean - all_mean:.2f} metres {mean_diff} than the mean modelled astronomical tide height."
+            f"{mean_diff_icon} The mean observed tide height was {obs_mean - all_mean:.2f} metres {mean_diff} than the mean modelled astronomical tide height."
         )
 
         if linear_reg:
             if obs_linreg.pvalue > 0.01:
-                print("   ➖ Observed tides showed no significant trends over time.")
+                print("➖ Observed tides showed no significant trends over time.")
             else:
                 obs_slope_desc = "decreasing" if obs_linreg.slope < 0 else "increasing"
                 print(
-                    f"   ⚠️ Observed tides showed a significant {obs_slope_desc} trend over time (p={obs_linreg.pvalue:.3f}, {obs_linreg.slope:.2f} metres per year)"
+                    f"⚠️ Observed tides showed a significant {obs_slope_desc} trend over time (p={obs_linreg.pvalue:.3f}, {obs_linreg.slope:.2f} metres per year)"
                 )
 
     if plot:
@@ -241,8 +235,8 @@ def tide_stats(
         if plot_col is not None:
             # Create a list of marker styles
             markers = ["o", "^", "s", "D", "v", "<", ">", "p", "*", "h", "H", "+", "x", "d", "|", "_"]
-            for i, value in enumerate(np.unique(ds_tides[plot_col])):
-                ds_tides.where(ds_tides[plot_col] == value, drop=True).tide_height.plot.line(
+            for i, value in enumerate(np.unique(ds[plot_col])):
+                obs_tides_da.sel(time=ds[plot_col] == value).plot.line(
                     ax=ax,
                     linewidth=0.0,
                     color="black",
@@ -252,7 +246,7 @@ def tide_stats(
                 )
         # Otherwise, plot all data at once
         else:
-            ds_tides.tide_height.plot.line(
+            obs_tides_da.plot.line(
                 ax=ax, marker="o", linewidth=0.0, color="black", markersize=3.5, label="Satellite observations"
             )
 
@@ -262,7 +256,7 @@ def tide_stats(
         # Add linear regression line
         if linear_reg:
             ax.plot(
-                ds_tides.time.isel(time=[0, -1]),
+                obs_tides_da.time.isel(time=[0, -1]),
                 obs_linreg.intercept + obs_linreg.slope * obs_x[[0, -1]],
                 "r",
                 label="fitted line",
