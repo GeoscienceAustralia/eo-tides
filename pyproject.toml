@@ -112,9 +112,7 @@ preview = true
 
 [tool.deptry.per_rule_ignores]
 DEP002 = [
-    "matplotlib",
     "folium",
-    "pystac-client",
 ]
 
 [tool.coverage.report]
