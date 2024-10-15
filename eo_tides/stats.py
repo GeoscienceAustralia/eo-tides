@@ -109,7 +109,8 @@ def tide_stats(
 
     Returns
     -------
-    A `pandas.Series` containing the following statistics:
+    stats_df : pandas.Series
+        A `pandas.Series` containing the following statistics:
 
         - `y`: latitude used for modelling tide heights
         - `x`: longitude used for modelling tide heights
@@ -125,11 +126,10 @@ def tide_stats(
         - `offset_low`: proportion of the lowest tides never observed by the satellite
         - `offset_high`: proportion of the highest tides never observed by the satellite
 
-    If `linear_reg = True`, the output will also contain:
+        If `linear_reg = True`, the output will also contain:
 
         - `observed_slope`: slope of any relationship between observed tide heights and time
         - `observed_pval`: significance/p-value of any relationship between observed tide heights and time
-
     """
     # Verify that only one tide model is provided
     if isinstance(model, list):
@@ -324,7 +324,9 @@ def tide_stats(
             "observed_pval": obs_linreg.pvalue,
         })
 
-    return pd.Series(output_stats).round(round_stats)
+    # Return pandas data
+    stats_df = pd.Series(output_stats).round(round_stats)
+    return stats_df
 
 
 def pixel_stats(
@@ -402,8 +404,8 @@ def pixel_stats(
 
     Returns
     -------
-    Am `xarray.Dataset` containing the following statistics as
-    two-dimensional data variables:
+    stats_ds : xarray.Dataset
+        An `xarray.Dataset` containing the following statistics as two-dimensional data variables:
 
         - `lot`: minimum tide height observed by the satellite (in metre units)
         - `lat`: minimum tide height from modelled tidal range (in metre units)
