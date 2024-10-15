@@ -267,7 +267,9 @@ def load_gauge_gesla(
 
     # If x and y are single numbers, select nearest row
     elif isinstance(x, Number) & isinstance(y, Number):
-        site_code = _nearest_row(metadata_gdf, x, y, max_distance).site_code
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            site_code = _nearest_row(metadata_gdf, x, y, max_distance).site_code
 
         # Raise exception if no valid tide gauges are found
         if site_code.isnull().all():
