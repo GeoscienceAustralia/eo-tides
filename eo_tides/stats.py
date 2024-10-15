@@ -8,13 +8,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import odc.geo.xr
 import pandas as pd
+import xarray as xr
 from scipy import stats
 
 # Only import if running type checking
 if TYPE_CHECKING:
     import xarray as xr
 
-from .eo import tag_tides
+from .eo import pixel_tides, tag_tides
 from .model import model_tides
 
 
@@ -27,16 +28,17 @@ def tide_stats(
     plain_english: bool = True,
     plot: bool = True,
     plot_col: str | None = None,
-    modelled_freq: str = "2h",
+    modelled_freq: str = "3h",
     linear_reg: bool = False,
     min_max_q: tuple = (0.0, 1.0),
     round_stats: int = 3,
     **model_tides_kwargs,
 ) -> pd.Series:
     """
-    Takes a multi-dimensional dataset and generate statistics
-    about the data's astronomical and satellite-observed tide
-    conditions.
+    Takes a multi-dimensional dataset and generate tide statistics
+    and satellite-observed tide bias metrics, calculated based on
+    every timestep in the satellte data and the geographic centroid
+    of the imagery.
 
     By comparing the subset of tides observed by satellites
     against the full astronomical tidal range, we can evaluate
@@ -50,8 +52,8 @@ def tide_stats(
     Parameters
     ----------
     ds : xarray.Dataset
-        A multi-dimensional dataset (e.g. "x", "y", "time") to
-        use to calculate tide statistics. This dataset must contain
+        A multi-dimensional dataset (e.g. "x", "y", "time") used
+        to calculate tide statistics. This dataset must contain
         a "time" dimension.
     model : string, optional
         The tide model to use to model tides. Defaults to "EOT20";
@@ -81,8 +83,8 @@ def tide_stats(
         Defaults to None, which will plot all observations as circles.
     modelled_freq : str, optional
         An optional string giving the frequency at which to model tides
-        when computing the full modelled tidal range. Defaults to '2h',
-        which computes a tide height for every two hours across the
+        when computing the full modelled tidal range. Defaults to '3h',
+        which computes a tide height for every three hours across the
         temporal extent of `ds`.
     linear_reg: bool, optional
         Whether to return linear regression statistics that assess
@@ -109,17 +111,19 @@ def tide_stats(
     -------
     A `pandas.Series` containing the following statistics:
 
-        - `tidepost_lat`: latitude used for modelling tide heights
-        - `tidepost_lon`: longitude used for modelling tide heights
-        - `observed_min_m`: minimum tide height observed by the satellite
-        - `all_min_m`: minimum tide height from all available tides
-        - `observed_max_m`: maximum tide height observed by the satellite
-        - `all_max_m`: maximum tide height from all available tides
-        - `observed_range_m`: tidal range observed by the satellite
-        - `all_range_m`: full astronomical tidal range based on all available tides
-        - `spread_m`: proportion of the full astronomical tidal range observed by the satellite (see Bishop-Taylor et al. 2018)
-        - `low_tide_offset`: proportion of the lowest tides never observed by the satellite (see Bishop-Taylor et al. 2018)
-        - `high_tide_offset`: proportion of the highest tides never observed by the satellite (see Bishop-Taylor et al. 2018)
+        - `y`: latitude used for modelling tide heights
+        - `x`: longitude used for modelling tide heights
+        - `obs_mean`: mean tide height observed by the satellite (in metre units)
+        - `all_mean`: mean modelled tide height (in metre units)
+        - `lot`: minimum tide height observed by the satellite (in metre units)
+        - `lat`: minimum tide height from modelled tidal range (in metre units)
+        - `hot`: maximum tide height observed by the satellite (in metre units)
+        - `hat`: maximum tide height from modelled tidal range (in metre units)
+        - `otr`: tidal range observed by the satellite (in metre units)
+        - `tr`: modelled tide range (in metre units)
+        - `spread`: proportion of the full modelled tidal range observed by the satellite
+        - `offset_low`: proportion of the lowest tides never observed by the satellite
+        - `offset_high`: proportion of the highest tides never observed by the satellite
 
     If `linear_reg = True`, the output will also contain:
 
@@ -315,3 +319,167 @@ def tide_stats(
         })
 
     return pd.Series(output_stats).round(round_stats)
+
+
+def pixel_stats(
+    ds: xr.Dataset | xr.DataArray,
+    model: str | list[str] = "EOT20",
+    directory: str | os.PathLike | None = None,
+    resample: bool = False,
+    modelled_freq="3h",
+    min_max_q=(0.0, 1.0),
+    extrapolate: bool = True,
+    cutoff: float = 10,
+    **pixel_tides_kwargs,
+) -> xr.Dataset:
+    """
+    Takes a multi-dimensional dataset and generate two-dimensional
+    tide statistics and satellite-observed tide bias metrics,
+    calculated based on every timestep in the satellte data and
+    modelled into the spatial extent of the imagery.
+
+    By comparing the subset of tides observed by satellites
+    against the full astronomical tidal range, we can evaluate
+    whether the tides observed by satellites are biased
+    (e.g. fail to observe either the highest or lowest tides).
+
+    Compared to `tide_stats`, this function models tide metrics
+    spatially to produce a two-dimensional output.
+
+    For more information about the tidal statistics computed by this
+    function, refer to Figure 8 in Bishop-Taylor et al. 2018:
+    <https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8>
+
+    Parameters
+    ----------
+    ds : xarray.Dataset or xarray.DataArray
+        A multi-dimensional dataset (e.g. "x", "y", "time") used
+        to calculate 2D tide statistics. This dataset must contain
+        a "time" dimension.
+    model : str or list of str, optional
+        The tide model (or models) to use to model tides. If a list is
+        provided, a new "tide_model" dimension will be added to `ds`.
+        Defaults to "EOT20"; for a full list of available/supported
+        models, run `eo_tides.model.list_models`.
+    directory : str, optional
+        The directory containing tide model data files. If no path is
+        provided, this will default to the environment variable
+        `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
+        Tide modelling files should be stored in sub-folders for each
+        model that match the structure required by `pyTMD`
+        (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
+    resample : bool, optional
+        Whether to resample tide statistics back into `ds`'s original
+        higher resolution grid. Defaults to False, which will return
+        lower-resolution statistics that are typically sufficient for
+        most purposes.
+    modelled_freq : str, optional
+        An optional string giving the frequency at which to model tides
+        when computing the full modelled tidal range. Defaults to '3h',
+        which computes a tide height for every three hours across the
+        temporal extent of `ds`.
+    min_max_q : tuple, optional
+        Quantiles used to calculate max and min observed and modelled
+        astronomical tides. By default `(0.0, 1.0)` which is equivalent
+        to minimum and maximum; to use a softer threshold that is more
+        robust to outliers, use e.g. `(0.1, 0.9)`.
+    extrapolate : bool, optional
+        Whether to extrapolate tides for x and y coordinates outside of
+        the valid tide modelling domain using nearest-neighbor. Defaults
+        to True.
+    cutoff : float, optional
+        Extrapolation cutoff in kilometers. To avoid producing tide
+        statistics too far inland, the default is 10 km.
+    **pixel_tides_kwargs :
+        Optional parameters passed to the `eo_tides.eo.pixel_tides`
+        function.
+
+    Returns
+    -------
+    Am `xarray.Dataset` containing the following statistics as
+    two-dimensional data variables:
+
+        - `lot`: minimum tide height observed by the satellite (in metre units)
+        - `lat`: minimum tide height from modelled tidal range (in metre units)
+        - `hot`: maximum tide height observed by the satellite (in metre units)
+        - `hat`: maximum tide height from modelled tidal range (in metre units)
+        - `otr`: tidal range observed by the satellite (in metre units)
+        - `tr`: modelled tide range (in metre units)
+        - `spread`: proportion of the full modelled tidal range observed by the satellite
+        - `offset_low`: proportion of the lowest tides never observed by the satellite
+        - `offset_high`: proportion of the highest tides never observed by the satellite
+    """
+    # Model observed tides
+    obs_tides = pixel_tides(
+        ds,
+        resample=False,
+        model=model,
+        directory=directory,
+        calculate_quantiles=min_max_q,
+        extrapolate=extrapolate,
+        cutoff=cutoff,
+        **pixel_tides_kwargs,
+    )
+
+    # Generate times covering entire period of satellite record
+    all_timerange = pd.date_range(
+        start=ds.time.min().item(),
+        end=ds.time.max().item(),
+        freq=modelled_freq,
+    )
+
+    # Model all tides
+    all_tides = pixel_tides(
+        ds,
+        times=all_timerange,
+        model=model,
+        directory=directory,
+        calculate_quantiles=min_max_q,
+        resample=False,
+        extrapolate=extrapolate,
+        cutoff=cutoff,
+        **pixel_tides_kwargs,
+    )
+
+    # Calculate min and max tides
+    lot = obs_tides.isel(quantile=0)
+    hot = obs_tides.isel(quantile=-1)
+    lat = all_tides.isel(quantile=0)
+    hat = all_tides.isel(quantile=-1)
+
+    # Calculate tidal range
+    otr = hot - lot
+    tr = hat - lat
+
+    # Calculate Bishop-Taylor et al. 2018 tidal metrics
+    spread = otr / tr
+    offset_low_m = abs(lat - lot)
+    offset_high_m = abs(hat - hot)
+    offset_low = offset_low_m / tr
+    offset_high = offset_high_m / tr
+
+    # Combine into a single dataset
+    stats_ds = (
+        xr.merge(
+            [
+                hat.rename("hat"),
+                hot.rename("hot"),
+                lat.rename("lat"),
+                lot.rename("lot"),
+                otr.rename("otr"),
+                tr.rename("tr"),
+                spread.rename("spread"),
+                offset_low.rename("offset_low"),
+                offset_high.rename("offset_high"),
+            ],
+            compat="override",
+        )
+        .drop_vars("quantile")
+        .odc.assign_crs(crs=ds.odc.crs)
+    )
+
+    # Optionally resample into the original pixel grid of `ds`
+    if resample:
+        stats_ds = stats_ds.odc.reproject(how=ds.odc.geobox, resample_method="bilinear")
+
+    return stats_ds

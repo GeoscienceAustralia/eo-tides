@@ -5,6 +5,7 @@ import os
 import pathlib
 import warnings
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from functools import partial
 from typing import TYPE_CHECKING
 
@@ -130,7 +131,7 @@ def list_models(
                 # Mark available models with a green tick
                 status = "✅"
                 print(f"{status:^{status_width}}│ {m:<{name_width}} │ {expected_paths[m]:<{path_width}}")
-        except:
+        except FileNotFoundError:
             if show_supported:
                 # Mark unavailable models with a red cross
                 status = "❌"
@@ -798,12 +799,19 @@ def model_tides(
                 )
 
             # Apply func in parallel, iterating through each input param
-            model_outputs = list(
-                tqdm(
-                    executor.map(iter_func, model_iters, x_iters, y_iters, time_iters),
-                    total=len(model_iters),
-                ),
-            )
+            try:
+                model_outputs = list(
+                    tqdm(
+                        executor.map(iter_func, model_iters, x_iters, y_iters, time_iters),
+                        total=len(model_iters),
+                    ),
+                )
+            except BrokenProcessPool:
+                error_msg = (
+                    "Parallelised tide modelling failed, likely to to an out-of-memory error. "
+                    "Try reducing the size of your analysis, or set `parallel=False`."
+                )
+                raise RuntimeError(error_msg)
 
     # Model tides in series if parallelisation is off
     else:

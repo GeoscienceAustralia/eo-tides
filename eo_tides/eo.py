@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import warnings
 from typing import TYPE_CHECKING
 
 import odc.geo.xr
@@ -223,7 +224,7 @@ def tag_tides(
 
     # If only one tidal model exists, squeeze out "tide_model" dim
     if len(tide_xr.tide_model) == 1:
-        tide_xr = tide_xr.squeeze("tide_model", drop=True)
+        tide_xr = tide_xr.squeeze("tide_model")
 
     return tide_xr
 
@@ -469,8 +470,10 @@ def pixel_tides(
     # Set dtype to dtype of the input data as quantile always returns
     # float64 (memory intensive)
     if calculate_quantiles is not None:
-        print("Computing tide quantiles")
-        tides_lowres = tides_lowres.quantile(q=calculate_quantiles, dim="time").astype(tides_lowres.dtype)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            print("Computing tide quantiles")
+            tides_lowres = tides_lowres.quantile(q=calculate_quantiles, dim="time").astype(tides_lowres.dtype)
 
     # If only one tidal model exists, squeeze out "tide_model" dim
     if len(tides_lowres.tide_model) == 1:
