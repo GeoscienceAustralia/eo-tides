@@ -20,6 +20,8 @@ Functions from `eo-tides` were originally developed in the [`Digital Earth Austr
 
 FES Finite Element Solution tide models were developed, validated by the CTOH/LEGOS, France and distributed by Aviso+: <https://www.aviso.altimetry.fr/en/data/products/sea-surface-height-products/regional/x-track-sla/x-track-l2p-sla-version-2022.html>
 
+This repository was initialised using the [`cookiecutter-uv`](https://github.com/fpgmaas/cookiecutter-uv) package.
+
 ## References
 
 <small>

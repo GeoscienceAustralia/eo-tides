@@ -14,71 +14,51 @@ ENSEMBLE_MODELS = ["EOT20", "HAMTIDE11"]  # simplified for tests
 
 
 @pytest.mark.parametrize(
-    "ebb_flow, swap_dims, tidepost_lat, tidepost_lon",
+    "tidepost_lat, tidepost_lon",
     [
-        (False, False, None, None),  # Run with default settings
-        (True, False, None, None),  # Run with ebb_flow on
-        (False, True, None, None),  # Run with swap_dims on
-        (False, False, GAUGE_Y, GAUGE_X),  # Run with custom tide posts
+        (None, None),  # Run with default settings
+        (GAUGE_Y, GAUGE_X),  # Run with custom tide posts
     ],
 )
-def test_tag_tides(satellite_ds, measured_tides_ds, ebb_flow, swap_dims, tidepost_lat, tidepost_lon):
+def test_tag_tides(satellite_ds, measured_tides_ds, tidepost_lat, tidepost_lon):
     # Use tag_tides to assign a "tide_height" variable to each observation
-    tagged_tides_ds = tag_tides(
+    tagged_tides_da = tag_tides(
         satellite_ds,
-        ebb_flow=ebb_flow,
-        swap_dims=swap_dims,
         tidepost_lat=tidepost_lat,
         tidepost_lon=tidepost_lon,
     )
 
-    # Verify tide_height variable was added
-    assert "tide_height" in tagged_tides_ds
+    # Verify tide_height variable has correct name
+    assert tagged_tides_da.name == "tide_height"
 
-    # Verify ebb_flow variable was added if requested
-    if ebb_flow:
-        assert "ebb_flow" in tagged_tides_ds
+    # Test that tagged tides have same timesteps as satellite data
+    assert len(tagged_tides_da.time) == len(satellite_ds.time)
 
-    if swap_dims:
-        # Verify "tide_height" is now a dimension
-        assert "tide_height" in tagged_tides_ds.dims
+    # Interpolate measured tide data to same timesteps
+    measured_tides_ds = measured_tides_ds.interp(time=satellite_ds.time, method="linear")
 
-        # Test that "tide_height" dim is same length as satellite "time" dim
-        assert len(tagged_tides_ds.tide_height) == len(satellite_ds.time)
+    # Compare measured and modelled tides
+    val_stats = eval_metrics(x=measured_tides_ds.tide_height, y=tagged_tides_da)
 
-        # Test that first value on "tide_height" dim is lower than last
-        # (data should be sorted in increasing tide height order)
-        assert tagged_tides_ds.isel(tide_height=0).tide_height < tagged_tides_ds.isel(tide_height=-1).tide_height
-
-    else:
-        # Test that tagged tides have same timesteps as satellite data
-        assert len(tagged_tides_ds.tide_height.time) == len(satellite_ds.time)
-
-        # Interpolate measured tide data to same timesteps
-        measured_tides_ds = measured_tides_ds.interp(time=satellite_ds.time, method="linear")
-
-        # Compare measured and modelled tides
-        val_stats = eval_metrics(x=measured_tides_ds.tide_height, y=tagged_tides_ds.tide_height)
-
-        # Test that modelled tides meet expected accuracy
-        assert val_stats["Correlation"] > 0.99
-        assert val_stats["RMSE"] < 0.26
-        assert val_stats["R-squared"] > 0.96
-        assert abs(val_stats["Bias"]) < 0.20
+    # Test that modelled tides meet expected accuracy
+    assert val_stats["Correlation"] > 0.99
+    assert val_stats["RMSE"] < 0.26
+    assert val_stats["R-squared"] > 0.96
+    assert abs(val_stats["Bias"]) < 0.20
 
 
 def test_tag_tides_multiple(satellite_ds):
     # Model multiple models at once
-    tagged_tides_ds = tag_tides(satellite_ds, model=["EOT20", "HAMTIDE11"], ebb_flow=True)
+    tagged_tides_da = tag_tides(satellite_ds, model=["EOT20", "HAMTIDE11"], ebb_flow=True)
 
-    assert "tide_model" in tagged_tides_ds.dims
-    assert tagged_tides_ds.tide_height.dims == ("time", "tide_model")
-    assert tagged_tides_ds.ebb_flow.dims == ("time", "tide_model")
+    assert tagged_tides_da.name == "tide_height"
+    assert "tide_model" in tagged_tides_da.dims
+    assert tagged_tides_da.dims == ("time", "tide_model")
 
     # Test that multiple tide models are correlated
     val_stats = eval_metrics(
-        x=tagged_tides_ds.sel(tide_model="EOT20").tide_height,
-        y=tagged_tides_ds.sel(tide_model="HAMTIDE11").tide_height,
+        x=tagged_tides_da.sel(tide_model="EOT20"),
+        y=tagged_tides_da.sel(tide_model="HAMTIDE11"),
     )
     assert val_stats["Correlation"] >= 0.99
 

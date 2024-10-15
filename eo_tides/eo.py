@@ -93,19 +93,17 @@ def _pixel_tides_resample(
 
 
 def tag_tides(
-    ds: xr.Dataset,
+    ds: xr.Dataset | xr.DataArray,
     model: str | list[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     tidepost_lat: float | None = None,
     tidepost_lon: float | None = None,
-    ebb_flow: bool = False,
-    swap_dims: bool = False,
     **model_tides_kwargs,
-) -> xr.Dataset:
+) -> xr.DataArray:
     """
     Model tide heights for every timestep in a multi-dimensional
-    dataset, and add them as a new `tide_height` (and optionally,
-    `ebb_flow`) variable that "tags" each observation with tide data.
+    dataset, and return a new `tide_height` array that can
+    be used to "tag" each observation with tide data.
 
     The function models tides at the centroid of the dataset
     by default, but a custom tidal modelling location can
@@ -123,7 +121,7 @@ def tag_tides(
 
     Parameters
     ----------
-    ds : xarray.Dataset
+    ds : xarray.Dataset or xarray.DataArray
         A multi-dimensional dataset (e.g. "x", "y", "time") to
         tag with tide heights. This dataset must contain a "time"
         dimension.
@@ -143,16 +141,6 @@ def tag_tides(
         Optional coordinates used to model tides. The default is None,
         which uses the centroid of the dataset as the tide modelling
         location.
-    ebb_flow : bool, optional
-        An optional boolean indicating whether to compute if the
-        tide phase was ebbing (falling) or flowing (rising) for each
-        observation. The default is False; if set to True, a new
-        "ebb_flow" variable will be added to the dataset with each
-        observation labelled with "Ebb" or "Flow".
-    swap_dims : bool, optional
-        An optional boolean indicating whether to swap the `time`
-        dimension in the original `ds` to the new "tide_height"
-        variable. Defaults to False.
     **model_tides_kwargs :
         Optional parameters passed to the `eo_tides.model.model_tides`
         function. Important parameters include `cutoff` (used to
@@ -174,8 +162,6 @@ def tag_tides(
 
     # Standardise model into a list for easy handling. and verify only one
     model = [model] if isinstance(model, str) else model
-    if (len(model) > 1) & swap_dims:
-        raise ValueError("Can only swap dimensions when a single tide model is passed to `model`.")
 
     # If custom tide modelling locations are not provided, use the
     # dataset centroid
@@ -208,48 +194,38 @@ def tag_tides(
             f"`tidepost_lat` and `tidepost_lon` parameters."
         )
 
-    # Optionally calculate the tide phase for each observation
-    if ebb_flow:
-        # Model tides for a time 15 minutes prior to each previously
-        # modelled satellite acquisition time. This allows us to compare
-        # tide heights to see if they are rising or falling.
-        print("Modelling tidal phase (e.g. ebb or flow)")
-        tide_pre_df = model_tides(
-            x=lon,  # type: ignore
-            y=lat,  # type: ignore
-            time=(ds.time - pd.Timedelta("15 min")),
-            model=model,
-            directory=directory,
-            crs="EPSG:4326",
-            **model_tides_kwargs,
-        )
+    # # Optionally calculate the tide phase for each observation
+    # if ebb_flow:
+    #     # Model tides for a time 15 minutes prior to each previously
+    #     # modelled satellite acquisition time. This allows us to compare
+    #     # tide heights to see if they are rising or falling.
+    #     print("Modelling tidal phase (e.g. ebb or flow)")
+    #     tide_pre_df = model_tides(
+    #         x=lon,  # type: ignore
+    #         y=lat,  # type: ignore
+    #         time=(ds.time - pd.Timedelta("15 min")),
+    #         model=model,
+    #         directory=directory,
+    #         crs="EPSG:4326",
+    #         **model_tides_kwargs,
+    #     )
 
-        # Compare tides computed for each timestep. If the previous tide
-        # was higher than the current tide, the tide is 'ebbing'. If the
-        # previous tide was lower, the tide is 'flowing'
-        tide_df["ebb_flow"] = (tide_df.tide_height < tide_pre_df.tide_height.values).replace({
-            True: "Ebb",
-            False: "Flow",
-        })
+    #     # Compare tides computed for each timestep. If the previous tide
+    #     # was higher than the current tide, the tide is 'ebbing'. If the
+    #     # previous tide was lower, the tide is 'flowing'
+    #     tide_df["ebb_flow"] = (tide_df.tide_height < tide_pre_df.tide_height.values).replace({
+    #         True: "Ebb",
+    #         False: "Flow",
+    #     })
 
     # Convert to xarray format
-    tide_xr = tide_df.reset_index().set_index(["time", "tide_model"]).drop(["x", "y"], axis=1).to_xarray()
+    tide_xr = tide_df.reset_index().set_index(["time", "tide_model"]).drop(["x", "y"], axis=1).tide_height.to_xarray()
 
     # If only one tidal model exists, squeeze out "tide_model" dim
     if len(tide_xr.tide_model) == 1:
         tide_xr = tide_xr.squeeze("tide_model", drop=True)
 
-    # Add each array into original dataset
-    for var in tide_xr.data_vars:
-        ds[var] = tide_xr[var]
-
-    # Swap dimensions and sort by tide height
-    if swap_dims:
-        ds = ds.swap_dims({"time": "tide_height"})
-        ds = ds.sortby("tide_height")
-        ds = ds.drop_vars("time")
-
-    return ds
+    return tide_xr
 
 
 def pixel_tides(
