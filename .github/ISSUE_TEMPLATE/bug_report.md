@@ -7,13 +7,14 @@ assignees: ''
 
 ---
 
-**Describe the bug**
+**Describe the problem**
 A clear and concise description of what the bug is.
 
-**To Reproduce**
+**To reproduce**
 Steps to reproduce the behavior:
 1. Run function/notebook '....'
 2. See error '....'
+3. A minimum reproducible code example is greatly appreciated!
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
