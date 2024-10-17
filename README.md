@@ -27,9 +27,9 @@ These tools can be applied to petabytes of freely available satellite data (e.g.
 - 🌊 Model tides from multiple global ocean tide models in parallel, and return tide heights in standardised `pandas.DataFrame` format for further analysis
 - 🛰️ "Tag" satellite data with tide height and stage based on the exact moment of image acquisition
 - 🌐 Model tides for every individual satellite pixel, producing three-dimensional "tide height" `xarray`-format datacubes that can be integrated with satellite data
-<!-- - 🎯 Combine multiple tide models into a single locally-optimised "ensemble" model informed by satellite altimetry and satellite-observed patterns of tidal inundation -->
 - 📈 Calculate statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits
 - 🛠️ Validate modelled tides using measured sea levels from coastal tide gauges (e.g. [GESLA Global Extreme Sea Level Analysis](https://gesla.org/))
+<!-- - 🎯 Combine multiple tide models into a single locally-optimised "ensemble" model informed by satellite altimetry and satellite-observed patterns of tidal inundation -->
 
 ## Supported tide models
 
@@ -42,6 +42,10 @@ These tools can be applied to petabytes of freely available satellite data (e.g.
 - [Hamburg direct data Assimilation Methods for Tides models](https://doi.org/10.1002/2013JC009766) (HAMTIDE11)
 
 For instructions on how to set up these models for use in `eo-tides`, refer to [Setting up tide models](setup.md).
+
+## Installing and setting up `eo-tides`
+
+To get started with `eo-tides`, follow the [Installation](https://geoscienceaustralia.github.io/eo-tides/install/) and [Setting up tide models](https://geoscienceaustralia.github.io/eo-tides/setup/) guides.
 
 ## Citing `eo-tides`
 
