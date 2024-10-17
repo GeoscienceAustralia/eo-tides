@@ -53,6 +53,7 @@ Documentation = "https://GeoscienceAustralia.github.io/eo-tides/"
 [project.optional-dependencies]
 notebooks = [
     "odc-stac>=0.3.10",
+    "odc-geo[warp,tiff]>=0.4.7",
     "pystac-client>=0.8.3",
     "folium>=0.16.0",
     "planetary_computer>=1.0.0",
