@@ -19,6 +19,122 @@ from .eo import pixel_tides, tag_tides
 from .model import model_tides
 
 
+def _plot_biases(
+    all_tides_df,
+    obs_tides_da,
+    lat,
+    lot,
+    hat,
+    hot,
+    offset_low,
+    offset_high,
+    spread,
+    plot_col,
+    obs_linreg,
+    obs_x,
+    all_timerange,
+):
+    """
+    Plot tide bias statistics as a figure, including both
+    satellite observations and all modelled tides.
+    """
+
+    # Create plot and add all time and observed tide data
+    fig, ax = plt.subplots(figsize=(10, 6))
+    all_tides_df.reset_index(["x", "y"]).tide_height.plot(ax=ax, alpha=0.4, label="Modelled tides")
+
+    # Look through custom column values if provided
+    if plot_col is not None:
+        # Create a list of marker styles
+        markers = [
+            "o",
+            "^",
+            "s",
+            "D",
+            "v",
+            "<",
+            ">",
+            "p",
+            "*",
+            "h",
+            "H",
+            "+",
+            "x",
+            "d",
+            "|",
+            "_",
+        ]
+        for i, value in enumerate(np.unique(plot_col)):
+            obs_tides_da.sel(time=plot_col == value).plot.line(
+                ax=ax,
+                linewidth=0.0,
+                color="black",
+                marker=markers[i % len(markers)],
+                markersize=4,
+                label=value,
+            )
+    # Otherwise, plot all data at once
+    else:
+        obs_tides_da.plot.line(
+            ax=ax,
+            marker="o",
+            linewidth=0.0,
+            color="black",
+            markersize=3.5,
+            label="Satellite observations",
+        )
+
+    # Add legend and remove title
+    ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.04),
+        ncol=20,
+        borderaxespad=0,
+        frameon=False,
+    )
+    ax.set_title("")
+
+    # Add linear regression line
+    if obs_linreg is not None:
+        ax.plot(
+            obs_tides_da.time.isel(time=[0, -1]),
+            obs_linreg.intercept + obs_linreg.slope * obs_x[[0, -1]],
+            "r",
+            label="fitted line",
+        )
+
+    # Add horizontal lines for spread/offsets
+    ax.axhline(lot, color="black", linestyle=":", linewidth=1)
+    ax.axhline(hot, color="black", linestyle=":", linewidth=1)
+    ax.axhline(lat, color="black", linestyle=":", linewidth=1)
+    ax.axhline(hat, color="black", linestyle=":", linewidth=1)
+
+    # Add text annotations for spread/offsets
+    ax.annotate(
+        f"    High tide\n    offset ({offset_high:.0%})",
+        xy=(all_timerange.max(), np.mean([hat, hot])),
+        va="center",
+    )
+    ax.annotate(
+        f"    Spread\n    ({spread:.0%})",
+        xy=(all_timerange.max(), np.mean([lot, hot])),
+        va="center",
+    )
+    ax.annotate(
+        f"    Low tide\n    offset ({offset_low:.0%})",
+        xy=(all_timerange.max(), np.mean([lat, lot])),
+    )
+
+    # Remove top right axes and add labels
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.set_ylabel("Tide height (m)")
+    ax.set_xlabel("")
+    ax.margins(x=0.015)
+
+    return fig
+
+
 def tide_stats(
     ds: xr.Dataset,
     model: str = "EOT20",
@@ -114,14 +230,14 @@ def tide_stats(
 
         - `y`: latitude used for modelling tide heights
         - `x`: longitude used for modelling tide heights
-        - `obs_mean`: mean tide height observed by the satellite (in metre units)
-        - `all_mean`: mean modelled tide height (in metre units)
-        - `lot`: minimum tide height observed by the satellite (in metre units)
-        - `lat`: minimum tide height from modelled tidal range (in metre units)
-        - `hot`: maximum tide height observed by the satellite (in metre units)
-        - `hat`: maximum tide height from modelled tidal range (in metre units)
-        - `otr`: tidal range observed by the satellite (in metre units)
-        - `tr`: modelled tide range (in metre units)
+        - `mot`: mean tide height observed by the satellite (metres)
+        - `mat`: mean modelled astronomical tide height (metres)
+        - `lot`: minimum tide height observed by the satellite (metres)
+        - `lat`: minimum tide height from modelled astronomical tidal range (metres)
+        - `hot`: maximum tide height observed by the satellite (metres)
+        - `hat`: maximum tide height from modelled astronomical tidal range (metres)
+        - `otr`: tidal range observed by the satellite (metres)
+        - `tr`: modelled astronomical tide range (metres)
         - `spread`: proportion of the full modelled tidal range observed by the satellite
         - `offset_low`: proportion of the lowest tides never observed by the satellite
         - `offset_high`: proportion of the highest tides never observed by the satellite
@@ -203,8 +319,6 @@ def tide_stats(
     # Compute linear regression
     obs_linreg = stats.linregress(x=obs_x, y=obs_y)
 
-    # return obs_linreg
-
     if plain_english:
         print(f"\n\n🌊 Modelled astronomical tide range: {all_range:.2f} metres.")
         print(f"🛰️ Observed tide range: {obs_range:.2f} metres.\n")
@@ -231,82 +345,28 @@ def tide_stats(
                 )
 
     if plot:
-        # Create plot and add all time and observed tide data
-        fig, ax = plt.subplots(figsize=(10, 6))
-        all_tides_df.reset_index(["x", "y"]).tide_height.plot(ax=ax, alpha=0.4, label="Modelled tides")
-
-        # Look through custom column values if provided
-        if plot_col is not None:
-            # Create a list of marker styles
-            markers = ["o", "^", "s", "D", "v", "<", ">", "p", "*", "h", "H", "+", "x", "d", "|", "_"]
-            for i, value in enumerate(np.unique(ds[plot_col])):
-                obs_tides_da.sel(time=ds[plot_col] == value).plot.line(
-                    ax=ax,
-                    linewidth=0.0,
-                    color="black",
-                    marker=markers[i % len(markers)],
-                    markersize=4,
-                    label=value,
-                )
-        # Otherwise, plot all data at once
-        else:
-            obs_tides_da.plot.line(
-                ax=ax,
-                marker="o",
-                linewidth=0.0,
-                color="black",
-                markersize=3.5,
-                label="Satellite observations",
-            )
-
-        # Add legend and remove title
-        ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.04), ncol=20, borderaxespad=0, frameon=False)
-        ax.set_title("")
-
-        # Add linear regression line
-        if linear_reg:
-            ax.plot(
-                obs_tides_da.time.isel(time=[0, -1]),
-                obs_linreg.intercept + obs_linreg.slope * obs_x[[0, -1]],
-                "r",
-                label="fitted line",
-            )
-
-        # Add horizontal lines for spread/offsets
-        ax.axhline(obs_min, color="black", linestyle=":", linewidth=1)
-        ax.axhline(obs_max, color="black", linestyle=":", linewidth=1)
-        ax.axhline(all_min, color="black", linestyle=":", linewidth=1)
-        ax.axhline(all_max, color="black", linestyle=":", linewidth=1)
-
-        # Add text annotations for spread/offsets
-        ax.annotate(
-            f"    High tide\n    offset ({high_tide_offset:.0%})",
-            xy=(all_timerange.max(), np.mean([all_max, obs_max])),
-            va="center",
+        _plot_biases(
+            all_tides_df=all_tides_df,
+            obs_tides_da=obs_tides_da,
+            lat=all_min,
+            lot=obs_min,
+            hat=all_max,
+            hot=obs_max,
+            offset_low=low_tide_offset,
+            offset_high=high_tide_offset,
+            spread=spread,
+            plot_col=ds[plot_col] if plot_col else None,
+            obs_linreg=obs_linreg if linear_reg else None,
+            obs_x=obs_x,
+            all_timerange=all_timerange,
         )
-        ax.annotate(
-            f"    Spread\n    ({spread:.0%})",
-            xy=(all_timerange.max(), np.mean([obs_min, obs_max])),
-            va="center",
-        )
-        ax.annotate(
-            f"    Low tide\n    offset ({low_tide_offset:.0%})",
-            xy=(all_timerange.max(), np.mean([all_min, obs_min])),
-        )
-
-        # Remove top right axes and add labels
-        ax.spines["right"].set_visible(False)
-        ax.spines["top"].set_visible(False)
-        ax.set_ylabel("Tide height (m)")
-        ax.set_xlabel("")
-        ax.margins(x=0.015)
 
     # Export pandas.Series containing tidal stats
     output_stats = {
         "y": tidepost_lat,
         "x": tidepost_lon,
-        "obs_mean": obs_mean,
-        "all_mean": all_mean,
+        "mot": obs_mean,
+        "mat": all_mean,
         "lot": obs_min,
         "lat": all_min,
         "hot": obs_max,
@@ -407,15 +467,16 @@ def pixel_stats(
     stats_ds : xarray.Dataset
         An `xarray.Dataset` containing the following statistics as two-dimensional data variables:
 
-        - `lot`: minimum tide height observed by the satellite (in metre units)
-        - `lat`: minimum tide height from modelled tidal range (in metre units)
-        - `hot`: maximum tide height observed by the satellite (in metre units)
-        - `hat`: maximum tide height from modelled tidal range (in metre units)
-        - `otr`: tidal range observed by the satellite (in metre units)
-        - `tr`: modelled tide range (in metre units)
+        - `lot`: minimum tide height observed by the satellite (metres)
+        - `lat`: minimum tide height from modelled astronomical tidal range (metres)
+        - `hot`: maximum tide height observed by the satellite (metres)
+        - `hat`: maximum tide height from modelled astronomical tidal range (metres)
+        - `otr`: tidal range observed by the satellite (metres)
+        - `tr`: modelled astronomical tide range (metres)
         - `spread`: proportion of the full modelled tidal range observed by the satellite
         - `offset_low`: proportion of the lowest tides never observed by the satellite
         - `offset_high`: proportion of the highest tides never observed by the satellite
+
     """
     # Model observed tides
     obs_tides = pixel_tides(
