@@ -153,19 +153,21 @@ def _load_gauge_metadata(metadata_path):
 
 
 def _load_gesla_dataset(site, path, na_value):
-    gesla_df = (
-        pd.read_csv(
-            path,
-            skiprows=41,
-            names=["date", "time", "sea_level", "qc_flag", "use_flag"],
-            sep=r"\s+",  # sep="\s+",
-            parse_dates=[[0, 1]],
-            index_col=0,
-            na_values=na_value,
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", FutureWarning)
+        gesla_df = (
+            pd.read_csv(
+                path,
+                skiprows=41,
+                names=["date", "time", "sea_level", "qc_flag", "use_flag"],
+                sep=r"\s+",  # sep="\s+",
+                parse_dates=[[0, 1]],
+                index_col=0,
+                na_values=na_value,
+            )
+            .rename_axis("time")
+            .assign(site_code=site)
         )
-        .rename_axis("time")
-        .assign(site_code=site)
-    )
 
     return gesla_df
 
@@ -269,7 +271,10 @@ def load_gauge_gesla(
     elif isinstance(x, Number) & isinstance(y, Number):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            site_code = _nearest_row(metadata_gdf, x, y, max_distance).site_code
+            site_code = (
+                _nearest_row(metadata_gdf, x, y, max_distance).rename({"index_right": "site_code"}, axis=1).site_code
+            )
+            # site_code = _nearest_row(metadata_gdf, x, y, max_distance).site_code
 
         # Raise exception if no valid tide gauges are found
         if site_code.isnull().all():
