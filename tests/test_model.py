@@ -223,6 +223,9 @@ def test_model_tides_mode(mode, models, output_format):
             assert all(modelled_tides_df.index.get_level_values("x") == np.tile(x, len(models)))
             assert all(modelled_tides_df.index.get_level_values("y") == np.tile(y, len(models)))
 
+            # Verify correct models exist
+            assert all(modelled_tides_df.tide_model.unique() == models)
+
     if mode == "one-to-many":
         if output_format == "wide":
             # In "wide" output format, the number of rows should equal
@@ -242,6 +245,9 @@ def test_model_tides_mode(mode, models, output_format):
             assert all(modelled_tides_df.index.get_level_values("time") == np.tile(times, len(x) * len(models)))
             assert all(modelled_tides_df.index.get_level_values("x") == np.tile(np.repeat(x, len(times)), len(models)))
             assert all(modelled_tides_df.index.get_level_values("y") == np.tile(np.repeat(y, len(times)), len(models)))
+
+            # Verify correct models exist
+            assert all(modelled_tides_df.tide_model.unique() == models)
 
 
 # Test ensemble modelling functionality
