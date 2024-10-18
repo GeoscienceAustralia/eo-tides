@@ -223,7 +223,8 @@ def test_model_tides_mode(mode, models, output_format):
             assert all(modelled_tides_df.index.get_level_values("x") == np.tile(x, len(models)))
             assert all(modelled_tides_df.index.get_level_values("y") == np.tile(y, len(models)))
 
-            # Verify correct models exist
+            # Verify correct models exist in column
+            assert "tide_model" in modelled_tides_df.columns
             assert all(modelled_tides_df.tide_model.unique() == models)
 
     if mode == "one-to-many":
@@ -246,7 +247,8 @@ def test_model_tides_mode(mode, models, output_format):
             assert all(modelled_tides_df.index.get_level_values("x") == np.tile(np.repeat(x, len(times)), len(models)))
             assert all(modelled_tides_df.index.get_level_values("y") == np.tile(np.repeat(y, len(times)), len(models)))
 
-            # Verify correct models exist
+            # Verify correct models exist in column
+            assert "tide_model" in modelled_tides_df.columns
             assert all(modelled_tides_df.tide_model.unique() == models)
 
 
