@@ -34,6 +34,21 @@ Renamed for consistency with `model_tides` and `pixel_tides`.
 
     Update references to `tidal_tag` to `tag_tides`.
 
+### `tag_tides` now returns an array instead of updating data in-place
+
+The `tag_tides` function now returns an `xarray.DataArray` output containing tide heights, rather than appending tide height data to the original input dataset in-place. This change provides better consistency with `pixel_tides`, which also returns an array of tide heights.
+
+!!! tip "Action required"
+
+    Update:
+    ```
+    ds = tag_tides(ds, ...)
+    ```
+    To:
+    ```
+    ds["tide_height"] = tag_tides(ds, ...)
+    ```
+
 ### `pixel_tides` only returns a single array
 
 The `pixel_tides` function has been updated to only ever return a single array as an output: a high-resolution tide height array matching the resolution of the input `ds` by default, and a low-resolution tide height array if `resample=False`.
