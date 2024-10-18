@@ -54,6 +54,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           resolution: ${{ matrix.resolution }}
 
+      - name: Check gdal version
+        run: uv run gdalinfo --format GTiff
+
       - name: Run Python unit tests
         run: uv run python -m pytest tests --cov --cov-config=pyproject.toml --cov-report=xml --verbose
 
