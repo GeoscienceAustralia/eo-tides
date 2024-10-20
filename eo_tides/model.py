@@ -50,12 +50,29 @@ def _set_directory(directory):
         return directory
 
 
+def _standardise_time(
+    time: np.ndarray | pd.DatetimeIndex | pd.Timestamp | None,
+) -> np.ndarray | None:
+    """
+    Accept a datetime64 ndarray, pandas.DatetimeIndex
+    or pandas.Timestamp, and return a datetime64 ndarray.
+    """
+    # Return time as-is if none
+    if time is None:
+        return time
+
+    # Convert to a 1D datetime64 array
+    time = np.atleast_1d(time).astype("datetime64[ns]")
+
+    return time
+
+
 def list_models(
     directory: str | os.PathLike | None = None,
     show_available: bool = True,
     show_supported: bool = True,
     raise_error: bool = False,
-) -> tuple[list[str], list[str]]:
+) -> (list[str], list[str]):
     """
     List all tide models available for tide modelling, and
     all models supported by `eo-tides` and `pyTMD`.
@@ -289,16 +306,14 @@ def _model_tides(
             )
 
     # Raise error if constituent files no not cover analysis extent
-    except IndexError:
-        error_msg = textwrap.dedent(
-            f"""
-            The {model} tide model constituent files do not cover the requested analysis extent.
-            This can occur if you are using clipped model files to improve run times.
-            Consider using model files that cover your entire analysis area, or set `crop=False`
-            to reduce the extent of tide model constituent files that is loaded.
-            """
-        ).strip()
-        raise Exception(error_msg)
+    except IndexError as e:
+        error_msg = f"""
+        The {model} tide model constituent files do not cover the requested analysis extent.
+        This can occur if you are using clipped model files to improve run times.
+        Consider using model files that cover your entire analysis area, or set `crop=False`
+        to reduce the extent of tide model constituent files that is loaded.
+        """
+        raise Exception(textwrap.dedent(error_msg).strip()) from None
 
     # Calculate complex phase in radians for Euler's
     cph = -1j * ph * np.pi / 180.0
@@ -674,7 +689,7 @@ def model_tides(
     models_requested = list(np.atleast_1d(model))
     x = np.atleast_1d(x)
     y = np.atleast_1d(y)
-    time = np.atleast_1d(time)
+    time = _standardise_time(time)
 
     # Validate input arguments
     assert method in ("bilinear", "spline", "linear", "nearest")
@@ -694,10 +709,6 @@ def model_tides(
             "identical in 'one-to-one' mode. Use 'one-to-many' mode if "
             "you intended to model multiple timesteps at each point."
         )
-
-    # If time passed as a single Timestamp, convert to datetime64
-    if isinstance(time, pd.Timestamp):
-        time = time.to_datetime64()
 
     # Set tide modelling files directory. If no custom path is
     # provided, try global environment variable.
