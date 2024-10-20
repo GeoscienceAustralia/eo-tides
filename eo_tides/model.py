@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import pathlib
+import textwrap
 import warnings
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
@@ -148,16 +149,19 @@ def list_models(
 
     # Raise error or warning if no models are available
     if not available_models:
-        warning_text = (
-            f"No valid tide models are available in `{directory}`. "
-            "Are you sure you have provided the correct `directory` path, "
-            "or set the `EO_TIDES_TIDE_MODELS` environment variable "
-            "to point to the location of your tide model directory?"
-        )
+        warning_msg = textwrap.dedent(
+            f"""
+            No valid tide models are available in `{directory}`.
+            Are you sure you have provided the correct `directory` path, or set the
+            `EO_TIDES_TIDE_MODELS` environment variable to point to the location of your
+            tide model directory?
+            """
+        ).strip()
+
         if raise_error:
-            raise Exception(warning_text)
+            raise Exception(warning_msg)
         else:
-            warnings.warn(warning_text, UserWarning)
+            warnings.warn(warning_msg, UserWarning)
 
     # Return list of available and supported models
     return available_models, supported_models
@@ -286,12 +290,14 @@ def _model_tides(
 
     # Raise error if constituent files no not cover analysis extent
     except IndexError:
-        error_msg = (
-            f"The {model} tide model constituent files do not cover the requested analysis extent. "
-            "This can occur if you are using clipped model files to improve run times. "
-            "Consider using model files that cover your analysis area, or set `crop=False` "
-            "to reduce the extent of tide model constituent files that is loaded."
-        )
+        error_msg = textwrap.dedent(
+            f"""
+            The {model} tide model constituent files do not cover the requested analysis extent.
+            This can occur if you are using clipped model files to improve run times.
+            Consider using model files that cover your entire analysis area, or set `crop=False`
+            to reduce the extent of tide model constituent files that is loaded.
+            """
+        ).strip()
         raise Exception(error_msg)
 
     # Calculate complex phase in radians for Euler's
