@@ -47,7 +47,7 @@ For instructions on how to set up these models for use in `eo-tides`, refer to [
 
 To get started with `eo-tides`, follow the [Installation](https://geoscienceaustralia.github.io/eo-tides/install/) and [Setting up tide models](https://geoscienceaustralia.github.io/eo-tides/setup/) guides.
 
-## Usage examples and case studies
+## Jupyter Notebooks code examples
 
 Interactive Jupyter Notebook usage examples and more complex coastal EO case studies can be found in the [`docs/notebooks/`](https://github.com/GeoscienceAustralia/eo-tides/tree/main/docs/notebooks) directory, or [rendered in the documentation here](https://geoscienceaustralia.github.io/eo-tides/notebooks/Model_tides/).
 
