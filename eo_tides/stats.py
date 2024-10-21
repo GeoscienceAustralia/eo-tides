@@ -136,7 +136,7 @@ def _plot_biases(
 
 
 def tide_stats(
-    ds: xr.Dataset,
+    ds: xr.Dataset | xr.DataArray,
     model: str = "EOT20",
     directory: str | os.PathLike | None = None,
     tidepost_lat: float | None = None,
@@ -167,7 +167,7 @@ def tide_stats(
 
     Parameters
     ----------
-    ds : xarray.Dataset
+    ds : xarray.Dataset or xarray.DataArray
         A multi-dimensional dataset (e.g. "x", "y", "time") used
         to calculate tide statistics. This dataset must contain
         a "time" dimension.
@@ -266,7 +266,7 @@ def tide_stats(
         return_tideposts=True,
         **model_tides_kwargs,
     )
-    obs_tides_da = obs_tides_da.sortby("time")
+    obs_tides_da = obs_tides_da.reindex_like(ds)
 
     # Generate range of times covering entire period of satellite record
     all_timerange = pd.date_range(
