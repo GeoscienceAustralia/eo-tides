@@ -865,3 +865,127 @@ def model_tides(
             tide_df = tide_df.reindex(output_indices)
 
     return tide_df
+
+
+def phase_tides(
+    x,
+    y,
+    time,
+    model="EOT20",
+    directory=None,
+    time_offset="15 min",
+    return_tides=False,
+    **model_tides_kwargs,
+):
+    """
+    Model tide phases (low-flow, high-flow, high-ebb, low-ebb)
+    at multiple coordinates and/or timesteps using using one
+    or more ocean tide models.
+
+    Ebb and low phases are calculated by running the
+    `eo_tides.model.model_tides` function twice, once for
+    the requested timesteps, and again after subtracting a
+    small time offset (by default, 15 minutes). If tides
+    increased over this period, they are assigned as "flow";
+    if they decreased, they are assigned as "ebb".
+    Tides are considered "high" if equal or greater than 0
+    metres tide height, otherwise "low".
+
+    This function supports all parameters that are supported
+    by `model_tides`.
+
+    Parameters
+    ----------
+    x, y : float or list of float
+        One or more x and y coordinates used to define
+        the location at which to model tide phases. By default
+        these coordinates should be lat/lon; use "crs" if they
+        are in a custom coordinate reference system.
+    time : Numpy datetime array or pandas.DatetimeIndex
+        An array containing `datetime64[ns]` values or a
+        `pandas.DatetimeIndex` providing the times at which to
+        model tide phases in UTC time.
+    model : str or list of str, optional
+        The tide model (or models) to use to compute tide phases.
+        Defaults to "EOT20"; for a full list of available/supported
+        models, run `eo_tides.model.list_models`.
+    directory : str, optional
+        The directory containing tide model data files. If no path is
+        provided, this will default to the environment variable
+        `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
+        Tide modelling files should be stored in sub-folders for each
+        model that match the structure required by `pyTMD`
+        (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
+    **model_tides_kwargs :
+        Optional parameters passed to the `eo_tides.model.model_tides`
+        function. Important parameters include `output_format` (e.g.
+        whether to return results in wide or long format), `crop`
+        (whether to crop tide model constituent files on-the-fly to
+        improve performance) etc.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A dataframe containing modelled tide phases.
+
+    """
+
+    # Pop output format and mode for special handling
+    output_format = model_tides_kwargs.pop("output_format", "long")
+    mode = model_tides_kwargs.pop("mode", "one-to-many")
+
+    # Model tides
+    tide_df = model_tides(
+        x=x,
+        y=y,
+        time=time,
+        model=model,
+        directory=directory,
+        **model_tides_kwargs,
+    )
+
+    # Model tides for a time 15 minutes prior to each previously
+    # modelled satellite acquisition time. This allows us to compare
+    # tide heights to see if they are rising or falling.
+    pre_df = model_tides(
+        x=x,
+        y=y,
+        time=time - pd.Timedelta(time_offset),
+        model=model,
+        directory=directory,
+        **model_tides_kwargs,
+    )
+
+    # Compare tides computed for each timestep. If the previous tide
+    # was higher than the current tide, the tide is 'ebbing'. If the
+    # previous tide was lower, the tide is 'flowing'
+    ebb_flow = (tide_df.tide_height < pre_df.tide_height.values).replace({True: "ebb", False: "flow"})
+
+    # If tides are greater than 0, then "high", otherwise "low"
+    high_low = (tide_df.tide_height >= 0).replace({True: "high", False: "low"})
+
+    # Combine into one string and add to data
+    tide_df["tide_phase"] = high_low.astype(str) + "-" + ebb_flow.astype(str)
+
+    # Optionally convert to a wide format dataframe with a tide model in
+    # each dataframe column
+    if output_format == "wide":
+        # Pivot into wide format with each time model as a column
+        print("Converting to a wide format dataframe")
+        tide_df = tide_df.pivot(columns="tide_model")
+
+        # If in 'one-to-one' mode, reindex using our input time/x/y
+        # values to ensure the output is sorted the same as our inputs
+        if mode == "one-to-one":
+            output_indices = pd.MultiIndex.from_arrays([time, x, y], names=["time", "x", "y"])
+            tide_df = tide_df.reindex(output_indices)
+
+        # Optionally drop tides
+        if not return_tides:
+            return tide_df.drop("tide_height", axis=1)["tide_phase"]
+
+    # Optionally drop tide heights
+    if not return_tides:
+        return tide_df.drop("tide_height", axis=1)
+
+    return tide_df
