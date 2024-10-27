@@ -34,6 +34,21 @@ Renamed for consistency with `model_tides` and `pixel_tides`.
 
     Update references to `tidal_tag` to `tag_tides`.
 
+## `ds` param renamed to `data`, now accepts `GeoBox`
+
+The `ds` param in all satellite data functions (`tag_tides`, `pixel_tides`, `tide_stats`, `pixel_tides`) has been updated to accept either `xarray.Dataset`, `xarray.DataArray` or a `odc.geo.geobox.GeoBox`. To account for this change, the `ds` param has been renamed to a more generic name `data`.
+
+!!! tip "Action required"
+
+    Update:
+    ```
+    tag_tides(ds=your_data)
+    ```
+    To:
+    ```
+    tag_tides(data=your_data)
+    ```
+
 ### `tag_tides` now returns an array instead of updating data in-place
 
 The `tag_tides` function now returns an `xarray.DataArray` output containing tide heights, rather than appending tide height data to the original input dataset in-place. This change provides better consistency with `pixel_tides`, which also returns an array of tide heights.
@@ -42,16 +57,16 @@ The `tag_tides` function now returns an `xarray.DataArray` output containing tid
 
     Update:
     ```
-    ds = tag_tides(ds, ...)
+    data = tag_tides(data, ...)
     ```
     To:
     ```
-    ds["tide_height"] = tag_tides(ds, ...)
+    data["tide_height"] = tag_tides(data, ...)
     ```
 
 ### `pixel_tides` only returns a single array
 
-The `pixel_tides` function has been updated to only ever return a single array as an output: a high-resolution tide height array matching the resolution of the input `ds` by default, and a low-resolution tide height array if `resample=False`.
+The `pixel_tides` function has been updated to only ever return a single array as an output: a high-resolution tide height array matching the resolution of the input `data` by default, and a low-resolution tide height array if `resample=False`.
 
 !!! tip "Action required"
 

@@ -6,6 +6,7 @@ import textwrap
 import warnings
 from typing import TYPE_CHECKING
 
+import numpy as np
 import odc.geo.xr
 import pandas as pd
 import xarray as xr
@@ -13,15 +14,15 @@ from odc.geo.geobox import GeoBox
 
 # Only import if running type checking
 if TYPE_CHECKING:
-    import numpy as np
+    from odc.geo import Shape2d
 
 from .model import _standardise_time, model_tides
 
 
 def _resample_chunks(
-    ds: xr.DataArray | xr.Dataset | GeoBox,
+    data: xr.DataArray | xr.Dataset | GeoBox,
     dask_chunks: tuple | None = None,
-) -> tuple:
+) -> tuple | Shape2d:
     """
     Automatically return optimised dask chunks
     for reprojection with `_pixel_tides_resample`.
@@ -33,62 +34,63 @@ def _resample_chunks(
     if dask_chunks is not None:
         return dask_chunks
 
-    # If ds is a GeoBox, return its shape
-    if isinstance(ds, GeoBox):
-        return ds.shape
+    # If data is a GeoBox, return its shape
+    if isinstance(data, GeoBox):
+        return data.shape
 
-    # if ds has chunks, then return just spatial chunks
-    if ds.chunks is not None:
-        y_dim, x_dim = ds.odc.spatial_dims
-        return ds.chunks[y_dim], ds.chunks[x_dim]
+    # if data has chunks, then return just spatial chunks
+    if data.chunks is not None:
+        y_dim, x_dim = data.odc.spatial_dims
+        return data.chunks[y_dim], data.chunks[x_dim]
 
-    # if ds has no chunks, then return entire image shape
-    return ds.odc.geobox.shape
+    # if data has no chunks, then return entire image shape
+    return data.odc.geobox.shape
 
 
 def _standardise_inputs(
-    ds: xr.DataArray | xr.Dataset | GeoBox,
+    data: xr.DataArray | xr.Dataset | GeoBox,
     time: np.ndarray | pd.DatetimeIndex | pd.Timestamp | None,
-) -> (GeoBox, np.ndarray):
+) -> tuple[GeoBox, np.ndarray | None]:
     """
     Takes an xarray or GeoBox input and an optional custom times,
-    and returns a standardised GeoBox and
+    and returns a standardised GeoBox and times (usually an
+    array, but possibly None).
     """
 
-    # If `ds` is an xarray object, extract its GeoBox and time
-    if isinstance(ds, (xr.DataArray, xr.Dataset)):
+    # If `data` is an xarray object, extract its GeoBox and time
+    if isinstance(data, (xr.DataArray, xr.Dataset)):
         # Try to extract GeoBox
         try:
-            gbox = ds.odc.geobox
+            gbox: GeoBox = data.odc.geobox
         except AttributeError:
             error_msg = """
-            Cannot extract a valid GeoBox for `ds`. This is required for
-            extracting details about `ds`'s CRS and spatial location.
+            Cannot extract a valid GeoBox for `data`. This is required for
+            extracting details about `data`'s CRS and spatial location.
 
-            Import `odc.geo.xr` then run `ds = ds.odc.assign_crs(crs=...)`
+            Import `odc.geo.xr` then run `data = data.odc.assign_crs(crs=...)`
             to prepare your data before passing it to this function.
             """
             raise Exception(textwrap.dedent(error_msg).strip())
 
-        # Use custom time by default if provided; otherwise try and extract from `ds`
+        # Use custom time by default if provided; otherwise try and extract from `data`
         if time is not None:
             time = _standardise_time(time)
-        elif "time" in ds.dims:
-            time = ds.coords["time"].values
+        elif "time" in data.dims:
+            time = np.asarray(data.coords["time"].values)
         else:
-            raise ValueError("`ds` does not have a 'time' dimension, and no custom times were provided via `time`.")
+            raise ValueError("`data` does not have a 'time' dimension, and no custom times were provided via `time`.")
 
-    # If `ds` is a GeoBox, use it directly; raise an error if no time was provided
-    elif isinstance(ds, GeoBox):
-        gbox = ds
+    # If `data` is a GeoBox, use it directly; raise an error if no time was provided
+    elif isinstance(data, GeoBox):
+        gbox = data
         if time is not None:
             time = _standardise_time(time)
         else:
-            raise ValueError("If `ds` is a GeoBox, custom times must be provided via `time`.")
+            raise ValueError("If `data` is a GeoBox, custom times must be provided via `time`.")
 
     # Raise error if no valid inputs were provided
     else:
-        raise TypeError("`ds` must be an xarray.DataArray, xarray.Dataset, or odc.geo.geobox.GeoBox.")
+        raise TypeError("`data` must be an xarray.DataArray, xarray.Dataset, or odc.geo.geobox.GeoBox.")
 
     return gbox, time
 
@@ -111,27 +113,24 @@ def _pixel_tides_resample(
     gbox : GeoBox
         The GeoBox to use as the template for the resampling operation.
         This is typically comes from the same satellite dataset originally
-        passed to `pixel_tides` (e.g. `ds.odc.geobox`).
+        passed to `pixel_tides` (e.g. `data.odc.geobox`).
     resample_method : string, optional
         The resampling method to use. Defaults to "bilinear"; valid
         options include "nearest", "cubic", "min", "max", "average" etc.
     dask_chunks : tuple of float, optional
         Can be used to configure custom Dask chunking for the final
-        resampling step. By default, chunks will be automatically set
-        to match y/x chunks from `ds` if they exist; otherwise chunks
-        will be chosen to cover the entire y/x extent of the dataset.
-        For custom chunks, provide a tuple in the form `(y, x)`, e.g.
-        `(2048, 2048)`.
+        resampling step. For custom chunks, provide a tuple in the form
+        (y, x), e.g. (2048, 2048).
     dask_compute : bool, optional
         Whether to compute results of the resampling step using Dask.
-        If False, this will return `tides_highres` as a Dask array.
+        If False, this will return `tides_highres` as a lazy loaded
+        Dask-enabled array.
 
     Returns
     -------
-    tides_highres, tides_lowres : tuple of xr.DataArrays
-        In addition to `tides_lowres` (see above), a high resolution
-        array of tide heights will be generated matching the
-        exact spatial resolution and extent of `ds`.
+    tides_highres : xr.DataArray
+        A high resolution array of tide heights matching the exact
+        spatial resolution and extent of `gbox`.
 
     """
     # Determine spatial dimensions
@@ -141,7 +140,7 @@ def _pixel_tides_resample(
     # and a single chunk for each timestep/quantile and tide model
     tides_lowres_dask = tides_lowres.chunk({d: None if d in [y_dim, x_dim] else 1 for d in tides_lowres.dims})
 
-    # Reproject into the GeoBox of `ds` using odc.geo and Dask
+    # Reproject into the pixel grid of `gbox` using odc.geo and Dask
     tides_highres = tides_lowres_dask.odc.reproject(
         how=gbox,
         chunks=dask_chunks,
@@ -156,7 +155,7 @@ def _pixel_tides_resample(
 
 
 def tag_tides(
-    ds: xr.Dataset | xr.DataArray | GeoBox,
+    data: xr.Dataset | xr.DataArray | GeoBox,
     time: np.ndarray | pd.DatetimeIndex | pd.Timestamp | None = None,
     model: str | list[str] = "EOT20",
     directory: str | os.PathLike | None = None,
@@ -185,18 +184,18 @@ def tag_tides(
 
     Parameters
     ----------
-    ds : xarray.Dataset or xarray.DataArray or odc.geo.geobox.GeoBox
+    data : xarray.Dataset or xarray.DataArray or odc.geo.geobox.GeoBox
         A multi-dimensional dataset or GeoBox pixel grid that will
-        be used to define the tide modelling location. If `ds`
+        be used to define the tide modelling location. If `data`
         is an xarray object, it should include a "time" dimension.
-        If no "time" dimension exists or if `ds` is a GeoBox,
+        If no "time" dimension exists or if `data` is a GeoBox,
         then times must be passed using the `time` parameter.
     time : pd.DatetimeIndex or list of pd.Timestamp, optional
         By default, the function will model tides using the times
-        contained in the "time" dimension of `ds`. Alternatively, this
+        contained in the "time" dimension of `data`. Alternatively, this
         param can be used to model tides for a custom set of times
         instead. For example:
-        `times=pd.date_range(start="2000", end="2001", freq="5h")`
+        `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
         The tide model (or models) used to model tides. If a list is
         provided, a new "tide_model" dimension will be added to the
@@ -224,11 +223,11 @@ def tag_tides(
     -------
     tides_da : xr.DataArray
         A one-dimensional tide height array. This will contain either
-        tide heights for every timestep in `ds`, or for every time in
+        tide heights for every timestep in `data`, or for every time in
         `times` if provided.
     """
     # Standardise data inputs, time and models
-    gbox, time_coords = _standardise_inputs(ds, time)
+    gbox, time_coords = _standardise_inputs(data, time)
     model = [model] if isinstance(model, str) else model
 
     # If custom tide posts are not provided, use dataset centroid
@@ -261,30 +260,6 @@ def tag_tides(
             f"`tidepost_lat` and `tidepost_lon` parameters."
         )
 
-    # # Optionally calculate the tide phase for each observation
-    # if ebb_flow:
-    #     # Model tides for a time 15 minutes prior to each previously
-    #     # modelled satellite acquisition time. This allows us to compare
-    #     # tide heights to see if they are rising or falling.
-    #     print("Modelling tidal phase (e.g. ebb or flow)")
-    #     tide_pre_df = model_tides(
-    #         x=lon,  # type: ignore
-    #         y=lat,  # type: ignore
-    #         time=(ds.time - pd.Timedelta("15 min")),
-    #         model=model,
-    #         directory=directory,
-    #         crs="EPSG:4326",
-    #         **model_tides_kwargs,
-    #     )
-
-    #     # Compare tides computed for each timestep. If the previous tide
-    #     # was higher than the current tide, the tide is 'ebbing'. If the
-    #     # previous tide was lower, the tide is 'flowing'
-    #     tide_df["ebb_flow"] = (tide_df.tide_height < tide_pre_df.tide_height.values).replace({
-    #         True: "Ebb",
-    #         False: "Flow",
-    #     })
-
     # Convert to xarray format
     tides_da = tide_df.reset_index().set_index(["time", "tide_model"]).drop(["x", "y"], axis=1).tide_height.to_xarray()
 
@@ -296,7 +271,7 @@ def tag_tides(
 
 
 def pixel_tides(
-    ds: xr.Dataset | xr.DataArray | GeoBox,
+    data: xr.Dataset | xr.DataArray | GeoBox,
     time: np.ndarray | pd.DatetimeIndex | pd.Timestamp | None = None,
     model: str | list[str] = "EOT20",
     directory: str | os.PathLike | None = None,
@@ -305,7 +280,7 @@ def pixel_tides(
     resolution: float | None = None,
     buffer: float | None = None,
     resample_method: str = "bilinear",
-    dask_chunks: tuple[float, float] = None,
+    dask_chunks: tuple[float, float] | None = None,
     dask_compute: bool = True,
     **model_tides_kwargs,
 ) -> xr.DataArray:
@@ -338,18 +313,18 @@ def pixel_tides(
 
     Parameters
     ----------
-    ds : xarray.Dataset or xarray.DataArray or odc.geo.geobox.GeoBox
+    data : xarray.Dataset or xarray.DataArray or odc.geo.geobox.GeoBox
         A multi-dimensional dataset or GeoBox pixel grid that will
-        be used to define the spatial tide modelling grid. If `ds`
+        be used to define the spatial tide modelling grid. If `data`
         is an xarray object, it should include a "time" dimension.
-        If no "time" dimension exists or if `ds` is a GeoBox,
+        If no "time" dimension exists or if `data` is a GeoBox,
         then times must be passed using the `time` parameter.
     time : pd.DatetimeIndex or list of pd.Timestamp, optional
         By default, the function will model tides using the times
-        contained in the "time" dimension of `ds`. Alternatively, this
+        contained in the "time" dimension of `data`. Alternatively, this
         param can be used to model tides for a custom set of times
         instead. For example:
-        `times=pd.date_range(start="2000", end="2001", freq="5h")`
+        `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
         The tide model (or models) used to model tides. If a list is
         provided, a new "tide_model" dimension will be added to the
@@ -363,7 +338,7 @@ def pixel_tides(
         model that match the structure required by `pyTMD`
         (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
     resample : bool, optional
-        Whether to resample low resolution tides back into `ds`'s original
+        Whether to resample low resolution tides back into `data`'s original
         higher resolution grid. Set this to `False` if you do not want
         low resolution tides to be re-projected back to higher resolution.
     calculate_quantiles : tuple of float or numpy.ndarray, optional
@@ -375,8 +350,8 @@ def pixel_tides(
     resolution : float, optional
         The desired resolution of the low-resolution grid used for tide
         modelling. The default None will create a 5000 m resolution grid
-        if `ds` has a projected CRS (i.e. metre units), or a 0.05 degree
-        resolution grid if `ds` has a geographic CRS (e.g. degree units).
+        if `data` has a projected CRS (i.e. metre units), or a 0.05 degree
+        resolution grid if `data` has a geographic CRS (e.g. degree units).
         Note: higher resolutions do not necessarily provide better
         tide modelling performance, as results will be limited by the
         resolution of the underlying global tide model (e.g. 1/16th
@@ -387,11 +362,11 @@ def pixel_tides(
         ensures that modelled tides are seamless across analysis
         boundaries. This buffer is eventually be clipped away when
         the low-resolution modelled tides are re-projected back to the
-        original resolution and extent of `ds`. To ensure that at least
+        original resolution and extent of `data`. To ensure that at least
         two low-resolution grid pixels occur outside of the dataset
-        bounds, the default None applies a 12000 m buffer if `ds` has a
+        bounds, the default None applies a 12000 m buffer if `data` has a
         projected CRS (i.e. metre units), or a 0.12 degree buffer if
-        `ds` has a geographic CRS (e.g. degree units).
+        `data` has a geographic CRS (e.g. degree units).
     resample_method : str, optional
         If resampling is requested (see `resample` above), use this
         resampling method when converting from low resolution to high
@@ -400,7 +375,7 @@ def pixel_tides(
     dask_chunks : tuple of float, optional
         Can be used to configure custom Dask chunking for the final
         resampling step. By default, chunks will be automatically set
-        to match y/x chunks from `ds` if they exist; otherwise chunks
+        to match y/x chunks from `data` if they exist; otherwise chunks
         will be chosen to cover the entire y/x extent of the dataset.
         For custom chunks, provide a tuple in the form `(y, x)`, e.g.
         `(2048, 2048)`.
@@ -419,15 +394,15 @@ def pixel_tides(
         A three-dimensional tide height array.
         If `resample=True` (default), a high-resolution array of tide
         heights will be returned that matches the exact spatial resolution
-        and extents of `ds`. This will contain either tide heights for
-        every timestep in `ds` (or in `times` if provided), or tide height
+        and extents of `data`. This will contain either tide heights for
+        every timestep in `data` (or in `times` if provided), or tide height
         quantiles for every quantile provided by `calculate_quantiles`.
         If `resample=False`, results for the intermediate low-resolution
         tide modelling grid will be returned instead.
     """
     # Standardise data inputs, time and models
-    gbox, time_coords = _standardise_inputs(ds, time)
-    dask_chunks = _resample_chunks(ds, dask_chunks)
+    gbox, time_coords = _standardise_inputs(data, time)
+    dask_chunks = _resample_chunks(data, dask_chunks)
     model = [model] if isinstance(model, str) else model
 
     # Determine spatial dimensions
@@ -435,6 +410,7 @@ def pixel_tides(
 
     # Determine resolution and buffer, using different defaults for
     # geographic (i.e. degrees) and projected (i.e. metres) CRSs:
+    assert gbox.crs is not None
     crs_units = gbox.crs.units[0][0:6]
     if gbox.crs.geographic:
         if resolution is None:
@@ -442,7 +418,7 @@ def pixel_tides(
         elif resolution > 360:
             raise ValueError(
                 f"A resolution of greater than 360 was "
-                f"provided, but `ds` has a geographic CRS "
+                f"provided, but `data` has a geographic CRS "
                 f"in {crs_units} units. Did you accidently "
                 f"provide a resolution in projected "
                 f"(i.e. metre) units?",
@@ -455,7 +431,7 @@ def pixel_tides(
         elif resolution < 1:
             raise ValueError(
                 f"A resolution of less than 1 was provided, "
-                f"but `ds` has a projected CRS in "
+                f"but `data` has a projected CRS in "
                 f"{crs_units} units. Did you accidently "
                 f"provide a resolution in geographic "
                 f"(degree) units?",
@@ -469,7 +445,7 @@ def pixel_tides(
         raise ValueError(
             f"The resolution of the low-resolution tide "
             f"modelling grid ({resolution:.2f}) is less "
-            f"than `ds`'s pixel resolution ({dataset_res:.2f}). "
+            f"than `data`'s pixel resolution ({dataset_res:.2f}). "
             f"This can cause extremely slow tide modelling "
             f"performance. Please select provide a resolution "
             f"greater than {dataset_res:.2f} using "
