@@ -239,7 +239,7 @@ model_tides(
 )
 ```
 
-### Setting the `EO_TIDES_TIDE_MODELS` environmental variable
+### Advanced: setting the `EO_TIDES_TIDE_MODELS` environmental variable
 
 For more advanced usage, you can set the path to your [tide model directory](#setting-up-a-tide-model-directory) by setting the `EO_TIDES_TIDE_MODELS` environment variable:
 
