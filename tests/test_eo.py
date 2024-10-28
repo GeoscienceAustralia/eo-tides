@@ -148,20 +148,20 @@ def test_pixel_tides_times(satellite_ds, measured_tides_ds):
     custom_times = pd.date_range(
         start="2022-01-01",
         end="2022-01-05",
-        freq="6H",
+        freq="6h",
     )
 
     # Verify that correct times are included on output
-    measured_tides_ds = pixel_tides(satellite_ds, times=custom_times)
+    measured_tides_ds = pixel_tides(satellite_ds, time=custom_times)
     assert all(measured_tides_ds.time.values == custom_times)
     assert len(measured_tides_ds.time) == len(custom_times)
 
     # Verify passing a list
-    measured_tides_ds = pixel_tides(satellite_ds, times=custom_times.tolist())
+    measured_tides_ds = pixel_tides(satellite_ds, time=custom_times.tolist())
     assert len(measured_tides_ds.time) == len(custom_times)
 
     # Verify passing a single timestamp
-    measured_tides_ds = pixel_tides(satellite_ds, times=custom_times.tolist()[0])
+    measured_tides_ds = pixel_tides(satellite_ds, time=custom_times.tolist()[0])
     assert len(measured_tides_ds) == 1
 
     # Verify that passing a dataset without time leads to error
@@ -170,7 +170,7 @@ def test_pixel_tides_times(satellite_ds, measured_tides_ds):
         pixel_tides(satellite_ds_notime)
 
     # Verify passing a dataset without time and custom times
-    measured_tides_ds = pixel_tides(satellite_ds_notime, times=custom_times)
+    measured_tides_ds = pixel_tides(satellite_ds_notime, time=custom_times)
     assert len(measured_tides_ds.time) == len(custom_times)
 
 
@@ -258,7 +258,7 @@ def test_pixel_tides_multiplemodels(satellite_ds, quantiles):
 # Run test for different combinations of Dask chunking
 @pytest.mark.parametrize(
     "dask_chunks",
-    ["auto", (300, 300), (200, 300)],
+    [None, (300, 300), (200, 300)],
 )
 def test_pixel_tides_dask(satellite_ds, dask_chunks):
     # Model tides with Dask compute turned off to return Dask arrays
@@ -268,7 +268,7 @@ def test_pixel_tides_dask(satellite_ds, dask_chunks):
     assert dask.is_dask_collection(modelled_tides_ds)
 
     # If chunks set to "auto", check output matches `satellite_ds` chunks
-    if dask_chunks == "auto":
+    if dask_chunks is None:
         assert modelled_tides_ds.chunks == satellite_ds.nbart_red.chunks
 
     # Otherwise, check output chunks match requested chunks

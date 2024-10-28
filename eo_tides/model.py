@@ -26,7 +26,9 @@ from tqdm import tqdm
 from .utils import idw
 
 
-def _set_directory(directory):
+def _set_directory(
+    directory: str | os.PathLike | None = None,
+) -> os.PathLike:
     """
     Set tide modelling files directory. If no custom
     path is provided, try global environmental variable
@@ -48,6 +50,23 @@ def _set_directory(directory):
         raise FileNotFoundError(f"No valid tide model directory found at path `{directory}`")
     else:
         return directory
+
+
+def _standardise_time(
+    time: np.ndarray | pd.DatetimeIndex | pd.Timestamp | None,
+) -> np.ndarray | None:
+    """
+    Accept a datetime64 ndarray, pandas.DatetimeIndex
+    or pandas.Timestamp, and return a datetime64 ndarray.
+    """
+    # Return time as-is if none
+    if time is None:
+        return time
+
+    # Convert to a 1D datetime64 array
+    time = np.atleast_1d(time).astype("datetime64[ns]")
+
+    return time
 
 
 def list_models(
@@ -188,117 +207,41 @@ def _model_tides(
     # Obtain model details
     pytmd_model = pyTMD.io.model(directory).elevation(model)
 
-    # Convert x, y to latitude/longitude
+    # Reproject x, y to latitude/longitude
     transformer = pyproj.Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
     lon, lat = transformer.transform(x.flatten(), y.flatten())
 
     # Convert datetime
     timescale = pyTMD.time.timescale().from_datetime(time.flatten())
 
-    # Calculate bounds for cropping
-    buffer = 1  # one degree on either side
-    bounds = [
-        lon.min() - buffer,
-        lon.max() + buffer,
-        lat.min() - buffer,
-        lat.max() + buffer,
-    ]
-
     try:
         # Read tidal constants and interpolate to grid points
-        if pytmd_model.format in ("OTIS", "ATLAS-compact", "TMD3"):
-            amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
-                lon,
-                lat,
-                pytmd_model.grid_file,
-                pytmd_model.model_file,
-                pytmd_model.projection,
-                type=pytmd_model.type,
-                grid=pytmd_model.file_format,
-                crop=crop,
-                bounds=bounds,
-                method=method,
-                extrapolate=extrapolate,
-                cutoff=cutoff,
-            )
+        amp, ph, c = pytmd_model.extract_constants(
+            lon,
+            lat,
+            type=pytmd_model.type,
+            crop=crop,
+            bounds=None,
+            method=method,
+            extrapolate=extrapolate,
+            cutoff=cutoff,
+            append_node=False,
+            # append_node=True,
+        )
 
-            # Use delta time at 2000.0 to match TMD outputs
-            deltat = np.zeros((len(timescale)), dtype=np.float64)
-
-        elif pytmd_model.format in ("ATLAS-netcdf",):
-            amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
-                lon,
-                lat,
-                pytmd_model.grid_file,
-                pytmd_model.model_file,
-                type=pytmd_model.type,
-                crop=crop,
-                bounds=bounds,
-                method=method,
-                extrapolate=extrapolate,
-                cutoff=cutoff,
-                scale=pytmd_model.scale,
-                compressed=pytmd_model.compressed,
-            )
-
-            # Use delta time at 2000.0 to match TMD outputs
-            deltat = np.zeros((len(timescale)), dtype=np.float64)
-
-        elif pytmd_model.format in ("GOT-ascii", "GOT-netcdf"):
-            amp, ph, c = pyTMD.io.GOT.extract_constants(
-                lon,
-                lat,
-                pytmd_model.model_file,
-                grid=pytmd_model.file_format,
-                crop=crop,
-                bounds=bounds,
-                method=method,
-                extrapolate=extrapolate,
-                cutoff=cutoff,
-                scale=pytmd_model.scale,
-                compressed=pytmd_model.compressed,
-            )
-
-            # Delta time (TT - UT1)
-            deltat = timescale.tt_ut1
-
-        elif pytmd_model.format in ("FES-ascii", "FES-netcdf"):
-            amp, ph = pyTMD.io.FES.extract_constants(
-                lon,
-                lat,
-                pytmd_model.model_file,
-                type=pytmd_model.type,
-                version=pytmd_model.version,
-                crop=crop,
-                bounds=bounds,
-                method=method,
-                extrapolate=extrapolate,
-                cutoff=cutoff,
-                scale=pytmd_model.scale,
-                compressed=pytmd_model.compressed,
-            )
-
-            # Available model constituents
-            c = pytmd_model.constituents
-
-            # Delta time (TT - UT1)
-            deltat = timescale.tt_ut1
-        else:
-            raise Exception(
-                f"Unsupported model format ({pytmd_model.format}). This may be due to an incompatible version of `pyTMD`."
-            )
+        # TODO: Return constituents
+        # print(amp.shape, ph.shape, c)
+        # print(pd.DataFrame({"amplitude": amp}))
 
     # Raise error if constituent files no not cover analysis extent
-    except IndexError:
-        error_msg = textwrap.dedent(
-            f"""
-            The {model} tide model constituent files do not cover the requested analysis extent.
-            This can occur if you are using clipped model files to improve run times.
-            Consider using model files that cover your entire analysis area, or set `crop=False`
-            to reduce the extent of tide model constituent files that is loaded.
-            """
-        ).strip()
-        raise Exception(error_msg)
+    except IndexError as e:
+        error_msg = f"""
+        The {model} tide model constituent files do not cover the requested analysis extent.
+        This can occur if you are using clipped model files to improve run times.
+        Consider using model files that cover your entire analysis area, or set `crop=False`
+        to reduce the extent of tide model constituent files that is loaded.
+        """
+        raise Exception(textwrap.dedent(error_msg).strip()) from None
 
     # Calculate complex phase in radians for Euler's
     cph = -1j * ph * np.pi / 180.0
@@ -306,30 +249,42 @@ def _model_tides(
     # Calculate constituent oscillation
     hc = amp * np.exp(cph)
 
+    # Compute deltat based on model
+    if pytmd_model.corrections in ("OTIS", "ATLAS", "TMD3", "netcdf"):
+        # Use delta time at 2000.0 to match TMD outputs
+        deltat = np.zeros_like(timescale.tt_ut1)
+    else:
+        # Use interpolated delta times
+        deltat = timescale.tt_ut1
+
     # Determine the number of points and times to process. If in
     # "one-to-many" mode, these counts are used to repeat our extracted
     # constituents and timesteps so we can extract tides for all
     # combinations of our input times and tide modelling points.
+    # If in "one-to-many" mode, repeat constituents to length of time
+    # and number of input coords before passing to `predict_tide_drift`
     # If in "one-to-one" mode, we avoid this step by setting counts to 1
     # (e.g. "repeat 1 times")
     points_repeat = len(x) if mode == "one-to-many" else 1
     time_repeat = len(time) if mode == "one-to-many" else 1
-
-    # If in "one-to-many" mode, repeat constituents to length of time
-    # and number of input coords before passing to `predict_tide_drift`
     t, hc, deltat = (
         np.tile(timescale.tide, points_repeat),
         hc.repeat(time_repeat, axis=0),
         np.tile(deltat, points_repeat),
     )
 
-    # Predict tidal elevations at time and infer minor corrections
-    npts = len(t)
-    tide = np.ma.zeros((npts), fill_value=np.nan)
+    # Create arrays to hold outputs
+    tide = np.ma.zeros((len(t)), fill_value=np.nan)
     tide.mask = np.any(hc.mask, axis=1)
 
-    # Predict tides
-    tide.data[:] = pyTMD.predict.drift(t, hc, c, deltat=deltat, corrections=pytmd_model.corrections)
+    # Predict tidal elevations at time and infer minor corrections
+    tide.data[:] = pyTMD.predict.drift(
+        t,
+        hc,
+        c,
+        deltat=deltat,
+        corrections=pytmd_model.corrections,
+    )
     minor = pyTMD.predict.infer_minor(
         t,
         hc,
@@ -674,9 +629,10 @@ def model_tides(
     models_requested = list(np.atleast_1d(model))
     x = np.atleast_1d(x)
     y = np.atleast_1d(y)
-    time = np.atleast_1d(time)
+    time = _standardise_time(time)
 
     # Validate input arguments
+    assert time is not None, "Times for modelling tides muyst be provided via `time`."
     assert method in ("bilinear", "spline", "linear", "nearest")
     assert output_units in (
         "m",
@@ -694,10 +650,6 @@ def model_tides(
             "identical in 'one-to-one' mode. Use 'one-to-many' mode if "
             "you intended to model multiple timesteps at each point."
         )
-
-    # If time passed as a single Timestamp, convert to datetime64
-    if isinstance(time, pd.Timestamp):
-        time = time.to_datetime64()
 
     # Set tide modelling files directory. If no custom path is
     # provided, try global environment variable.
@@ -852,5 +804,136 @@ def model_tides(
         if mode == "one-to-one":
             output_indices = pd.MultiIndex.from_arrays([time, x, y], names=["time", "x", "y"])
             tide_df = tide_df.reindex(output_indices)
+
+    return tide_df
+
+
+def phase_tides(
+    x: float | list[float] | xr.DataArray,
+    y: float | list[float] | xr.DataArray,
+    time: np.ndarray | pd.DatetimeIndex,
+    model: str | list[str] = "EOT20",
+    directory: str | os.PathLike | None = None,
+    time_offset: str = "15 min",
+    return_tides: bool = False,
+    **model_tides_kwargs,
+) -> pd.DataFrame:
+    """
+    Model tide phases (low-flow, high-flow, high-ebb, low-ebb)
+    at multiple coordinates and/or timesteps using using one
+    or more ocean tide models.
+
+    Ebb and low phases are calculated by running the
+    `eo_tides.model.model_tides` function twice, once for
+    the requested timesteps, and again after subtracting a
+    small time offset (by default, 15 minutes). If tides
+    increased over this period, they are assigned as "flow";
+    if they decreased, they are assigned as "ebb".
+    Tides are considered "high" if equal or greater than 0
+    metres tide height, otherwise "low".
+
+    This function supports all parameters that are supported
+    by `model_tides`.
+
+    Parameters
+    ----------
+    x, y : float or list of float
+        One or more x and y coordinates used to define
+        the location at which to model tide phases. By default
+        these coordinates should be lat/lon; use "crs" if they
+        are in a custom coordinate reference system.
+    time : Numpy datetime array or pandas.DatetimeIndex
+        An array containing `datetime64[ns]` values or a
+        `pandas.DatetimeIndex` providing the times at which to
+        model tide phases in UTC time.
+    model : str or list of str, optional
+        The tide model (or models) to use to compute tide phases.
+        Defaults to "EOT20"; for a full list of available/supported
+        models, run `eo_tides.model.list_models`.
+    directory : str, optional
+        The directory containing tide model data files. If no path is
+        provided, this will default to the environment variable
+        `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
+        Tide modelling files should be stored in sub-folders for each
+        model that match the structure required by `pyTMD`
+        (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
+    time_offset: str, optional
+        The time offset/delta used to generate a time series of
+        offset tide heights required for phase calculation. Defeaults
+        to "15 min"; can be any string passed to `pandas.Timedelta`.
+    return_tides: bool, optional
+        Whether to return intermediate modelled tide heights as a
+        "tide_height" column in the output dataframe. Defaults to False.
+    **model_tides_kwargs :
+        Optional parameters passed to the `eo_tides.model.model_tides`
+        function. Important parameters include `output_format` (e.g.
+        whether to return results in wide or long format), `crop`
+        (whether to crop tide model constituent files on-the-fly to
+        improve performance) etc.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A dataframe containing modelled tide phases.
+
+    """
+
+    # Pop output format and mode for special handling
+    output_format = model_tides_kwargs.pop("output_format", "long")
+    mode = model_tides_kwargs.pop("mode", "one-to-many")
+
+    # Model tides
+    tide_df = model_tides(
+        x=x,
+        y=y,
+        time=time,
+        model=model,
+        directory=directory,
+        **model_tides_kwargs,
+    )
+
+    # Model tides for a time 15 minutes prior to each previously
+    # modelled satellite acquisition time. This allows us to compare
+    # tide heights to see if they are rising or falling.
+    pre_df = model_tides(
+        x=x,
+        y=y,
+        time=time - pd.Timedelta(time_offset),
+        model=model,
+        directory=directory,
+        **model_tides_kwargs,
+    )
+
+    # Compare tides computed for each timestep. If the previous tide
+    # was higher than the current tide, the tide is 'ebbing'. If the
+    # previous tide was lower, the tide is 'flowing'
+    ebb_flow = (tide_df.tide_height < pre_df.tide_height.values).replace({True: "ebb", False: "flow"})
+
+    # If tides are greater than 0, then "high", otherwise "low"
+    high_low = (tide_df.tide_height >= 0).replace({True: "high", False: "low"})
+
+    # Combine into one string and add to data
+    tide_df["tide_phase"] = high_low.astype(str) + "-" + ebb_flow.astype(str)
+
+    # Optionally convert to a wide format dataframe with a tide model in
+    # each dataframe column
+    if output_format == "wide":
+        # Pivot into wide format with each time model as a column
+        print("Converting to a wide format dataframe")
+        tide_df = tide_df.pivot(columns="tide_model")
+
+        # If in 'one-to-one' mode, reindex using our input time/x/y
+        # values to ensure the output is sorted the same as our inputs
+        if mode == "one-to-one":
+            output_indices = pd.MultiIndex.from_arrays([time, x, y], names=["time", "x", "y"])
+            tide_df = tide_df.reindex(output_indices)
+
+        # Optionally drop tides
+        if not return_tides:
+            return tide_df.drop("tide_height", axis=1)["tide_phase"]
+
+    # Optionally drop tide heights
+    if not return_tides:
+        return tide_df.drop("tide_height", axis=1)
 
     return tide_df

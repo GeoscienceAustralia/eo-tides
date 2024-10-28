@@ -85,6 +85,8 @@ build-and-publish: build publish ## Build and publish.
 docs-test: ## Test if documentation can be built without warnings or errors
 	@uv run mkdocs build -s
 
+# On Sandbox: uv run mkdocs serve -a localhost:8000
+# https://app.sandbox.dea.ga.gov.au/user/robbi.bishoptaylor@ga.gov.au/proxy/8000/eo-tides/
 .PHONY: docs
 docs: ## Build and serve the documentation
 	@uv run mkdocs serve

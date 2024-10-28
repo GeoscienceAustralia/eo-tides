@@ -80,7 +80,7 @@ def test_tidal_stats(satellite_ds, modelled_freq):
 )
 def test_pixel_stats(satellite_ds, models, resample):
     stats_ds = pixel_stats(
-        ds=satellite_ds,
+        satellite_ds,
         model=models,
         resample=resample,
     )

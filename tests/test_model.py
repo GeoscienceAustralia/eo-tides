@@ -5,12 +5,94 @@ import pandas as pd
 import pytest
 from pyTMD.compute import tide_elevations
 
-from eo_tides.model import _set_directory, list_models, model_tides
+from eo_tides.model import _set_directory, list_models, model_tides, phase_tides
 from eo_tides.validation import eval_metrics
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
 ENSEMBLE_MODELS = ["EOT20", "HAMTIDE11"]  # simplified for tests
+
+
+@pytest.mark.parametrize("time_offset", ["15 min", "20 min"])
+def test_phase_tides(time_offset):
+    phase_df = phase_tides(
+        x=[122.14],
+        y=[-17.91],
+        time=pd.date_range("2020-01-01", "2020-01-02", freq="h"),
+        model=["EOT20"],
+        time_offset=time_offset,
+    )
+
+    assert phase_df.tide_phase.tolist() == [
+        "low-flow",
+        "low-flow",
+        "low-flow",
+        "low-flow",
+        "high-flow",
+        "high-flow",
+        "high-flow",
+        "high-ebb",
+        "high-ebb",
+        "high-ebb",
+        "low-ebb",
+        "low-ebb",
+        "low-ebb",
+        "low-flow",
+        "low-flow",
+        "high-flow",
+        "high-flow",
+        "high-flow",
+        "high-flow",
+        "high-ebb",
+        "high-ebb",
+        "high-ebb",
+        "low-ebb",
+        "low-ebb",
+        "low-ebb",
+    ]
+
+
+@pytest.mark.parametrize(
+    "models,output_format,return_tides,expected_cols",
+    [
+        (["EOT20"], "long", False, ["tide_model", "tide_phase"]),
+        (["EOT20"], "long", True, ["tide_model", "tide_height", "tide_phase"]),
+        (["EOT20", "GOT5.5"], "long", False, ["tide_model", "tide_phase"]),
+        (
+            ["EOT20", "GOT5.5"],
+            "long",
+            True,
+            ["tide_model", "tide_height", "tide_phase"],
+        ),
+        (["EOT20"], "wide", False, ["EOT20"]),
+        (["EOT20"], "wide", True, [("tide_height", "EOT20"), ("tide_phase", "EOT20")]),
+        (["EOT20", "GOT5.5"], "wide", False, ["EOT20", "GOT5.5"]),
+        (
+            ["EOT20", "GOT5.5"],
+            "wide",
+            True,
+            [
+                ("tide_height", "EOT20"),
+                ("tide_height", "GOT5.5"),
+                ("tide_phase", "EOT20"),
+                ("tide_phase", "GOT5.5"),
+            ],
+        ),
+    ],
+)
+def test_phase_tides_format(models, output_format, return_tides, expected_cols):
+    phase_df = phase_tides(
+        x=[122.14],
+        y=[-17.91],
+        time=pd.date_range("2020", "2021", periods=2),
+        model=models,
+        output_format=output_format,
+        return_tides=return_tides,
+    )
+
+    # Assert expected indexes and columns
+    assert phase_df.index.names == ["time", "x", "y"]
+    assert phase_df.columns.tolist() == expected_cols
 
 
 # Test available tide models

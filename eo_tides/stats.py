@@ -14,8 +14,9 @@ from scipy import stats
 # Only import if running type checking
 if TYPE_CHECKING:
     import xarray as xr
+    from odc.geo.geobox import GeoBox
 
-from .eo import pixel_tides, tag_tides
+from .eo import _standardise_inputs, pixel_tides, tag_tides
 from .model import model_tides
 
 
@@ -136,7 +137,8 @@ def _plot_biases(
 
 
 def tide_stats(
-    ds: xr.Dataset | xr.DataArray,
+    data: xr.Dataset | xr.DataArray | GeoBox,
+    time: np.ndarray | pd.DatetimeIndex | pd.Timestamp | None = None,
     model: str = "EOT20",
     directory: str | os.PathLike | None = None,
     tidepost_lat: float | None = None,
@@ -167,15 +169,23 @@ def tide_stats(
 
     Parameters
     ----------
-    ds : xarray.Dataset or xarray.DataArray
-        A multi-dimensional dataset (e.g. "x", "y", "time") used
-        to calculate tide statistics. This dataset must contain
-        a "time" dimension.
-    model : string, optional
+    data : xarray.Dataset or xarray.DataArray or odc.geo.geobox.GeoBox
+        A multi-dimensional dataset or GeoBox pixel grid that will
+        be used to calculate tide statistics. If `data` is an
+        xarray object, it should include a "time" dimension.
+        If no "time" dimension exists or if `data` is a GeoBox,
+        then times must be passed using the `time` parameter.
+    time : pd.DatetimeIndex or list of pd.Timestamp, optional
+        By default, the function will model tides using the times
+        contained in the "time" dimension of `data`. Alternatively, this
+        param can be used to model tides for a custom set of times
+        instead. For example:
+        `time=pd.date_range(start="2000", end="2001", freq="5h")`
+    model : str, optional
         The tide model to use to model tides. Defaults to "EOT20";
         for a full list of available/supported models, run
         `eo_tides.model.list_models`.
-    directory : string, optional
+    directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
         `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
@@ -201,7 +211,7 @@ def tide_stats(
         An optional string giving the frequency at which to model tides
         when computing the full modelled tidal range. Defaults to '3h',
         which computes a tide height for every three hours across the
-        temporal extent of `ds`.
+        temporal extent of `data`.
     linear_reg: bool, optional
         Whether to return linear regression statistics that assess
         whether satellite-observed tides show any decreasing  or
@@ -247,6 +257,9 @@ def tide_stats(
         - `observed_slope`: slope of any relationship between observed tide heights and time
         - `observed_pval`: significance/p-value of any relationship between observed tide heights and time
     """
+    # Standardise data inputs, time and models
+    gbox, time_coords = _standardise_inputs(data, time)
+
     # Verify that only one tide model is provided
     if isinstance(model, list):
         raise Exception("Only single tide models are supported by `tide_stats`.")
@@ -254,11 +267,13 @@ def tide_stats(
     # If custom tide modelling locations are not provided, use the
     # dataset centroid
     if not tidepost_lat or not tidepost_lon:
-        tidepost_lon, tidepost_lat = ds.odc.geobox.geographic_extent.centroid.coords[0]
+        tidepost_lon, tidepost_lat = gbox.geographic_extent.centroid.coords[0]
 
     # Model tides for each observation in the supplied xarray object
+    assert time_coords is not None
     obs_tides_da = tag_tides(
-        ds,
+        gbox,
+        time=time_coords,
         model=model,
         directory=directory,
         tidepost_lat=tidepost_lat,  # type: ignore
@@ -266,12 +281,13 @@ def tide_stats(
         return_tideposts=True,
         **model_tides_kwargs,
     )
-    obs_tides_da = obs_tides_da.reindex_like(ds)
+    if isinstance(data, (xr.Dataset, xr.DataArray)):
+        obs_tides_da = obs_tides_da.reindex_like(data)
 
     # Generate range of times covering entire period of satellite record
     all_timerange = pd.date_range(
-        start=obs_tides_da.time.min().item(),
-        end=obs_tides_da.time.max().item(),
+        start=time_coords.min().item(),
+        end=time_coords.max().item(),
         freq=modelled_freq,
     )
 
@@ -355,7 +371,7 @@ def tide_stats(
             offset_low=low_tide_offset,
             offset_high=high_tide_offset,
             spread=spread,
-            plot_col=ds[plot_col] if plot_col else None,
+            plot_col=data[plot_col] if plot_col else None,
             obs_linreg=obs_linreg if linear_reg else None,
             obs_x=obs_x,
             all_timerange=all_timerange,
@@ -390,12 +406,13 @@ def tide_stats(
 
 
 def pixel_stats(
-    ds: xr.Dataset | xr.DataArray,
+    data: xr.Dataset | xr.DataArray | GeoBox,
+    time: np.ndarray | pd.DatetimeIndex | pd.Timestamp | None = None,
     model: str | list[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     resample: bool = False,
-    modelled_freq="3h",
-    min_max_q=(0.0, 1.0),
+    modelled_freq: str = "3h",
+    min_max_q: tuple[float, float] = (0.0, 1.0),
     extrapolate: bool = True,
     cutoff: float = 10,
     **pixel_tides_kwargs,
@@ -420,13 +437,21 @@ def pixel_stats(
 
     Parameters
     ----------
-    ds : xarray.Dataset or xarray.DataArray
-        A multi-dimensional dataset (e.g. "x", "y", "time") used
-        to calculate 2D tide statistics. This dataset must contain
-        a "time" dimension.
+    data : xarray.Dataset or xarray.DataArray or odc.geo.geobox.GeoBox
+        A multi-dimensional dataset or GeoBox pixel grid that will
+        be used to calculate 2D tide statistics. If `data`
+        is an xarray object, it should include a "time" dimension.
+        If no "time" dimension exists or if `data` is a GeoBox,
+        then times must be passed using the `time` parameter.
+    time : pd.DatetimeIndex or list of pd.Timestamp, optional
+        By default, the function will model tides using the times
+        contained in the "time" dimension of `data`. Alternatively, this
+        param can be used to model tides for a custom set of times
+        instead. For example:
+        `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
         The tide model (or models) to use to model tides. If a list is
-        provided, a new "tide_model" dimension will be added to `ds`.
+        provided, a new "tide_model" dimension will be added to `data`.
         Defaults to "EOT20"; for a full list of available/supported
         models, run `eo_tides.model.list_models`.
     directory : str, optional
@@ -437,7 +462,7 @@ def pixel_stats(
         model that match the structure required by `pyTMD`
         (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
     resample : bool, optional
-        Whether to resample tide statistics back into `ds`'s original
+        Whether to resample tide statistics back into `data`'s original
         higher resolution grid. Defaults to False, which will return
         lower-resolution statistics that are typically sufficient for
         most purposes.
@@ -445,7 +470,7 @@ def pixel_stats(
         An optional string giving the frequency at which to model tides
         when computing the full modelled tidal range. Defaults to '3h',
         which computes a tide height for every three hours across the
-        temporal extent of `ds`.
+        temporal extent of `data`.
     min_max_q : tuple, optional
         Quantiles used to calculate max and min observed and modelled
         astronomical tides. By default `(0.0, 1.0)` which is equivalent
@@ -478,9 +503,15 @@ def pixel_stats(
         - `offset_high`: proportion of the highest tides never observed by the satellite
 
     """
+    # Standardise data inputs, time and models
+    gbox, time_coords = _standardise_inputs(data, time)
+    model = [model] if isinstance(model, str) else model
+
     # Model observed tides
+    assert time_coords is not None
     obs_tides = pixel_tides(
-        ds,
+        gbox,
+        time=time_coords,
         resample=False,
         model=model,
         directory=directory,
@@ -492,15 +523,15 @@ def pixel_stats(
 
     # Generate times covering entire period of satellite record
     all_timerange = pd.date_range(
-        start=ds.time.min().item(),
-        end=ds.time.max().item(),
+        start=time_coords.min().item(),
+        end=time_coords.max().item(),
         freq=modelled_freq,
     )
 
     # Model all tides
     all_tides = pixel_tides(
-        ds,
-        times=all_timerange,
+        gbox,
+        time=all_timerange,
         model=model,
         directory=directory,
         calculate_quantiles=min_max_q,
@@ -509,6 +540,11 @@ def pixel_stats(
         cutoff=cutoff,
         **pixel_tides_kwargs,
     )
+
+    # # Calculate means
+    # TODO: Find way to make this work with `calculate_quantiles`
+    # mot = obs_tides.mean(dim="time")
+    # mat = all_tides.mean(dim="time")
 
     # Calculate min and max tides
     lot = obs_tides.isel(quantile=0)
@@ -531,10 +567,12 @@ def pixel_stats(
     stats_ds = (
         xr.merge(
             [
-                hat.rename("hat"),
+                # mot.rename("mot"),
+                # mat.rename("mat"),
                 hot.rename("hot"),
-                lat.rename("lat"),
+                hat.rename("hat"),
                 lot.rename("lot"),
+                lat.rename("lat"),
                 otr.rename("otr"),
                 tr.rename("tr"),
                 spread.rename("spread"),
@@ -544,11 +582,11 @@ def pixel_stats(
             compat="override",
         )
         .drop_vars("quantile")
-        .odc.assign_crs(crs=ds.odc.crs)
+        .odc.assign_crs(crs=gbox.crs)
     )
 
-    # Optionally resample into the original pixel grid of `ds`
+    # Optionally resample into the original pixel grid of `data`
     if resample:
-        stats_ds = stats_ds.odc.reproject(how=ds.odc.geobox, resample_method="bilinear")
+        stats_ds = stats_ds.odc.reproject(how=gbox, resample_method="bilinear")
 
     return stats_ds

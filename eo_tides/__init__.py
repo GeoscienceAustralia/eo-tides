@@ -37,9 +37,11 @@ from .validation import eval_metrics, load_gauge_gesla
 __all__ = [
     "list_models",
     "model_tides",
+    "phase_tides",
     "tag_tides",
     "pixel_tides",
     "tide_stats",
+    "pixel_stats",
     "idw",
     "eval_metrics",
     "load_gauge_gesla",
