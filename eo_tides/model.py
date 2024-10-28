@@ -76,12 +76,12 @@ def list_models(
     raise_error: bool = False,
 ) -> tuple[list[str], list[str]]:
     """
-    List all tide models available for tide modelling, and
-    all models supported by `eo-tides` and `pyTMD`.
+    List all tide models available for tide modelling.
 
     This function scans the specified tide model directory
     and returns a list of models that are available in the
-    directory as well as the full list of all supported models.
+    directory as well as the full list of all models supported
+    by `eo-tides` and `pyTMD`.
 
     For instructions on setting up tide models, see:
     <https://geoscienceaustralia.github.io/eo-tides/setup/>

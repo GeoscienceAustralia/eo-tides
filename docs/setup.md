@@ -61,15 +61,15 @@ Follow the guides below for some of the most commonly used global ocean tide mod
     2. Once your registration is complete, login to [MY AVISO+](https://www.aviso.altimetry.fr/en/my-aviso-plus.html).
     3. Once logged in, select [My products](https://www.aviso.altimetry.fr/en/my-aviso-plus/my-products.html) in the left-hand menu:
 
-        ![image](https://user-images.githubusercontent.com/17680388/160057999-381fb818-e379-46cb-a3c4-a836308a96d8.png)
+        ![image](assets/fes_myproducts.jpg)
 
     4. `FES (Finite Element Solution - Oceanic Tides Heights)` should appear under `Your current subscriptions.` Right click on `Ftp`, and copy the FTP address.
 
-        ![image](https://user-images.githubusercontent.com/17680388/160058064-77430ddf-1939-449d-86e7-f05b27ca768a.png)
+        ![image](assets/fes_subscriptions.jpg)
 
     5. Using an FTP client like FileZilla, log in to the FTP using your AVISO+ username and password:
 
-        ![image](https://user-images.githubusercontent.com/17680388/160058263-b0b1da72-e5ac-47ca-b1d0-544569d3f06a.png)
+        ![image](assets/fes_ftp.jpg)
 
     6. Navigate to `/auxiliary/tide_model/`, and download the contents of one or more of the following directories:
 
@@ -109,15 +109,15 @@ Follow the guides below for some of the most commonly used global ocean tide mod
     2. Once your registration is complete, login to [MY AVISO+](https://www.aviso.altimetry.fr/en/my-aviso-plus.html).
     3. Once logged in, select [My products](https://www.aviso.altimetry.fr/en/my-aviso-plus/my-products.html) in the left-hand menu:
 
-        ![image](https://user-images.githubusercontent.com/17680388/160057999-381fb818-e379-46cb-a3c4-a836308a96d8.png)
+        ![image](assets/fes_myproducts.jpg)
 
     4. `FES (Finite Element Solution - Oceanic Tides Heights)` should appear under `Your current subscriptions.` Right click on `Ftp`, and copy the FTP address.
 
-        ![image](https://user-images.githubusercontent.com/17680388/160058064-77430ddf-1939-449d-86e7-f05b27ca768a.png)
+        ![image](assets/fes_subscriptions.jpg)
 
     5. Using an FTP client like FileZilla, log in to the FTP using your AVISO+ username and password:
 
-        ![image](https://user-images.githubusercontent.com/17680388/160058263-b0b1da72-e5ac-47ca-b1d0-544569d3f06a.png)
+        ![image](assets/fes_ftp.jpg)
 
     6. Navigate to `/auxiliary/tide_model/`, and download the contents of one or more of the following directories:
 
@@ -185,6 +185,30 @@ Follow the guides below for some of the most commonly used global ocean tide mod
         Or:
         ```
         tide_models/GOT4.7/grids_oceantide/
+           |- ...
+        ```
+
+??? note "TPXO Global Tidal Models"
+
+    ### TPXO Global Tidal Models
+
+    1. Visit [TPXO Registration](https://www.tpxo.net/tpxo-products-and-registration)
+    2. Follow instructions to email TPXO authors for access, providing your name, institution, your intended application/use case, and which TPXO models you need (typically, "TPXO10-atlas-v2 netcdf" or "TPXO9-atlas-v5 netcdf").
+    3. If your request is approved, you will be emailed an invite to an app.box.com folder. Open this link, then click "Download" on the top-right to download your zipped model files.
+
+        ![image](assets/tpxo_download.jpg)
+
+    4. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called either `TPXO10_atlas_v2/` or `TPXO9_atlas_v5/` to store the TPXO model files.
+
+    4. Extract your zipped model files (e.g. `TPXO10_atlas_v2_nc.zip` or `TPXO9_atlas_v5_nc.zip`) into this new directory. You should end up with the following directory structure containing the extracted NetCDF files depending on the model you downloaded:
+
+        ```
+        tide_models/TPXO10_atlas_v2/
+           |- ...
+        ```
+        Or:
+        ```
+        tide_models/TPXO9_atlas_v5/
            |- ...
         ```
 

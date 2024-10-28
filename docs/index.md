@@ -22,9 +22,9 @@ These tools can be applied to petabytes of freely available satellite data (e.g.
 
 ## Highlights
 
-- 🌊 Model tides from multiple global ocean tide models in parallel, and return tide heights in standardised `pandas.DataFrame` format for further analysis
-- 🛰️ "Tag" satellite data with tide height and stage based on the exact moment of image acquisition
-- 🌐 Model tides for every individual satellite pixel, producing three-dimensional "tide height" `xarray`-format datacubes that can be integrated with satellite data
+- 🌊 Model tide heights and phases (e.g. high, low, ebb, flow) from multiple global ocean tide models in parallel, and return a `pandas.DataFrame` for further analysis
+- 🛰️ "Tag" satellite data with tide heights based on the exact moment of image acquisition
+- 🌐 Model tides for every individual satellite pixel through time, producing three-dimensional "tide height" `xarray`-format datacubes that can be integrated with satellite data
 - 📈 Calculate statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits
 - 🛠️ Validate modelled tides using measured sea levels from coastal tide gauges (e.g. [GESLA Global Extreme Sea Level Analysis](https://gesla.org/))
 <!-- - 🎯 Combine multiple tide models into a single locally-optimised "ensemble" model informed by satellite altimetry and satellite-observed patterns of tidal inundation -->
@@ -49,6 +49,13 @@ To cite `eo-tides` in your work, please use the following citation:
 Bishop-Taylor, R., Sagar, S., Phillips, C., & Newey, V. (2024). eo-tides: Tide modelling tools for large-scale satellite earth observation analysis. https://github.com/GeoscienceAustralia/eo-tides
 ```
 
+In addition, please consider also citing the underlying [`pyTMD` Python package](https://pytmd.readthedocs.io/en/latest/) which powers the tide modelling functionality behind `eo-tides`:
+
+```
+Sutterley, T. C., Alley, K., Brunt, K., Howard, S., Padman, L., Siegfried, M. (2017) pyTMD: Python-based tidal prediction software. 10.5281/zenodo.5555395
+```
+
 ## Next steps
 
 To get started, first follow the [guide to installing `eo-tides`](install.md), and then [set up one or multiple global ocean tide models](setup.md).
+<br>
