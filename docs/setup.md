@@ -200,16 +200,20 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
     4. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called either `TPXO10_atlas_v2/` or `TPXO9_atlas_v5/` to store the TPXO model files.
 
-    4. Extract your zipped model files (e.g. `TPXO10_atlas_v2_nc.zip` or `TPXO9_atlas_v5_nc.zip`) into this new directory. You should end up with the following directory structure containing the extracted NetCDF files depending on the model you downloaded:
+    5. Extract your zipped model files (e.g. `TPXO10_atlas_v2_nc.zip` or `TPXO9_atlas_v5_nc.zip`) into this new directory. You should end up with the following directory structure containing the extracted NetCDF files depending on the model you downloaded:
 
         ```
         tide_models/TPXO10_atlas_v2/
+           |- grid_tpxo10atlas_v2.nc
            |- ...
+           |- u_s2_tpxo10_atlas_30_v2.nc
         ```
         Or:
         ```
         tide_models/TPXO9_atlas_v5/
+           |- grid_tpxo9_atlas_30_v5.nc
            |- ...
+           |- u_s2_tpxo9_atlas_30_v5.nc
         ```
 
 ## Configuring `eo-tides` to use tide model directory
