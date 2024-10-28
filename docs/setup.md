@@ -58,20 +58,21 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
         ![image](assets/fes_productselection.jpg)
 
-    2. Once your registration is complete, login to [MY AVISO+](https://www.aviso.altimetry.fr/en/my-aviso-plus.html).
-    3. Once logged in, select [My products](https://www.aviso.altimetry.fr/en/my-aviso-plus/my-products.html) in the left-hand menu:
+    2. Scroll to the bottom of the page and agree to the licence agreement. Your request will be sent for approval (this may take several days).
+    3. Once you are notified via email that your registration and access is approved, login to [MY AVISO+](https://www.aviso.altimetry.fr/en/my-aviso-plus.html).
+    4. Once logged in, select [My products](https://www.aviso.altimetry.fr/en/my-aviso-plus/my-products.html) in the left-hand menu:
 
         ![image](assets/fes_myproducts.jpg)
 
-    4. `FES (Finite Element Solution - Oceanic Tides Heights)` should appear under `Your current subscriptions.` Right click on `Ftp`, and copy the FTP address.
+    5. `FES (Finite Element Solution - Oceanic Tides Heights)` should appear under `Your current subscriptions.` Right click on `Ftp`, and copy the FTP address.
 
         ![image](assets/fes_subscriptions.jpg)
 
-    5. Using an FTP client like FileZilla, log in to the FTP using your AVISO+ username and password:
+    6. Using an FTP client like FileZilla, log in to the FTP using your AVISO+ username and password:
 
         ![image](assets/fes_ftp.jpg)
 
-    6. Navigate to `/auxiliary/tide_model/`, and download the contents of one or more of the following directories:
+    7. Navigate to `/auxiliary/tide_model/`, and download the contents of one or more of the following directories:
 
         - `fes2022b/ocean_tide/`
         - `fes2022b/ocean_tide_extrapolated/`
@@ -80,9 +81,9 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
             The "extrapolated" version of FES models have been extended inland using a simple "nearest" extrapolation method to ensure data coverage across the entire coastal zone. This can be useful for ensuring you always return a modelled tide, but can also introduce uncertainty into your modelling (particularly in complex regions such as narrow peninsulas or inlets/embayments).
 
-    7. Create new nested directories inside your [tide model directory](#setting-up-a-tide-model-directory) called `fes2022b/ocean_tide/` (if using standard model data) or `fes2022b/ocean_tide_extrapolated/` (if using extrapolated model data) to store the FES2022 model files.
+    8. Create new nested directories inside your [tide model directory](#setting-up-a-tide-model-directory) called `fes2022b/ocean_tide/` (if using standard model data) or `fes2022b/ocean_tide_extrapolated/` (if using extrapolated model data) to store the FES2022 model files.
 
-    8. Extract your `...nc.xz` files into this directory (e.g. `tar -xf m2_fes2022.nc.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
+    9. Extract your `...nc.xz` files into this directory (e.g. `tar -xf m2_fes2022.nc.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
 
         ```
         tide_models/fes2022b/ocean_tide/
@@ -106,20 +107,21 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
         ![image](assets/fes_productselection.jpg)
 
-    2. Once your registration is complete, login to [MY AVISO+](https://www.aviso.altimetry.fr/en/my-aviso-plus.html).
-    3. Once logged in, select [My products](https://www.aviso.altimetry.fr/en/my-aviso-plus/my-products.html) in the left-hand menu:
+    2. Scroll to the bottom of the page and agree to the licence agreement. Your request will be sent for approval (this may take several days).
+    3. Once you are notified via email that your registration and access is approved, login to [MY AVISO+](https://www.aviso.altimetry.fr/en/my-aviso-plus.html).
+    4. Once logged in, select [My products](https://www.aviso.altimetry.fr/en/my-aviso-plus/my-products.html) in the left-hand menu:
 
         ![image](assets/fes_myproducts.jpg)
 
-    4. `FES (Finite Element Solution - Oceanic Tides Heights)` should appear under `Your current subscriptions.` Right click on `Ftp`, and copy the FTP address.
+    5. `FES (Finite Element Solution - Oceanic Tides Heights)` should appear under `Your current subscriptions.` Right click on `Ftp`, and copy the FTP address.
 
         ![image](assets/fes_subscriptions.jpg)
 
-    5. Using an FTP client like FileZilla, log in to the FTP using your AVISO+ username and password:
+    6. Using an FTP client like FileZilla, log in to the FTP using your AVISO+ username and password:
 
         ![image](assets/fes_ftp.jpg)
 
-    6. Navigate to `/auxiliary/tide_model/`, and download the contents of one or more of the following directories:
+    7. Navigate to `/auxiliary/tide_model/`, and download the contents of one or more of the following directories:
 
         - `fes2014_elevations_and_load/fes2014b_elevations/`
         - `fes2014_elevations_and_load/fes2014b_elevations_extrapolated/`
@@ -128,9 +130,9 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
             The "extrapolated" version of FES have been extended inland using a simple "nearest" extrapolation method to ensure data coverage across the entire coastal zone. This can be useful for ensuring you always return a modelled tide, but can also introduce uncertainty into your modelling (particularly in complex regions such as narrow peninsulas or inlets/embayments).
 
-    7. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called `fes2014/` to store the FES2014 model files.
+    8. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called `fes2014/` to store the FES2014 model files.
 
-    8. Extract `ocean_tide.tar.xz` or `ocean_tide_extrapolated.tar.xz` into this directory (e.g. `tar -xf ocean_tide.tar.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
+    9. Extract `ocean_tide.tar.xz` or `ocean_tide_extrapolated.tar.xz` into this directory (e.g. `tar -xf ocean_tide.tar.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
 
         ```
         tide_models/fes2014/ocean_tide/
