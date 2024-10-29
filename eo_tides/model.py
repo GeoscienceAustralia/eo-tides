@@ -1,6 +1,7 @@
 # Used to postpone evaluation of type annotations
 from __future__ import annotations
 
+import datetime
 import os
 import pathlib
 import textwrap
@@ -8,7 +9,7 @@ import warnings
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 # Only import if running type checking
 if TYPE_CHECKING:
@@ -24,6 +25,9 @@ from pyTMD.io.model import load_database, model
 from tqdm import tqdm
 
 from .utils import idw
+
+# Type alias for all possible inputs to "time" params
+DatetimeLike: TypeAlias = np.ndarray | pd.DatetimeIndex | pd.Timestamp | datetime.datetime | str | list[str]
 
 
 def _set_directory(
@@ -53,20 +57,22 @@ def _set_directory(
 
 
 def _standardise_time(
-    time: np.ndarray | pd.DatetimeIndex | pd.Timestamp | None,
+    time: DatetimeLike | None,
 ) -> np.ndarray | None:
     """
-    Accept a datetime64 ndarray, pandas.DatetimeIndex
-    or pandas.Timestamp, and return a datetime64 ndarray.
+    Accept any time format accepted by `pd.to_datetime`,
+    and return a datetime64 ndarray. Return None if None
+    passed.
     """
-    # Return time as-is if none
+    # Return time as-is if None
     if time is None:
-        return time
+        return None
 
-    # Convert to a 1D datetime64 array
-    time = np.atleast_1d(time).astype("datetime64[ns]")
+    # Use pd.to_datetime for conversion, then convert to numpy array
+    time = pd.to_datetime(time).to_numpy().astype("datetime64[ns]")
 
-    return time
+    # Ensure that data has at least one dimension
+    return np.atleast_1d(time)
 
 
 def list_models(
@@ -487,7 +493,7 @@ def _ensemble_model(
 def model_tides(
     x: float | list[float] | xr.DataArray,
     y: float | list[float] | xr.DataArray,
-    time: np.ndarray | pd.DatetimeIndex,
+    time: DatetimeLike,
     model: str | list[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     crs: str = "EPSG:4326",
@@ -533,10 +539,11 @@ def model_tides(
         the location at which to model tides. By default these
         coordinates should be lat/lon; use "crs" if they
         are in a custom coordinate reference system.
-    time : Numpy datetime array or pandas.DatetimeIndex
-        An array containing `datetime64[ns]` values or a
-        `pandas.DatetimeIndex` providing the times at which to
-        model tides in UTC time.
+    time : DatetimeLike
+        Times at which to model tide heights (in UTC). Accepts
+        any format that can be converted by `pandas.to_datetime()`;
+        e.g. np.ndarray[datetime64], pd.DatetimeIndex, pd.Timestamp,
+        datetime.datetime and strings (e.g. "2020-01-01 23:00").
     model : str or list of str, optional
         The tide model (or models) to use to model tides.
         Defaults to "EOT20"; for a full list of available/supported
@@ -808,10 +815,10 @@ def model_tides(
     return tide_df
 
 
-def phase_tides(
+def model_phases(
     x: float | list[float] | xr.DataArray,
     y: float | list[float] | xr.DataArray,
-    time: np.ndarray | pd.DatetimeIndex,
+    time: DatetimeLike,
     model: str | list[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     time_offset: str = "15 min",
@@ -842,10 +849,11 @@ def phase_tides(
         the location at which to model tide phases. By default
         these coordinates should be lat/lon; use "crs" if they
         are in a custom coordinate reference system.
-    time : Numpy datetime array or pandas.DatetimeIndex
-        An array containing `datetime64[ns]` values or a
-        `pandas.DatetimeIndex` providing the times at which to
-        model tide phases in UTC time.
+    time : DatetimeLike
+        Times at which to model tide phases (in UTC). Accepts
+        any format that can be converted by `pandas.to_datetime()`;
+        e.g. np.ndarray[datetime64], pd.DatetimeIndex, pd.Timestamp,
+        datetime.datetime and strings (e.g. "2020-01-01 23:00").
     model : str or list of str, optional
         The tide model (or models) to use to compute tide phases.
         Defaults to "EOT20"; for a full list of available/supported

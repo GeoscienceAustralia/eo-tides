@@ -1,11 +1,12 @@
 import pathlib
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
 import pytest
 from pyTMD.compute import tide_elevations
 
-from eo_tides.model import _set_directory, list_models, model_tides, phase_tides
+from eo_tides.model import _set_directory, _standardise_time, list_models, model_phases, model_tides
 from eo_tides.validation import eval_metrics
 
 GAUGE_X = 122.2183
@@ -13,9 +14,57 @@ GAUGE_Y = -18.0008
 ENSEMBLE_MODELS = ["EOT20", "HAMTIDE11"]  # simplified for tests
 
 
+@pytest.mark.parametrize(
+    "input_value, expected_output",
+    [
+        # Case 1: None
+        (None, None),
+        # Case 2: Single datetime.datetime object
+        (datetime(2020, 1, 12, 21, 14), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
+        # Case 3: Single pandas.Timestamp
+        (pd.Timestamp("2020-01-12 21:14"), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
+        # Case 4: np.datetime64 scalar
+        (np.datetime64("2020-01-12T21:14:00"), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
+        # Case 5: 1D numpy array of np.datetime64
+        (
+            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
+            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
+        ),
+        # Case 6: 1D numpy array of datetime.datetime
+        (
+            np.array([datetime(2020, 1, 12, 21, 14), datetime(2021, 2, 14, 15, 30)]),
+            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
+        ),
+        # Case 7: pandas.DatetimeIndex
+        (
+            pd.date_range(start="2000-01-01", end="2000-01-02", periods=3),
+            np.array(["2000-01-01T00:00:00", "2000-01-01T12:00:00", "2000-01-02T00:00:00"], dtype="datetime64[ns]"),
+        ),
+        # Case 8: Mixed array with datetime.datetime and np.datetime64
+        (
+            np.array([datetime(2020, 1, 12, 21, 14), np.datetime64("2021-02-14T15:30:00")]),
+            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
+        ),
+        # Case 9: Single string datetime
+        ("2020-01-12 21:14", np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
+        # Case 10: Array of string datetimes
+        (
+            ["2020-01-12 21:14", "2021-02-14 15:30"],
+            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
+        ),
+    ],
+)
+def test_standardise_time(input_value, expected_output):
+    result = _standardise_time(input_value)
+    if result is None:
+        assert result == expected_output
+    else:
+        assert np.array_equal(result, expected_output)
+
+
 @pytest.mark.parametrize("time_offset", ["15 min", "20 min"])
-def test_phase_tides(time_offset):
-    phase_df = phase_tides(
+def test_model_phases(time_offset):
+    phase_df = model_phases(
         x=[122.14],
         y=[-17.91],
         time=pd.date_range("2020-01-01", "2020-01-02", freq="h"),
@@ -80,8 +129,8 @@ def test_phase_tides(time_offset):
         ),
     ],
 )
-def test_phase_tides_format(models, output_format, return_tides, expected_cols):
-    phase_df = phase_tides(
+def test_model_phases_format(models, output_format, return_tides, expected_cols):
+    phase_df = model_phases(
         x=[122.14],
         y=[-17.91],
         time=pd.date_range("2020", "2021", periods=2),
