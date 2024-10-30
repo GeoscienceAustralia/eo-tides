@@ -9,7 +9,13 @@ import warnings
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from functools import partial
-from typing import TYPE_CHECKING, TypeAlias
+
+try:
+    from typing import TYPE_CHECKING, TypeAlias
+except:
+    from typing import TYPE_CHECKING
+
+    from typing_extensions import TypeAlias
 
 # Only import if running type checking
 if TYPE_CHECKING:
