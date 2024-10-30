@@ -14,9 +14,11 @@ from odc.geo.geobox import GeoBox
 
 # Only import if running type checking
 if TYPE_CHECKING:
+    import datetime
+
     from odc.geo import Shape2d
 
-from .model import _standardise_time, model_tides
+from .model import DatetimeLike, _standardise_time, model_tides
 
 
 def _resample_chunks(
@@ -49,7 +51,7 @@ def _resample_chunks(
 
 def _standardise_inputs(
     data: xr.DataArray | xr.Dataset | GeoBox,
-    time: np.ndarray | pd.DatetimeIndex | pd.Timestamp | None,
+    time: DatetimeLike | None,
 ) -> tuple[GeoBox, np.ndarray | None]:
     """
     Takes an xarray or GeoBox input and an optional custom times,
@@ -156,7 +158,7 @@ def _pixel_tides_resample(
 
 def tag_tides(
     data: xr.Dataset | xr.DataArray | GeoBox,
-    time: np.ndarray | pd.DatetimeIndex | pd.Timestamp | None = None,
+    time: DatetimeLike | None = None,
     model: str | list[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     tidepost_lat: float | None = None,
@@ -190,11 +192,11 @@ def tag_tides(
         is an xarray object, it should include a "time" dimension.
         If no "time" dimension exists or if `data` is a GeoBox,
         then times must be passed using the `time` parameter.
-    time : pd.DatetimeIndex or list of pd.Timestamp, optional
-        By default, the function will model tides using the times
-        contained in the "time" dimension of `data`. Alternatively, this
-        param can be used to model tides for a custom set of times
-        instead. For example:
+    time : DatetimeLike, optional
+        By default, tides will be modelled using times from the
+        "time" dimension of `data`. Alternatively, this param can
+        be used to provide a custom set of times. Accepts any format
+        that can be converted by `pandas.to_datetime()`. For example:
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
         The tide model (or models) used to model tides. If a list is
@@ -272,7 +274,7 @@ def tag_tides(
 
 def pixel_tides(
     data: xr.Dataset | xr.DataArray | GeoBox,
-    time: np.ndarray | pd.DatetimeIndex | pd.Timestamp | None = None,
+    time: DatetimeLike | None = None,
     model: str | list[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     resample: bool = True,
@@ -319,11 +321,11 @@ def pixel_tides(
         is an xarray object, it should include a "time" dimension.
         If no "time" dimension exists or if `data` is a GeoBox,
         then times must be passed using the `time` parameter.
-    time : pd.DatetimeIndex or list of pd.Timestamp, optional
-        By default, the function will model tides using the times
-        contained in the "time" dimension of `data`. Alternatively, this
-        param can be used to model tides for a custom set of times
-        instead. For example:
+    time : DatetimeLike, optional
+        By default, tides will be modelled using times from the
+        "time" dimension of `data`. Alternatively, this param can
+        be used to provide a custom set of times. Accepts any format
+        that can be converted by `pandas.to_datetime()`. For example:
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
         The tide model (or models) used to model tides. If a list is

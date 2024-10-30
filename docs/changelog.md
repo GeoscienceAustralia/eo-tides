@@ -8,6 +8,6 @@
 
 ### Breaking changes
 
-See [Migrating from DEA Tools](#migration) for a guide to updating your code from the original [`Digital Earth Australia Notebooks and Tools` repository](https://github.com/GeoscienceAustralia/dea-notebooks/).
+See [Migrating from DEA Tools](migration.md) for a guide to updating your code from the original [`Digital Earth Australia Notebooks and Tools` repository](https://github.com/GeoscienceAustralia/dea-notebooks/).
 
 <!-- ### Bug fixes -->
