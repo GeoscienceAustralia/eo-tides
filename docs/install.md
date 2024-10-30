@@ -1,11 +1,11 @@
 # Installing `eo-tides`
 
+## Stable version
+
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
 [![Python Version from PEP 621 TOML](https://img.shields.io/pypi/pyversions/eo-tides)](https://github.com/GeoscienceAustralia/eo-tides/blob/main/pyproject.toml)
 
-## Stable version
-
-The [latest stable release](https://github.com/GeoscienceAustralia/eo-tides/releases) of `eo-tides` can be installed into your Python environment from [PyPI](https://pypi.org/project/eo-tides/) using `pip`:
+The [latest stable release](https://pypi.org/project/eo-tides/) of `eo-tides` can be installed into your Python environment from [PyPI](https://pypi.org/project/eo-tides/) using `pip`:
 
 ```console
 python3 -m pip install eo-tides
