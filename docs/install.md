@@ -1,17 +1,20 @@
 # Installing `eo-tides`
 
+[![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
+[![Python Version from PEP 621 TOML](https://img.shields.io/pypi/pyversions/eo-tides)](https://github.com/GeoscienceAustralia/eo-tides/blob/main/pyproject.toml)
+
 ## Stable version
 
 The [latest stable release](https://github.com/GeoscienceAustralia/eo-tides/releases) of `eo-tides` can be installed into your Python environment from [PyPI](https://pypi.org/project/eo-tides/) using `pip`:
 
 ```console
-pip install eo-tides
+python3 -m pip install eo-tides
 ```
 
 By default, only essential package dependencies are installed. To install all packages required for running the included Jupyter Notebook examples (including `odc-stac` and `pystac-client` for loading freely available satellite data), run:
 
 ```console
-pip install eo-tides[notebooks]
+python3 -m pip install eo-tides[notebooks]
 ```
 
 ## Unstable development version
@@ -19,7 +22,7 @@ pip install eo-tides[notebooks]
 To install the latest unstable development version of `eo-tides` directly from Github, run:
 
 ```console
-pip install git+https://github.com/GeoscienceAustralia/eo-tides.git
+python3 -m pip install git+https://github.com/GeoscienceAustralia/eo-tides.git
 ```
 
 ### Cloning locally
@@ -34,7 +37,7 @@ Navigate to the project directory and install in editable mode from your local c
 
 ```console
 cd eo_tides
-pip install -e .
+python3 -m pip install -e .
 ```
 
 !!! important

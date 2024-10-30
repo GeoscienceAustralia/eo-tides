@@ -4,7 +4,7 @@
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
 [![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/main.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/main.yml?query=branch%3Amain)
-![Python Version from PEP 621 TOML](https://img.shields.io/pypi/pyversions/eo-tides)
+[![Python Version from PEP 621 TOML](https://img.shields.io/pypi/pyversions/eo-tides)](https://github.com/GeoscienceAustralia/eo-tides/blob/main/pyproject.toml)
 [![codecov](https://codecov.io/gh/GeoscienceAustralia/eo-tides/branch/main/graph/badge.svg)](https://codecov.io/gh/GeoscienceAustralia/eo-tides)
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
 
@@ -25,7 +25,7 @@ These tools can be applied to petabytes of freely available satellite data (e.g.
 ## Highlights
 
 - 🌊 Model tide heights and phases (e.g. high, low, ebb, flow) from multiple global ocean tide models in parallel, and return a `pandas.DataFrame` for further analysis
-- 🛰️ "Tag" satellite data with tide height and stage based on the exact moment of image acquisition
+- 🛰️ "Tag" satellite data with tide heights based on the exact moment of image acquisition
 - 🌐 Model tides for every individual satellite pixel through time, producing three-dimensional "tide height" `xarray`-format datacubes that can be integrated with satellite data
 - 📈 Calculate statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits
 - 🛠️ Validate modelled tides using measured sea levels from coastal tide gauges (e.g. [GESLA Global Extreme Sea Level Analysis](https://gesla.org/))
