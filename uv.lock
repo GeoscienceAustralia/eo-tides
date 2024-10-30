@@ -719,7 +719,7 @@ wheels = [
 
 [[package]]
 name = "eo-tides"
-version = "0.0.1"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "colorama" },
@@ -746,7 +746,7 @@ notebooks = [
     { name = "pystac-client" },
 ]
 
-[package.dependency-groups]
+[package.dev-dependencies]
 dev = [
     { name = "black" },
     { name = "deptry" },
@@ -787,7 +787,7 @@ requires-dist = [
     { name = "xarray", specifier = ">=2022.3.0" },
 ]
 
-[package.metadata.dependency-groups]
+[package.metadata.requires-dev]
 dev = [
     { name = "black", specifier = ">=22.1.0" },
     { name = "deptry", specifier = ">=0.20.0" },
