@@ -8,8 +8,8 @@
 [![codecov](https://codecov.io/gh/GeoscienceAustralia/eo-tides/branch/main/graph/badge.svg)](https://codecov.io/gh/GeoscienceAustralia/eo-tides)
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
 
-- **Github repository**: <https://github.com/GeoscienceAustralia/eo-tides/>
-- **Documentation** <https://GeoscienceAustralia.github.io/eo-tides/>
+- ⚙️ **Github repository**: <https://github.com/GeoscienceAustralia/eo-tides/>
+- 📘 **Documentation** <https://GeoscienceAustralia.github.io/eo-tides/>
 
 > [!CAUTION]
 > This package is a work in progress, and not currently ready for operational use.
