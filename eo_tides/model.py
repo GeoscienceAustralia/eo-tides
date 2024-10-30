@@ -9,13 +9,7 @@ import warnings
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from functools import partial
-
-try:
-    from typing import TYPE_CHECKING, TypeAlias
-except:
-    from typing import TYPE_CHECKING
-
-    from typing_extensions import TypeAlias
+from typing import TYPE_CHECKING, List, Union
 
 # Only import if running type checking
 if TYPE_CHECKING:
@@ -33,7 +27,7 @@ from tqdm import tqdm
 from .utils import idw
 
 # Type alias for all possible inputs to "time" params
-DatetimeLike: TypeAlias = np.ndarray | pd.DatetimeIndex | pd.Timestamp | datetime.datetime | str | list[str]
+DatetimeLike = Union[np.ndarray, pd.DatetimeIndex, pd.Timestamp, datetime.datetime, str, List[str]]
 
 
 def _set_directory(
