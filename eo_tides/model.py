@@ -432,7 +432,6 @@ def _model_tides(
             lat,
             type=pytmd_model.type,
             crop=crop,
-            bounds=None,
             method=method,
             extrapolate=extrapolate,
             cutoff=cutoff,
@@ -460,7 +459,7 @@ def _model_tides(
     # Calculate constituent oscillation
     hc = amp * np.exp(cph)
 
-    # Compute deltat based on model
+    # Compute delta times based on model
     if pytmd_model.corrections in ("OTIS", "ATLAS", "TMD3", "netcdf"):
         # Use delta time at 2000.0 to match TMD outputs
         deltat = np.zeros_like(timescale.tt_ut1)
@@ -468,14 +467,11 @@ def _model_tides(
         # Use interpolated delta times
         deltat = timescale.tt_ut1
 
-    # Determine the number of points and times to process. If in
-    # "one-to-many" mode, these counts are used to repeat our extracted
-    # constituents and timesteps so we can extract tides for all
-    # combinations of our input times and tide modelling points.
-    # If in "one-to-many" mode, repeat constituents to length of time
-    # and number of input coords before passing to `predict_tide_drift`
-    # If in "one-to-one" mode, we avoid this step by setting counts to 1
-    # (e.g. "repeat 1 times")
+    # In "one-to-many" mode, extracted tidal constituents and timesteps
+    # are repeated/multiplied out to match the number of input points and
+    # timesteps, enabling the modeling of tides across all combinations
+    # of input times and points. In "one-to-one" mode, no repetition is
+    # needed, so each repeat count is set to 1.
     points_repeat = len(x) if mode == "one-to-many" else 1
     time_repeat = len(time) if mode == "one-to-many" else 1
     t, hc, deltat = (
