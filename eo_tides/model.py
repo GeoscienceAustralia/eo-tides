@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import psutil
 import pyproj
 import pyTMD
 from colorama import Style, init
@@ -381,10 +382,8 @@ def _parallel_splits(
     # Available CPUs
     if parallel_max is None:
         try:
-            import psutil
-
             parallel_max = psutil.cpu_count(logical=False)
-        except ImportError:
+        except:
             parallel_max = os.cpu_count()
 
     # Calculate optimal number of splits based on constraints
