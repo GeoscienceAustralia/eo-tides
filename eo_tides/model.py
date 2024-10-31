@@ -358,11 +358,11 @@ def _ensemble_model(
 
 
 def _parallel_splits(
-    total_points,
-    model_count,
-    parallel_max=None,
-    min_points_per_split=1000,
-):
+    total_points: int,
+    model_count: int,
+    parallel_max: int | None = None,
+    min_points_per_split: int = 1000,
+) -> int:
     """
     Calculates the optimal number of parallel splits for data
     processing based on system resources and processing constraints.
@@ -388,6 +388,7 @@ def _parallel_splits(
             parallel_max = os.cpu_count()
 
     # Calculate optimal number of splits based on constraints
+    assert parallel_max is not None
     splits_by_size = total_points / min_points_per_split
     splits_by_cpu = parallel_max / model_count
     optimal_splits = min(splits_by_size, splits_by_cpu)
@@ -783,10 +784,14 @@ def model_tides(
             model_count=len(models_to_process),
             parallel_max=parallel_max,
         )
-    elif parallel_splits > len(x):
+
+    # Verify that parallel splits are not larger than number of points
+    assert isinstance(parallel_splits, int)
+    if parallel_splits > len(x):
         raise ValueError(f"Parallel splits ({parallel_splits}) cannot be larger than the number of points ({len(x)}).")
 
     # Parallelise if either multiple models or multiple splits requested
+
     if parallel & ((len(models_to_process) > 1) | (parallel_splits > 1)):
         with ProcessPoolExecutor(max_workers=parallel_max) as executor:
             print(
