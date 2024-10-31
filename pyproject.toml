@@ -36,6 +36,7 @@ dependencies = [
     "numpy>=1.26.0",
     "odc-geo>=0.4.7",
     "pandas>=2.2.0",
+    "psutil>=5.8.0",
     "pyproj>=3.6.1",
     "pyTMD==2.1.7",
     "scikit-learn>=1.4.0",
