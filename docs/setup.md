@@ -303,11 +303,11 @@ from eo_tides.utils import clip_models
 clip_models(
     input_directory="tide_models/",
     output_directory="tide_models_clipped/",
-    bbox=(-8.968392, 50.070574, 2.447160, 59.367122),
+    bbox=(113.3, -43.6, 153.6, -10.7),
 )
 ```
 
-When you run `clip_models`, the function will automatically identify suitable NetCDF-format models in your input directory, and clip each of them to the extent of your bounding box.
+When you run `clip_models`, the function will automatically identify suitable NetCDF-format models in your input directory, and clip each of them to the extent of your bounding box (specified as `(left, bottom, right, top)`).
 After each model is clipped, the result is exported to your selected output directory and verified to ensure the clipped data is suitable for tide modelling:
 
 ```text
