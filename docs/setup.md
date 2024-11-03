@@ -195,7 +195,7 @@ Follow the guides below for some of the most commonly used global ocean tide mod
     ### TPXO Global Tidal Models
 
     1. Visit [TPXO Registration](https://www.tpxo.net/tpxo-products-and-registration)
-    2. Follow instructions to email TPXO authors for access, providing your name, institution, your intended application/use case, and which TPXO models you need (typically, "TPXO10-atlas-v2 netcdf" or "TPXO9-atlas-v5 netcdf").
+    2. Follow instructions to email TPXO authors for access, providing your name, institution, your intended application/use case, and which TPXO models you need ("TPXO10-atlas-v2 netcdf" or "TPXO9-atlas-v5 netcdf" are recommended to [enable clipping](#Clipping-model-files-to-improve-performance)).
     3. If your request is approved, you will be emailed an invite to an app.box.com folder. Open this link, then click "Download" on the top-right to download your zipped model files.
 
         ![image](assets/tpxo_download.jpg)
@@ -218,6 +218,10 @@ Follow the guides below for some of the most commonly used global ocean tide mod
            |- u_s2_tpxo9_atlas_30_v5.nc
         ```
 
+!!! tip
+
+    To allow you to improve tide modelling performance by clipping your tide model files ([see below](#Clipping-model-files-to-improve-performance)), we recommend downloading NetCDF-format versions of tide models wherever possible.
+
 ## Configuring `eo-tides` to use tide model directory
 
 `eo-tides` can be pointed to the location of your [tide model directory](#setting-up-a-tide-model-directory) and your downloaded tide model data in two ways:
@@ -225,7 +229,7 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 ### Using the `directory` function parameter
 
 All tide modelling functions from `eo-tides` provide a `directory` parameter that can be used to specify the location of your tide model directory.
-For example, using `model_tides` from the `eo_tides.model` module:
+For example, using the [`eo_tides.model.model_tides`](api.md#eo_tides.model.model_tides) function:
 
 ```py hl_lines="8"
 import pandas as pd
@@ -256,10 +260,10 @@ All tide modelling functions from `eo-tides` will check for the presence of the 
 
 ## Verifying available and supported models
 
-You can check what tide models have been correctly set up for use by `eo-tides` using the [`eo_tides.model.list_models`](api.md#eo_tides.model.list_models) function:
+You can check what tide models have been correctly set up for use by `eo-tides` using the [`eo_tides.utils.list_models`](api.md#eo_tides.utils.list_models) function:
 
 ```py
-from eo_tides.model import list_models
+from eo_tides.utils import list_models
 
 available_models, supported_models = list_models(directory="tide_models/")
 ```
@@ -280,6 +284,57 @@ This will print out a useful summary, with available models marked with a ✅:
 Summary:
 Available models: 2/50
 ```
+
+## Clipping model files to improve performance
+
+!!! important "Highly recommended"
+
+    Clipping your model files to a smaller spatial extent is **highly recommended**, unless you are specifically running global-scale analyses.
+
+Running tide modelling on the default tide modelling data provided by external providers can be slow due to the large size of these files (especially for high-resolution models like FES2022).
+To improve performance, it can be extremely useful to clip your model files to a smaller region of interest (e.g. the extents of your country or coastal region).
+This can **greatly** improve run-times: potentially speeding up your tide modelling by over 10 times for large models!
+
+Once you have downloaded and verified your tide model data, you can use the [`eo_tides.utils.clip_models`](api.md#eo_tides.utils.clip_models) function to automatically clip your data, and export them to a new tide modelling directory:
+
+```py
+from eo_tides.utils import clip_models
+
+clip_models(
+    input_directory="tide_models/",
+    output_directory="tide_models_clipped/",
+    bbox=(-8.968392, 50.070574, 2.447160, 59.367122),
+)
+```
+
+When you run `clip_models`, the function will automatically identify suitable NetCDF-format models in your input directory, and clip each of them to the extent of your bounding box.
+After each model is clipped, the result is exported to your selected output directory and verified to ensure the clipped data is suitable for tide modelling:
+
+```text
+Preparing to clip suitable NetCDF models: ['HAMTIDE11', 'EOT20']
+
+Clipping HAMTIDE11: 100%|██████████| 9/9 [00:03<00:00,  2.60it/s]
+✅ Clipped model exported and verified
+Clipping EOT20: 100%|██████████| 17/17 [00:07<00:00,  2.36it/s]
+✅ Clipped model exported and verified
+
+Outputs exported to tide_models_clipped/
+```
+
+You can now pass this new clipped tide model directory to all future `eo_tides` function calls for improved tide modelling performance, e.g.:
+
+```py hl_lines="5"
+model_tides(
+        x=155,
+        y=-35,
+        time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
+        directory="tide_models_clipped/"
+)
+```
+
+!!! tip
+
+    Because only NetCDF-format tide models can be clipped, we recommend downloading NetCDF versions of your tide models wherever possible.
 
 ## Next steps
 

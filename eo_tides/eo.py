@@ -8,17 +8,15 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import odc.geo.xr
-import pandas as pd
 import xarray as xr
 from odc.geo.geobox import GeoBox
 
 # Only import if running type checking
 if TYPE_CHECKING:
-    import datetime
-
     from odc.geo import Shape2d
 
-from .model import DatetimeLike, _standardise_time, model_tides
+from .model import model_tides
+from .utils import DatetimeLike, _standardise_time
 
 
 def _resample_chunks(

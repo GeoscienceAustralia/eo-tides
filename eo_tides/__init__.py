@@ -28,9 +28,9 @@ validation : Load observed tide gauge data to validate modelled tides
 
 # Import commonly used functions for convenience
 from .eo import pixel_tides, tag_tides
-from .model import list_models, model_phases, model_tides
+from .model import model_phases, model_tides
 from .stats import pixel_stats, tide_stats
-from .utils import idw
+from .utils import clip_models, idw, list_models
 from .validation import eval_metrics, load_gauge_gesla
 
 # Define what should be imported with "from eo_tides import *"
@@ -42,7 +42,8 @@ __all__ = [
     "pixel_tides",
     "tide_stats",
     "pixel_stats",
-    "idw",
     "eval_metrics",
     "load_gauge_gesla",
+    "clip_models",
+    "idw",
 ]

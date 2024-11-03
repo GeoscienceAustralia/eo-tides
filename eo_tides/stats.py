@@ -6,20 +6,18 @@ from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
-import odc.geo.xr
 import pandas as pd
 import xarray as xr
 from scipy import stats
 
 # Only import if running type checking
 if TYPE_CHECKING:
-    import datetime
-
     import xarray as xr
     from odc.geo.geobox import GeoBox
 
 from .eo import _standardise_inputs, pixel_tides, tag_tides
-from .model import DatetimeLike, model_tides
+from .model import model_tides
+from .utils import DatetimeLike
 
 
 def _plot_biases(

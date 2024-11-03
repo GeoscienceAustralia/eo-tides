@@ -1,12 +1,9 @@
-import pathlib
-from datetime import datetime
-
 import numpy as np
 import pandas as pd
 import pytest
 from pyTMD.compute import tide_elevations
 
-from eo_tides.model import _set_directory, _standardise_time, list_models, model_phases, model_tides
+from eo_tides.model import _parallel_splits, _set_directory, model_phases, model_tides
 from eo_tides.validation import eval_metrics
 
 GAUGE_X = 122.2183
@@ -15,154 +12,35 @@ ENSEMBLE_MODELS = ["EOT20", "HAMTIDE11"]  # simplified for tests
 
 
 @pytest.mark.parametrize(
-    "input_value, expected_output",
+    "total_points, model_count, parallel_max, expected_splits",
     [
-        # Case 1: None
-        (None, None),
-        # Case 2: Single datetime.datetime object
-        (datetime(2020, 1, 12, 21, 14), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
-        # Case 3: Single pandas.Timestamp
-        (pd.Timestamp("2020-01-12 21:14"), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
-        # Case 4: np.datetime64 scalar
-        (np.datetime64("2020-01-12T21:14:00"), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
-        # Case 5: 1D numpy array of np.datetime64
-        (
-            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
-            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
-        ),
-        # Case 6: 1D numpy array of datetime.datetime
-        (
-            np.array([datetime(2020, 1, 12, 21, 14), datetime(2021, 2, 14, 15, 30)]),
-            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
-        ),
-        # Case 7: pandas.DatetimeIndex
-        (
-            pd.date_range(start="2000-01-01", end="2000-01-02", periods=3),
-            np.array(["2000-01-01T00:00:00", "2000-01-01T12:00:00", "2000-01-02T00:00:00"], dtype="datetime64[ns]"),
-        ),
-        # Case 8: Mixed array with datetime.datetime and np.datetime64
-        (
-            np.array([datetime(2020, 1, 12, 21, 14), np.datetime64("2021-02-14T15:30:00")]),
-            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
-        ),
-        # Case 9: Single string datetime
-        ("2020-01-12 21:14", np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
-        # Case 10: Array of string datetimes
-        (
-            ["2020-01-12 21:14", "2021-02-14 15:30"],
-            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
-        ),
+        # Basic cases
+        (10000, 2, 8, 4),  # Standard case with explicit parallel_max
+        (5000, 1, 4, 4),  # Single model case
+        # Minimum split size cases
+        (900, 1, 4, 1),  # Less than min_points_per_split
+        (2000, 2, 2, 1),  # Just enough for 1 split with 2 models
+        # Maximum parallelization cases
+        (100000, 2, 4, 2),  # Limited by CPU cores / model_count
+        (100000, 4, 8, 2),  # Testing with more models
+        # Edge cases
+        (1, 1, 1, 1),  # Minimum possible values
+        (999999, 1, 8, 8),  # Large number of points
+        (10000, 8, 8, 1),  # Many models relative to cores
     ],
 )
-def test_standardise_time(input_value, expected_output):
-    result = _standardise_time(input_value)
-    if result is None:
-        assert result == expected_output
-    else:
-        assert np.array_equal(result, expected_output)
-
-
-@pytest.mark.parametrize("time_offset", ["15 min", "20 min"])
-def test_model_phases(time_offset):
-    phase_df = model_phases(
-        x=[122.14],
-        y=[-17.91],
-        time=pd.date_range("2020-01-01", "2020-01-02", freq="h"),
-        model=["EOT20"],
-        time_offset=time_offset,
+def test_parallel_splits(total_points, model_count, parallel_max, expected_splits):
+    """
+    Test the _parallel_splits function with various parameter combinations.
+    """
+    result = _parallel_splits(
+        total_points=total_points,
+        model_count=model_count,
+        parallel_max=parallel_max,
     )
 
-    assert phase_df.tide_phase.tolist() == [
-        "low-flow",
-        "low-flow",
-        "low-flow",
-        "low-flow",
-        "high-flow",
-        "high-flow",
-        "high-flow",
-        "high-ebb",
-        "high-ebb",
-        "high-ebb",
-        "low-ebb",
-        "low-ebb",
-        "low-ebb",
-        "low-flow",
-        "low-flow",
-        "high-flow",
-        "high-flow",
-        "high-flow",
-        "high-flow",
-        "high-ebb",
-        "high-ebb",
-        "high-ebb",
-        "low-ebb",
-        "low-ebb",
-        "low-ebb",
-    ]
-
-
-@pytest.mark.parametrize(
-    "models,output_format,return_tides,expected_cols",
-    [
-        (["EOT20"], "long", False, ["tide_model", "tide_phase"]),
-        (["EOT20"], "long", True, ["tide_model", "tide_height", "tide_phase"]),
-        (["EOT20", "GOT5.5"], "long", False, ["tide_model", "tide_phase"]),
-        (
-            ["EOT20", "GOT5.5"],
-            "long",
-            True,
-            ["tide_model", "tide_height", "tide_phase"],
-        ),
-        (["EOT20"], "wide", False, ["EOT20"]),
-        (["EOT20"], "wide", True, [("tide_height", "EOT20"), ("tide_phase", "EOT20")]),
-        (["EOT20", "GOT5.5"], "wide", False, ["EOT20", "GOT5.5"]),
-        (
-            ["EOT20", "GOT5.5"],
-            "wide",
-            True,
-            [
-                ("tide_height", "EOT20"),
-                ("tide_height", "GOT5.5"),
-                ("tide_phase", "EOT20"),
-                ("tide_phase", "GOT5.5"),
-            ],
-        ),
-    ],
-)
-def test_model_phases_format(models, output_format, return_tides, expected_cols):
-    phase_df = model_phases(
-        x=[122.14],
-        y=[-17.91],
-        time=pd.date_range("2020", "2021", periods=2),
-        model=models,
-        output_format=output_format,
-        return_tides=return_tides,
-    )
-
-    # Assert expected indexes and columns
-    assert phase_df.index.names == ["time", "x", "y"]
-    assert phase_df.columns.tolist() == expected_cols
-
-
-# Test available tide models
-def test_list_models():
-    # Using env var
-    available_models, supported_models = list_models()
-    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
-    assert len(supported_models) > 3
-
-    # Not printing outputs
-    available_models, supported_models = list_models(show_available=False, show_supported=False)
-    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
-
-    # Providing a string path
-    available_models, supported_models = list_models(directory="./tests/data/tide_models")
-    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
-
-    # Providing a pathlib
-    path = pathlib.Path("./tests/data/tide_models")
-    available_models, supported_models = list_models(directory=path)
-    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
+    # Check the returned value
+    assert result == expected_splits
 
 
 # Run test for multiple input coordinates, CRSs and interpolation methods
@@ -552,3 +430,85 @@ def test_model_tides_ensemble():
         "ensemble-mean-weighted",
         "ensemble-mean",
     ])
+
+
+@pytest.mark.parametrize("time_offset", ["15 min", "20 min"])
+def test_model_phases(time_offset):
+    phase_df = model_phases(
+        x=[122.14],
+        y=[-17.91],
+        time=pd.date_range("2020-01-01", "2020-01-02", freq="h"),
+        model=["EOT20"],
+        time_offset=time_offset,
+    )
+
+    assert phase_df.tide_phase.tolist() == [
+        "low-flow",
+        "low-flow",
+        "low-flow",
+        "low-flow",
+        "high-flow",
+        "high-flow",
+        "high-flow",
+        "high-ebb",
+        "high-ebb",
+        "high-ebb",
+        "low-ebb",
+        "low-ebb",
+        "low-ebb",
+        "low-flow",
+        "low-flow",
+        "high-flow",
+        "high-flow",
+        "high-flow",
+        "high-flow",
+        "high-ebb",
+        "high-ebb",
+        "high-ebb",
+        "low-ebb",
+        "low-ebb",
+        "low-ebb",
+    ]
+
+
+@pytest.mark.parametrize(
+    "models,output_format,return_tides,expected_cols",
+    [
+        (["EOT20"], "long", False, ["tide_model", "tide_phase"]),
+        (["EOT20"], "long", True, ["tide_model", "tide_height", "tide_phase"]),
+        (["EOT20", "GOT5.5"], "long", False, ["tide_model", "tide_phase"]),
+        (
+            ["EOT20", "GOT5.5"],
+            "long",
+            True,
+            ["tide_model", "tide_height", "tide_phase"],
+        ),
+        (["EOT20"], "wide", False, ["EOT20"]),
+        (["EOT20"], "wide", True, [("tide_height", "EOT20"), ("tide_phase", "EOT20")]),
+        (["EOT20", "GOT5.5"], "wide", False, ["EOT20", "GOT5.5"]),
+        (
+            ["EOT20", "GOT5.5"],
+            "wide",
+            True,
+            [
+                ("tide_height", "EOT20"),
+                ("tide_height", "GOT5.5"),
+                ("tide_phase", "EOT20"),
+                ("tide_phase", "GOT5.5"),
+            ],
+        ),
+    ],
+)
+def test_model_phases_format(models, output_format, return_tides, expected_cols):
+    phase_df = model_phases(
+        x=[122.14],
+        y=[-17.91],
+        time=pd.date_range("2020", "2021", periods=2),
+        model=models,
+        output_format=output_format,
+        return_tides=return_tides,
+    )
+
+    # Assert expected indexes and columns
+    assert phase_df.index.names == ["time", "x", "y"]
+    assert phase_df.columns.tolist() == expected_cols

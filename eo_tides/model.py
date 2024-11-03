@@ -1,15 +1,14 @@
 # Used to postpone evaluation of type annotations
 from __future__ import annotations
 
-import datetime
 import os
-import pathlib
 import textwrap
-import warnings
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from functools import partial
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING
+
+import psutil
 
 # Only import if running type checking
 if TYPE_CHECKING:
@@ -20,309 +19,9 @@ import numpy as np
 import pandas as pd
 import pyproj
 import pyTMD
-from colorama import Style, init
-from pyTMD.io.model import load_database, model
 from tqdm import tqdm
 
-from .utils import idw
-
-# Type alias for all possible inputs to "time" params
-DatetimeLike = Union[np.ndarray, pd.DatetimeIndex, pd.Timestamp, datetime.datetime, str, List[str]]
-
-
-def _set_directory(
-    directory: str | os.PathLike | None = None,
-) -> os.PathLike:
-    """
-    Set tide modelling files directory. If no custom
-    path is provided, try global environmental variable
-    instead.
-    """
-    if directory is None:
-        if "EO_TIDES_TIDE_MODELS" in os.environ:
-            directory = os.environ["EO_TIDES_TIDE_MODELS"]
-        else:
-            raise Exception(
-                "No tide model directory provided via `directory`, and/or no "
-                "`EO_TIDES_TIDE_MODELS` environment variable found. "
-                "Please provide a valid path to your tide model directory."
-            )
-
-    # Verify path exists
-    directory = pathlib.Path(directory).expanduser()
-    if not directory.exists():
-        raise FileNotFoundError(f"No valid tide model directory found at path `{directory}`")
-    else:
-        return directory
-
-
-def _standardise_time(
-    time: DatetimeLike | None,
-) -> np.ndarray | None:
-    """
-    Accept any time format accepted by `pd.to_datetime`,
-    and return a datetime64 ndarray. Return None if None
-    passed.
-    """
-    # Return time as-is if None
-    if time is None:
-        return None
-
-    # Use pd.to_datetime for conversion, then convert to numpy array
-    time = pd.to_datetime(time).to_numpy().astype("datetime64[ns]")
-
-    # Ensure that data has at least one dimension
-    return np.atleast_1d(time)
-
-
-def list_models(
-    directory: str | os.PathLike | None = None,
-    show_available: bool = True,
-    show_supported: bool = True,
-    raise_error: bool = False,
-) -> tuple[list[str], list[str]]:
-    """
-    List all tide models available for tide modelling.
-
-    This function scans the specified tide model directory
-    and returns a list of models that are available in the
-    directory as well as the full list of all models supported
-    by `eo-tides` and `pyTMD`.
-
-    For instructions on setting up tide models, see:
-    <https://geoscienceaustralia.github.io/eo-tides/setup/>
-
-    Parameters
-    ----------
-    directory : str, optional
-        The directory containing tide model data files. If no path is
-        provided, this will default to the environment variable
-        `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
-        Tide modelling files should be stored in sub-folders for each
-        model that match the structure required by `pyTMD`
-        (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
-    show_available : bool, optional
-        Whether to print a list of locally available models.
-    show_supported : bool, optional
-        Whether to print a list of all supported models, in
-        addition to models available locally.
-    raise_error : bool, optional
-        If True, raise an error if no available models are found.
-        If False, raise a warning.
-
-    Returns
-    -------
-    available_models : list of str
-        A list of all tide models available within `directory`.
-    supported_models : list of str
-        A list of all tide models supported by `eo-tides`.
-    """
-    init()  # Initialize colorama
-
-    # Set tide modelling files directory. If no custom path is
-    # provided, try global environment variable.
-    directory = _set_directory(directory)
-
-    # Get full list of supported models from pyTMD database
-    model_database = load_database()["elevation"]
-    supported_models = list(model_database.keys())
-
-    # Extract expected model paths
-    expected_paths = {}
-    for m in supported_models:
-        model_file = model_database[m]["model_file"]
-        model_file = model_file[0] if isinstance(model_file, list) else model_file
-        expected_paths[m] = str(directory / pathlib.Path(model_file).expanduser().parent)
-
-    # Define column widths
-    status_width = 4  # Width for emoji
-    name_width = max(len(name) for name in supported_models)
-    path_width = max(len(path) for path in expected_paths.values())
-
-    # Print list of supported models, marking available and
-    # unavailable models and appending available to list
-    if show_available or show_supported:
-        total_width = min(status_width + name_width + path_width + 6, 80)
-        print("─" * total_width)
-        print(f"{'󠀠🌊':^{status_width}} | {'Model':<{name_width}} | {'Expected path':<{path_width}}")
-        print("─" * total_width)
-
-    available_models = []
-    for m in supported_models:
-        try:
-            model_file = model(directory=directory).elevation(m=m)
-            available_models.append(m)
-
-            if show_available:
-                # Mark available models with a green tick
-                status = "✅"
-                print(f"{status:^{status_width}}│ {m:<{name_width}} │ {expected_paths[m]:<{path_width}}")
-        except FileNotFoundError:
-            if show_supported:
-                # Mark unavailable models with a red cross
-                status = "❌"
-                print(
-                    f"{status:^{status_width}}│ {Style.DIM}{m:<{name_width}} │ {expected_paths[m]:<{path_width}}{Style.RESET_ALL}"
-                )
-
-    if show_available or show_supported:
-        print("─" * total_width)
-
-        # Print summary
-        print(f"\n{Style.BRIGHT}Summary:{Style.RESET_ALL}")
-        print(f"Available models: {len(available_models)}/{len(supported_models)}")
-
-    # Raise error or warning if no models are available
-    if not available_models:
-        warning_msg = textwrap.dedent(
-            f"""
-            No valid tide models are available in `{directory}`.
-            Are you sure you have provided the correct `directory` path, or set the
-            `EO_TIDES_TIDE_MODELS` environment variable to point to the location of your
-            tide model directory?
-            """
-        ).strip()
-
-        if raise_error:
-            raise Exception(warning_msg)
-        else:
-            warnings.warn(warning_msg, UserWarning)
-
-    # Return list of available and supported models
-    return available_models, supported_models
-
-
-def _model_tides(
-    model,
-    x,
-    y,
-    time,
-    directory,
-    crs,
-    crop,
-    method,
-    extrapolate,
-    cutoff,
-    output_units,
-    mode,
-):
-    """Worker function applied in parallel by `model_tides`. Handles the
-    extraction of tide modelling constituents and tide modelling using
-    `pyTMD`.
-    """
-    # Obtain model details
-    pytmd_model = pyTMD.io.model(directory).elevation(model)
-
-    # Reproject x, y to latitude/longitude
-    transformer = pyproj.Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
-    lon, lat = transformer.transform(x.flatten(), y.flatten())
-
-    # Convert datetime
-    timescale = pyTMD.time.timescale().from_datetime(time.flatten())
-
-    try:
-        # Read tidal constants and interpolate to grid points
-        amp, ph, c = pytmd_model.extract_constants(
-            lon,
-            lat,
-            type=pytmd_model.type,
-            crop=crop,
-            bounds=None,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            append_node=False,
-            # append_node=True,
-        )
-
-        # TODO: Return constituents
-        # print(amp.shape, ph.shape, c)
-        # print(pd.DataFrame({"amplitude": amp}))
-
-    # Raise error if constituent files no not cover analysis extent
-    except IndexError as e:
-        error_msg = f"""
-        The {model} tide model constituent files do not cover the requested analysis extent.
-        This can occur if you are using clipped model files to improve run times.
-        Consider using model files that cover your entire analysis area, or set `crop=False`
-        to reduce the extent of tide model constituent files that is loaded.
-        """
-        raise Exception(textwrap.dedent(error_msg).strip()) from None
-
-    # Calculate complex phase in radians for Euler's
-    cph = -1j * ph * np.pi / 180.0
-
-    # Calculate constituent oscillation
-    hc = amp * np.exp(cph)
-
-    # Compute deltat based on model
-    if pytmd_model.corrections in ("OTIS", "ATLAS", "TMD3", "netcdf"):
-        # Use delta time at 2000.0 to match TMD outputs
-        deltat = np.zeros_like(timescale.tt_ut1)
-    else:
-        # Use interpolated delta times
-        deltat = timescale.tt_ut1
-
-    # Determine the number of points and times to process. If in
-    # "one-to-many" mode, these counts are used to repeat our extracted
-    # constituents and timesteps so we can extract tides for all
-    # combinations of our input times and tide modelling points.
-    # If in "one-to-many" mode, repeat constituents to length of time
-    # and number of input coords before passing to `predict_tide_drift`
-    # If in "one-to-one" mode, we avoid this step by setting counts to 1
-    # (e.g. "repeat 1 times")
-    points_repeat = len(x) if mode == "one-to-many" else 1
-    time_repeat = len(time) if mode == "one-to-many" else 1
-    t, hc, deltat = (
-        np.tile(timescale.tide, points_repeat),
-        hc.repeat(time_repeat, axis=0),
-        np.tile(deltat, points_repeat),
-    )
-
-    # Create arrays to hold outputs
-    tide = np.ma.zeros((len(t)), fill_value=np.nan)
-    tide.mask = np.any(hc.mask, axis=1)
-
-    # Predict tidal elevations at time and infer minor corrections
-    tide.data[:] = pyTMD.predict.drift(
-        t,
-        hc,
-        c,
-        deltat=deltat,
-        corrections=pytmd_model.corrections,
-    )
-    minor = pyTMD.predict.infer_minor(
-        t,
-        hc,
-        c,
-        deltat=deltat,
-        corrections=pytmd_model.corrections,
-        minor=pytmd_model.minor,
-    )
-    tide.data[:] += minor.data[:]
-
-    # Replace invalid values with fill value
-    tide.data[tide.mask] = tide.fill_value
-
-    # Convert data to pandas.DataFrame, and set index to our input
-    # time/x/y values
-    tide_df = pd.DataFrame({
-        "time": np.tile(time, points_repeat),
-        "x": np.repeat(x, time_repeat),
-        "y": np.repeat(y, time_repeat),
-        "tide_model": model,
-        "tide_height": tide,
-    }).set_index(["time", "x", "y"])
-
-    # Optionally convert outputs to integer units (can save memory)
-    if output_units == "m":
-        tide_df["tide_height"] = tide_df.tide_height.astype(np.float32)
-    elif output_units == "cm":
-        tide_df["tide_height"] = (tide_df.tide_height * 100).astype(np.int16)
-    elif output_units == "mm":
-        tide_df["tide_height"] = (tide_df.tide_height * 1000).astype(np.int16)
-
-    return tide_df
+from .utils import DatetimeLike, _set_directory, _standardise_time, idw, list_models
 
 
 def _ensemble_model(
@@ -490,6 +189,179 @@ def _ensemble_model(
     return pd.concat(ensemble_list)
 
 
+def _parallel_splits(
+    total_points: int,
+    model_count: int,
+    parallel_max: int | None = None,
+    min_points_per_split: int = 1000,
+) -> int:
+    """
+    Calculates the optimal number of parallel splits for data
+    processing based on system resources and processing constraints.
+
+    Parameters:
+    -----------
+    total_points : int
+        Total number of data points to process
+    model_count : int
+        Number of models that will be run in parallel
+    parallel_max : int, optional
+        Maximum number of parallel processes to use. If None, uses CPU core count
+    min_points_per_split : int, default=1000
+        Minimum number of points that should be processed in each split
+    """
+    # Get available CPUs. First see if `CPU_GUARANTEE` exists in
+    # environment (if running in JupyterHub); if not use psutil
+    # followed by standard CPU count
+    if parallel_max is None:
+        # Take the first valid output
+        raw_value = os.environ.get("CPU_GUARANTEE") or psutil.cpu_count(logical=False) or os.cpu_count() or 1
+
+        # Convert to integer
+        if isinstance(raw_value, str):
+            parallel_max = int(float(raw_value))
+        else:
+            parallel_max = int(raw_value)
+
+    # Calculate optimal number of splits based on constraints
+    splits_by_size = total_points / min_points_per_split
+    splits_by_cpu = parallel_max / model_count
+    optimal_splits = min(splits_by_size, splits_by_cpu)
+
+    # Convert to integer and ensure at least 1 split
+    final_split_count = int(max(1, optimal_splits))
+    return final_split_count
+
+
+def _model_tides(
+    model,
+    x,
+    y,
+    time,
+    directory,
+    crs,
+    crop,
+    method,
+    extrapolate,
+    cutoff,
+    output_units,
+    mode,
+):
+    """Worker function applied in parallel by `model_tides`. Handles the
+    extraction of tide modelling constituents and tide modelling using
+    `pyTMD`.
+    """
+    # Obtain model details
+    pytmd_model = pyTMD.io.model(directory).elevation(model)
+
+    # Reproject x, y to latitude/longitude
+    transformer = pyproj.Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
+    lon, lat = transformer.transform(x.flatten(), y.flatten())
+
+    # Convert datetime
+    timescale = pyTMD.time.timescale().from_datetime(time.flatten())
+
+    try:
+        # Read tidal constants and interpolate to grid points
+        amp, ph, c = pytmd_model.extract_constants(
+            lon,
+            lat,
+            type=pytmd_model.type,
+            crop=crop,
+            method=method,
+            extrapolate=extrapolate,
+            cutoff=cutoff,
+            append_node=False,
+            # append_node=True,
+        )
+
+        # TODO: Return constituents
+        # print(amp.shape, ph.shape, c)
+        # print(pd.DataFrame({"amplitude": amp}))
+
+    # Raise error if constituent files no not cover analysis extent
+    except IndexError:
+        error_msg = f"""
+        The {model} tide model constituent files do not cover the requested analysis extent.
+        This can occur if you are using clipped model files to improve run times.
+        Consider using model files that cover your entire analysis area, or set `crop=False`
+        to reduce the extent of tide model constituent files that is loaded.
+        """
+        raise Exception(textwrap.dedent(error_msg).strip()) from None
+
+    # Calculate complex phase in radians for Euler's
+    cph = -1j * ph * np.pi / 180.0
+
+    # Calculate constituent oscillation
+    hc = amp * np.exp(cph)
+
+    # Compute delta times based on model
+    if pytmd_model.corrections in ("OTIS", "ATLAS", "TMD3", "netcdf"):
+        # Use delta time at 2000.0 to match TMD outputs
+        deltat = np.zeros_like(timescale.tt_ut1)
+    else:
+        # Use interpolated delta times
+        deltat = timescale.tt_ut1
+
+    # In "one-to-many" mode, extracted tidal constituents and timesteps
+    # are repeated/multiplied out to match the number of input points and
+    # timesteps, enabling the modeling of tides across all combinations
+    # of input times and points. In "one-to-one" mode, no repetition is
+    # needed, so each repeat count is set to 1.
+    points_repeat = len(x) if mode == "one-to-many" else 1
+    time_repeat = len(time) if mode == "one-to-many" else 1
+    t, hc, deltat = (
+        np.tile(timescale.tide, points_repeat),
+        hc.repeat(time_repeat, axis=0),
+        np.tile(deltat, points_repeat),
+    )
+
+    # Create arrays to hold outputs
+    tide = np.ma.zeros((len(t)), fill_value=np.nan)
+    tide.mask = np.any(hc.mask, axis=1)
+
+    # Predict tidal elevations at time and infer minor corrections
+    tide.data[:] = pyTMD.predict.drift(
+        t,
+        hc,
+        c,
+        deltat=deltat,
+        corrections=pytmd_model.corrections,
+    )
+    minor = pyTMD.predict.infer_minor(
+        t,
+        hc,
+        c,
+        deltat=deltat,
+        corrections=pytmd_model.corrections,
+        minor=pytmd_model.minor,
+    )
+    tide.data[:] += minor.data[:]
+
+    # Replace invalid values with fill value
+    tide.data[tide.mask] = tide.fill_value
+
+    # Convert data to pandas.DataFrame, and set index to our input
+    # time/x/y values
+    tide_df = pd.DataFrame({
+        "time": np.tile(time, points_repeat),
+        "x": np.repeat(x, time_repeat),
+        "y": np.repeat(y, time_repeat),
+        "tide_model": model,
+        "tide_height": tide,
+    }).set_index(["time", "x", "y"])
+
+    # Optionally convert outputs to integer units (can save memory)
+    if output_units == "m":
+        tide_df["tide_height"] = tide_df.tide_height.astype(np.float32)
+    elif output_units == "cm":
+        tide_df["tide_height"] = (tide_df.tide_height * 100).astype(np.int16)
+    elif output_units == "mm":
+        tide_df["tide_height"] = (tide_df.tide_height * 1000).astype(np.int16)
+
+    return tide_df
+
+
 def model_tides(
     x: float | list[float] | xr.DataArray,
     y: float | list[float] | xr.DataArray,
@@ -498,12 +370,13 @@ def model_tides(
     directory: str | os.PathLike | None = None,
     crs: str = "EPSG:4326",
     crop: bool = True,
-    method: str = "spline",
+    method: str = "linear",
     extrapolate: bool = True,
     cutoff: float | None = None,
     mode: str = "one-to-many",
     parallel: bool = True,
-    parallel_splits: int = 5,
+    parallel_splits: int | str = "auto",
+    parallel_max: int | None = None,
     output_units: str = "m",
     output_format: str = "long",
     ensemble_models: list[str] | None = None,
@@ -564,11 +437,11 @@ def model_tides(
         1 degree buffer around all input points. Defaults to True.
     method : str, optional
         Method used to interpolate tidal constituents
-        from model files. Options include:
+        from model files. Defaults to "linear"; options include:
 
-        - "spline": scipy bivariate spline interpolation (default)
-        - "bilinear": quick bilinear interpolation
         - "linear", "nearest": scipy regular grid interpolations
+        - "spline": scipy bivariate spline interpolation
+        - "bilinear": quick bilinear interpolation
     extrapolate : bool, optional
         Whether to extrapolate tides for x and y coordinates outside of
         the valid tide modelling domain using nearest-neighbor.
@@ -594,12 +467,16 @@ def model_tides(
         parallel. Optionally, tide modelling can also be run in parallel
         across input x and y coordinates (see "parallel_splits" below).
         Default is True.
-    parallel_splits : int, optional
+    parallel_splits : str or int, optional
         Whether to split the input x and y coordinates into smaller,
         evenly-sized chunks that are processed in parallel. This can
         provide a large performance boost when processing large numbers
-        of coordinates. The default is 5 chunks, which will split
-        coordinates into 5 parallelised chunks.
+        of coordinates. The default is "auto", which will automatically
+        attempt to determine optimal splits based on available CPUs,
+        the number of input points, and the number of models.
+    parallel_max : int, optional
+        Maximum number of processes to run in parallel. The default of
+        None will automatically determine this from your available CPUs.
     output_units : str, optional
         Whether to return modelled tides in floating point metre units,
         or integer centimetre units (i.e. scaled by 100) or integer
@@ -729,13 +606,28 @@ def model_tides(
         mode=mode,
     )
 
-    # Ensure requested parallel splits is not smaller than number of points
-    parallel_splits = min(parallel_splits, len(x))
+    # If automatic parallel splits, calculate optimal value
+    # based on available parallelisation, number of points
+    # and number of models
+    if parallel_splits == "auto":
+        parallel_splits = _parallel_splits(
+            total_points=len(x),
+            model_count=len(models_to_process),
+            parallel_max=parallel_max,
+        )
+
+    # Verify that parallel splits are not larger than number of points
+    assert isinstance(parallel_splits, int)
+    if parallel_splits > len(x):
+        raise ValueError(f"Parallel splits ({parallel_splits}) cannot be larger than the number of points ({len(x)}).")
 
     # Parallelise if either multiple models or multiple splits requested
+
     if parallel & ((len(models_to_process) > 1) | (parallel_splits > 1)):
-        with ProcessPoolExecutor() as executor:
-            print(f"Modelling tides using {', '.join(models_to_process)} in parallel")
+        with ProcessPoolExecutor(max_workers=parallel_max) as executor:
+            print(
+                f"Modelling tides with {', '.join(models_to_process)} in parallel (models: {len(models_to_process)}, splits: {parallel_splits})"
+            )
 
             # Optionally split lon/lat points into `splits_n` chunks
             # that will be applied in parallel
@@ -783,7 +675,7 @@ def model_tides(
         model_outputs = []
 
         for model_i in models_to_process:
-            print(f"Modelling tides using {model_i}")
+            print(f"Modelling tides with {model_i}")
             tide_df = iter_func(model_i, x, y, time)
             model_outputs.append(tide_df)
 

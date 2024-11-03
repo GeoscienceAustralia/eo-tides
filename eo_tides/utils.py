@@ -1,5 +1,454 @@
+# Used to postpone evaluation of type annotations
+from __future__ import annotations
+
+import datetime
+import os
+import pathlib
+import textwrap
+import warnings
+from typing import List, Union
+
 import numpy as np
+import odc.geo
+import pandas as pd
+import xarray as xr
+from colorama import Style, init
+from odc.geo.geom import BoundingBox
+from pyTMD.io.model import load_database
+from pyTMD.io.model import model as pytmd_model
 from scipy.spatial import cKDTree as KDTree
+from tqdm import tqdm
+
+# Type alias for all possible inputs to "time" params
+DatetimeLike = Union[np.ndarray, pd.DatetimeIndex, pd.Timestamp, datetime.datetime, str, List[str]]
+
+
+def _set_directory(
+    directory: str | os.PathLike | None = None,
+) -> os.PathLike:
+    """
+    Set tide modelling files directory. If no custom
+    path is provided, try global `EO_TIDES_TIDE_MODELS`
+    environmental variable instead.
+    """
+    if directory is None:
+        if "EO_TIDES_TIDE_MODELS" in os.environ:
+            directory = os.environ["EO_TIDES_TIDE_MODELS"]
+        else:
+            raise Exception(
+                "No tide model directory provided via `directory`, and/or no "
+                "`EO_TIDES_TIDE_MODELS` environment variable found. "
+                "Please provide a valid path to your tide model directory."
+            )
+
+    # Verify path exists
+    directory = pathlib.Path(directory).expanduser()
+    if not directory.exists():
+        raise FileNotFoundError(f"No valid tide model directory found at path `{directory}`")
+    else:
+        return directory
+
+
+def _standardise_time(
+    time: DatetimeLike | None,
+) -> np.ndarray | None:
+    """
+    Accept any time format accepted by `pd.to_datetime`,
+    and return a datetime64 ndarray. Return None if None
+    passed.
+    """
+    # Return time as-is if None
+    if time is None:
+        return None
+
+    # Use pd.to_datetime for conversion, then convert to numpy array
+    time = pd.to_datetime(time).to_numpy().astype("datetime64[ns]")
+
+    # Ensure that data has at least one dimension
+    return np.atleast_1d(time)
+
+
+def _clip_model_file(
+    nc: xr.Dataset,
+    bbox: BoundingBox,
+    ydim: str,
+    xdim: str,
+    ycoord: str,
+    xcoord: str,
+) -> xr.Dataset:
+    """
+    Clips tide model netCDF datasets to a bounding box.
+
+    If the bounding box crosses 0 degrees longitude (e.g. Greenwich),
+    the function will clip the dataset into two parts and concatenate
+    them along the x-dimension to create a continuous result.
+
+    Parameters
+    ----------
+    nc : xr.Dataset
+        Input tide model xarray dataset.
+    bbox : odc.geo.geom.BoundingBox
+        A BoundingBox object for clipping the dataset in EPSG:4326
+        degrees coordinates. For example:
+        `BoundingBox(left=108, bottom=-48, right=158, top=-6, crs='EPSG:4326')`
+    ydim : str
+        The name of the xarray dimension representing the y-axis.
+        Depending on the tide model, this may or may not contain
+        actual latitude values.
+    xdim : str
+        The name of the xarray dimension representing the x-axis.
+        Depending on the tide model, this may or may not contain
+        actual longitude values.
+    ycoord : str
+        The name of the coordinate, variable or dimension containing
+        actual latitude values used for clipping the data.
+    xcoord : str
+        The name of the coordinate, variable or dimension containing
+        actual longitude values used for clipping the data.
+
+    Returns
+    -------
+    xr.Dataset
+        A dataset clipped to the specified bounding box, with
+        appropriate adjustments if the bounding box crosses 0
+        degrees longitude.
+
+    Examples
+    --------
+    >>> nc = xr.open_dataset("GOT5.5/ocean_tides/2n2.nc")
+    >>> bbox = BoundingBox(left=108, bottom=-48, right=158, top=-6, crs='EPSG:4326')
+    >>> clipped_nc = _clip_model_file(nc, bbox,  xdim="lon", ydim="lat", ycoord="latitude", xcoord="longitude")
+    """
+
+    # Extract x and y coords from xarray and load into memory
+    xcoords = nc[xcoord].compute()
+    ycoords = nc[ycoord].compute()
+
+    # If data falls within 0-360 degree bounds, then clip directly
+    if (bbox.left >= 0) & (bbox.right <= 360):
+        nc_clipped = nc.sel({
+            ydim: (ycoords >= bbox.bottom) & (ycoords <= bbox.top),
+            xdim: (xcoords >= bbox.left) & (xcoords <= bbox.right),
+        })
+
+    # If bbox crosses zero longitude, extract left and right
+    # separately and then combine into one concatenated dataset
+    elif (bbox.left < 0) & (bbox.right > 0):
+        # Convert longitudes to 0-360 range
+        left = bbox.left % 360
+        right = bbox.right % 360
+
+        # Extract data from left of 0 longitude, and convert lon
+        # coords to -180 to 0 range to enable continuous interpolation
+        # across 0 boundary
+        nc_left = nc.sel({
+            ydim: (ycoords >= bbox.bottom) & (ycoords <= bbox.top),
+            xdim: (xcoords >= left) & (xcoords <= 360),
+        }).assign({xcoord: lambda x: x[xcoord] - 360})
+
+        # Convert additional lon variables for TXPO
+        if "lon_v" in nc_left:
+            nc_left = nc_left.assign({
+                "lon_v": lambda x: x["lon_v"] - 360,
+                "lon_u": lambda x: x["lon_u"] - 360,
+            })
+
+        # Extract data to right of 0 longitude
+        nc_right = nc.sel({
+            ydim: (ycoords >= bbox.bottom) & (ycoords <= bbox.top),
+            xdim: (xcoords > 0) & (xcoords <= right),
+        })
+
+        # Combine left and right data along x dimension
+        nc_clipped = xr.concat([nc_left, nc_right], dim=xdim)
+
+        # Hack fix to remove expanded x dim on lat variables issue
+        # for TPXO data; remove x dim by selecting the first obs
+        for i in ["lat_z", "lat_v", "lat_u", "con"]:
+            try:
+                nc_clipped[i] = nc_clipped[i].isel(nx=0)
+            except:
+                pass
+
+    return nc_clipped
+
+
+def clip_models(
+    input_directory: str | os.PathLike,
+    output_directory: str | os.PathLike,
+    bbox: tuple[float, float, float, float],
+    model: list | None = None,
+    buffer: float = 1,
+    overwrite: bool = False,
+):
+    """
+    Clip NetCDF-format ocean tide models to a bounding box.
+
+    This function identifies all NetCDF-format tide models in a
+    given input directory, including "ATLAS-netcdf" (e.g. TPXO9-atlas-nc),
+    "FES-netcdf" (e.g. FES2022, EOT20), and "GOT-netcdf" (e.g. GOT5.5)
+    format files. Files for each model are then clipped to the extent of
+    the provided bounding box, handling model-specific file structures.
+    After each model is clipped, the result is exported to the output
+    directory and verified with `pyTMD` to ensure the clipped data is
+    suitable for tide modelling.
+
+    Parameters
+    ----------
+    input_directory : str or os.PathLike
+        Path to directory containing input NetCDF-format tide model files.
+    output_directory : str or os.PathLike
+        Path to directory where clipped NetCDF files will be exported.
+    bbox : tuple of float
+        Bounding box for clipping the tide models in EPSG:4326 degrees
+        coordinates, specified as `(left, bottom, right, top)`.
+    model : str or list of str, optional
+        The tide model (or models) to clip. Defaults to None, which
+        will automatically identify and clip all NetCDF-format models
+        in the input directly.
+    buffer : float, optional
+        Buffer distance (in degrees) added to the bounding box to provide
+        sufficient data on edges of study area. Defaults to 1 degree.
+    overwrite : bool, optional
+        If True, overwrite existing files in the output directory.
+        Defaults to False.
+
+    Examples
+    --------
+    >>> clip_models(
+    ...     input_directory="tide_models/",
+    ...     output_directory="tide_models_clipped/",
+    ...     bbox=(-8.968392, 50.070574, 2.447160, 59.367122),
+    ... )
+    """
+
+    # Get input and output paths
+    input_directory = _set_directory(input_directory)
+    output_directory = pathlib.Path(output_directory)
+
+    # Prepare bounding box
+    bbox = odc.geo.geom.BoundingBox(*bbox, crs="EPSG:4326").buffered(buffer)
+
+    # Identify NetCDF models
+    model_database = load_database()["elevation"]
+    netcdf_formats = ["ATLAS-netcdf", "FES-netcdf", "GOT-netcdf"]
+    netcdf_models = {k for k, v in model_database.items() if v["format"] in netcdf_formats}
+
+    # Identify subset of available and requested NetCDF models
+    available_models, _ = list_models(directory=input_directory, show_available=False, show_supported=False)
+    requested_models = list(np.atleast_1d(model)) if model is not None else available_models
+    available_netcdf_models = list(set(available_models) & set(requested_models) & set(netcdf_models))
+
+    # Raise error if no valid models found
+    if len(available_netcdf_models) == 0:
+        raise ValueError(f"No valid NetCDF models found in {input_directory}.")
+
+    # If model list is provided,
+    print(f"Preparing to clip suitable NetCDF models: {available_netcdf_models}\n")
+
+    # Loop through suitable models and export
+    for m in available_netcdf_models:
+        # Get model file and grid file list if they exist
+        model_files = model_database[m].get("model_file", [])
+        grid_file = model_database[m].get("grid_file", [])
+
+        # Convert to list if strings and combine
+        model_files = model_files if isinstance(model_files, list) else [model_files]
+        grid_file = grid_file if isinstance(grid_file, list) else [grid_file]
+        all_files = model_files + grid_file
+
+        # Loop through each model file and clip
+        for file in tqdm(all_files, desc=f"Clipping {m}"):
+            # Skip if it exists in output directory
+            if (output_directory / file).exists() and not overwrite:
+                continue
+
+            # Load model file
+            nc = xr.open_mfdataset(input_directory / file)
+
+            # Open file and clip according to model
+            if m in (
+                "GOT5.5",
+                "GOT5.5_load",
+                "GOT5.5_extrapolated",
+                "GOT5.5D",
+                "GOT5.5D_extrapolated",
+                "GOT5.6",
+                "GOT5.6_extrapolated",
+            ):
+                nc_clipped = _clip_model_file(
+                    nc,
+                    bbox,
+                    xdim="lon",
+                    ydim="lat",
+                    ycoord="latitude",
+                    xcoord="longitude",
+                )
+
+            elif m in ("HAMTIDE11",):
+                nc_clipped = _clip_model_file(nc, bbox, xdim="LON", ydim="LAT", ycoord="LAT", xcoord="LON")
+
+            elif m in (
+                "EOT20",
+                "EOT20_load",
+                "FES2012",
+                "FES2014",
+                "FES2014_extrapolated",
+                "FES2014_load",
+                "FES2022",
+                "FES2022_extrapolated",
+                "FES2022_load",
+            ):
+                nc_clipped = _clip_model_file(nc, bbox, xdim="lon", ydim="lat", ycoord="lat", xcoord="lon")
+
+            elif m in (
+                "TPXO8-atlas-nc",
+                "TPXO9-atlas-nc",
+                "TPXO9-atlas-v2-nc",
+                "TPXO9-atlas-v3-nc",
+                "TPXO9-atlas-v4-nc",
+                "TPXO9-atlas-v5-nc",
+                "TPXO10-atlas-v2-nc",
+            ):
+                nc_clipped = _clip_model_file(
+                    nc,
+                    bbox,
+                    xdim="nx",
+                    ydim="ny",
+                    ycoord="lat_z",
+                    xcoord="lon_z",
+                )
+
+            else:
+                raise Exception(f"Model {m} not supported")
+
+            # Create directory and export
+            (output_directory / file).parent.mkdir(parents=True, exist_ok=True)
+            nc_clipped.to_netcdf(output_directory / file, mode="w")
+
+        # Verify that models are ready
+        pytmd_model(directory=output_directory).elevation(m=m).verify
+        print(" ✅ Clipped model exported and verified")
+
+    print(f"\nOutputs exported to {output_directory}")
+    list_models(directory=output_directory, show_available=True, show_supported=False)
+
+
+def list_models(
+    directory: str | os.PathLike | None = None,
+    show_available: bool = True,
+    show_supported: bool = True,
+    raise_error: bool = False,
+) -> tuple[list[str], list[str]]:
+    """
+    List all tide models available for tide modelling.
+
+    This function scans the specified tide model directory
+    and returns a list of models that are available in the
+    directory as well as the full list of all models supported
+    by `eo-tides` and `pyTMD`.
+
+    For instructions on setting up tide models, see:
+    <https://geoscienceaustralia.github.io/eo-tides/setup/>
+
+    Parameters
+    ----------
+    directory : str, optional
+        The directory containing tide model data files. If no path is
+        provided, this will default to the environment variable
+        `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
+        Tide modelling files should be stored in sub-folders for each
+        model that match the structure required by `pyTMD`
+        (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
+    show_available : bool, optional
+        Whether to print a list of locally available models.
+    show_supported : bool, optional
+        Whether to print a list of all supported models, in
+        addition to models available locally.
+    raise_error : bool, optional
+        If True, raise an error if no available models are found.
+        If False, raise a warning.
+
+    Returns
+    -------
+    available_models : list of str
+        A list of all tide models available within `directory`.
+    supported_models : list of str
+        A list of all tide models supported by `eo-tides`.
+    """
+    init()  # Initialize colorama
+
+    # Set tide modelling files directory. If no custom path is
+    # provided, try global environment variable.
+    directory = _set_directory(directory)
+
+    # Get full list of supported models from pyTMD database
+    model_database = load_database()["elevation"]
+    supported_models = list(model_database.keys())
+
+    # Extract expected model paths
+    expected_paths = {}
+    for m in supported_models:
+        model_file = model_database[m]["model_file"]
+        model_file = model_file[0] if isinstance(model_file, list) else model_file
+        expected_paths[m] = str(directory / pathlib.Path(model_file).expanduser().parent)
+
+    # Define column widths
+    status_width = 4  # Width for emoji
+    name_width = max(len(name) for name in supported_models)
+    path_width = max(len(path) for path in expected_paths.values())
+
+    # Print list of supported models, marking available and
+    # unavailable models and appending available to list
+    if show_available or show_supported:
+        total_width = min(status_width + name_width + path_width + 6, 80)
+        print("─" * total_width)
+        print(f"{'󠀠🌊':^{status_width}} | {'Model':<{name_width}} | {'Expected path':<{path_width}}")
+        print("─" * total_width)
+
+    available_models = []
+    for m in supported_models:
+        try:
+            model_file = pytmd_model(directory=directory).elevation(m=m)
+            available_models.append(m)
+
+            if show_available:
+                # Mark available models with a green tick
+                status = "✅"
+                print(f"{status:^{status_width}}│ {m:<{name_width}} │ {expected_paths[m]:<{path_width}}")
+        except FileNotFoundError:
+            if show_supported:
+                # Mark unavailable models with a red cross
+                status = "❌"
+                print(
+                    f"{status:^{status_width}}│ {Style.DIM}{m:<{name_width}} │ {expected_paths[m]:<{path_width}}{Style.RESET_ALL}"
+                )
+
+    if show_available or show_supported:
+        print("─" * total_width)
+
+        # Print summary
+        print(f"\n{Style.BRIGHT}Summary:{Style.RESET_ALL}")
+        print(f"Available models: {len(available_models)}/{len(supported_models)}")
+
+    # Raise error or warning if no models are available
+    if not available_models:
+        warning_msg = textwrap.dedent(
+            f"""
+            No valid tide models are available in `{directory}`.
+            Are you sure you have provided the correct `directory` path, or set the
+            `EO_TIDES_TIDE_MODELS` environment variable to point to the location of your
+            tide model directory?
+            """
+        ).strip()
+
+        if raise_error:
+            raise Exception(warning_msg)
+        else:
+            warnings.warn(warning_msg, UserWarning)
+
+    # Return list of available and supported models
+    return available_models, supported_models
 
 
 def idw(
