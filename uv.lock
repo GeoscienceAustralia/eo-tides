@@ -781,7 +781,7 @@ requires-dist = [
     { name = "psutil", specifier = ">=5.8.0" },
     { name = "pyproj", specifier = ">=3.6.1" },
     { name = "pystac-client", marker = "extra == 'notebooks'", specifier = ">=0.8.3" },
-    { name = "pytmd", specifier = "==2.1.7" },
+    { name = "pytmd", git = "https://github.com/tsutterley/pyTMD.git?rev=fa277076b2c23d1bf6aaf92ceaef540b8ac3b813#fa277076b2c23d1bf6aaf92ceaef540b8ac3b813" },
     { name = "scikit-learn", specifier = ">=1.4.0" },
     { name = "scipy", specifier = ">=1.11.2" },
     { name = "shapely", specifier = ">=2.0.6" },
@@ -2724,8 +2724,8 @@ wheels = [
 
 [[package]]
 name = "pytmd"
-version = "2.1.7"
-source = { registry = "https://pypi.org/simple" }
+version = "2.1.8.dev8+gfa27707"
+source = { git = "https://github.com/tsutterley/pyTMD.git?rev=fa277076b2c23d1bf6aaf92ceaef540b8ac3b813#fa277076b2c23d1bf6aaf92ceaef540b8ac3b813" }
 dependencies = [
     { name = "lxml" },
     { name = "netcdf4" },
@@ -2735,10 +2735,6 @@ dependencies = [
     { name = "scipy" },
     { name = "setuptools-scm" },
     { name = "timescale" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/0c/79898afb48bd3af2a4c877b9bc1bdf4ac2490e4c0cf7a8f408c755651ec5/pytmd-2.1.7.tar.gz", hash = "sha256:8455dc07b5600ab4eff9dc246371f7b923239cc7990beb08529d6011cec46b6d", size = 6349643 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/95/02d28427e62b0f8691618a85c9df42fcc0d25ee8a320b590afc376786249/pyTMD-2.1.7-py3-none-any.whl", hash = "sha256:8d4bc46ee925ca5a9760ead54a8e65796dd79f89177cdf6d8fd26debb3fb5baf", size = 6449947 },
 ]
 
 [[package]]
