@@ -193,6 +193,9 @@ def clip_models(
     directory and verified with `pyTMD` to ensure the clipped data is
     suitable for tide modelling.
 
+    For instructions on accessing and downloading tide models, see:
+    <https://geoscienceaustralia.github.io/eo-tides/setup/>
+
     Parameters
     ----------
     input_directory : str or os.PathLike
@@ -471,7 +474,7 @@ def idw(
     inverse distance to each neighbor, with weights descreasing with
     increasing distance.
 
-    Code inspired by: https://github.com/DahnJ/REM-xarray
+    Code inspired by: <https://github.com/DahnJ/REM-xarray>
 
     Parameters
     ----------
