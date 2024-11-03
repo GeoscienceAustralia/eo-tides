@@ -332,6 +332,10 @@ model_tides(
 )
 ```
 
+> Example of tide model data for the M2 tidal constituent from `EOT20` clipped to Australia:
+
+![Clipped tide model data example](assets/tide_models_clipped.jpg){: width="800"}
+
 !!! tip
 
     Because only NetCDF-format tide models can be clipped, we recommend downloading NetCDF versions of your tide models wherever possible.
