@@ -1,5 +1,4 @@
 import datetime
-import glob
 import warnings
 from math import sqrt
 from numbers import Number
@@ -193,11 +192,12 @@ def load_gauge_gesla(
     metadata_path="/gdata1/data/sea_level/GESLA3_ALL 2.csv",
 ):
     """
-    Load and process all available Global Extreme Sea Level Analysis
-    (GESLA) tide gauge data with an `x, y, time` spatiotemporal query,
-    or from a list of specific tide gauges.
+    Load Global Extreme Sea Level Analysis (GESLA) tide gauge data.
 
-    Can optionally filter by gauge quality and append detailed gauge metadata.
+    Load and process all available GESLA measured sea-level data
+    with an `x, y, time` spatio-temporal query, or from a list of
+    specific tide gauges. Can optionally filter by gauge quality
+    and append detailed gauge metadata.
 
     Modified from original code in <https://github.com/philiprt/GeslaDataset>.
 

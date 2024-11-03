@@ -1,7 +1,80 @@
+import pathlib
+from datetime import datetime
+
 import numpy as np
+import pandas as pd
 import pytest
 
-from eo_tides.utils import idw
+from eo_tides.utils import _standardise_time, idw, list_models
+
+
+@pytest.mark.parametrize(
+    "input_value, expected_output",
+    [
+        # Case 1: None
+        (None, None),
+        # Case 2: Single datetime.datetime object
+        (datetime(2020, 1, 12, 21, 14), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
+        # Case 3: Single pandas.Timestamp
+        (pd.Timestamp("2020-01-12 21:14"), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
+        # Case 4: np.datetime64 scalar
+        (np.datetime64("2020-01-12T21:14:00"), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
+        # Case 5: 1D numpy array of np.datetime64
+        (
+            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
+            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
+        ),
+        # Case 6: 1D numpy array of datetime.datetime
+        (
+            np.array([datetime(2020, 1, 12, 21, 14), datetime(2021, 2, 14, 15, 30)]),
+            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
+        ),
+        # Case 7: pandas.DatetimeIndex
+        (
+            pd.date_range(start="2000-01-01", end="2000-01-02", periods=3),
+            np.array(["2000-01-01T00:00:00", "2000-01-01T12:00:00", "2000-01-02T00:00:00"], dtype="datetime64[ns]"),
+        ),
+        # Case 8: Mixed array with datetime.datetime and np.datetime64
+        (
+            np.array([datetime(2020, 1, 12, 21, 14), np.datetime64("2021-02-14T15:30:00")]),
+            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
+        ),
+        # Case 9: Single string datetime
+        ("2020-01-12 21:14", np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
+        # Case 10: Array of string datetimes
+        (
+            ["2020-01-12 21:14", "2021-02-14 15:30"],
+            np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
+        ),
+    ],
+)
+def test_standardise_time(input_value, expected_output):
+    result = _standardise_time(input_value)
+    if result is None:
+        assert result == expected_output
+    else:
+        assert np.array_equal(result, expected_output)
+
+
+# Test available tide models
+def test_list_models():
+    # Using env var
+    available_models, supported_models = list_models()
+    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
+    assert len(supported_models) > 3
+
+    # Not printing outputs
+    available_models, supported_models = list_models(show_available=False, show_supported=False)
+    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
+
+    # Providing a string path
+    available_models, supported_models = list_models(directory="./tests/data/tide_models")
+    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
+
+    # Providing a pathlib
+    path = pathlib.Path("./tests/data/tide_models")
+    available_models, supported_models = list_models(directory=path)
+    assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
 
 
 # Test Inverse Distance Weighted function

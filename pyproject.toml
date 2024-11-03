@@ -97,13 +97,6 @@ target-version = "py310"
 line-length = 120
 fix = true
 
-[tool.ruff.lint]
-ignore = [
-    "E501",  # LineTooLong
-    "E731",  # DoNotAssignLambda
-    "F401"   # Unused import
-]
-
 [tool.ruff.format]
 preview = true
 

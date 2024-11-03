@@ -1,15 +1,14 @@
 # Used to postpone evaluation of type annotations
 from __future__ import annotations
 
-import datetime
 import os
-import pathlib
 import textwrap
-import warnings
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from functools import partial
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING
+
+import psutil
 
 # Only import if running type checking
 if TYPE_CHECKING:
@@ -18,179 +17,11 @@ if TYPE_CHECKING:
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import psutil
 import pyproj
 import pyTMD
-from colorama import Style, init
-from pyTMD.io.model import load_database, model
 from tqdm import tqdm
 
-from .utils import idw
-
-# Type alias for all possible inputs to "time" params
-DatetimeLike = Union[np.ndarray, pd.DatetimeIndex, pd.Timestamp, datetime.datetime, str, List[str]]
-
-
-def _set_directory(
-    directory: str | os.PathLike | None = None,
-) -> os.PathLike:
-    """
-    Set tide modelling files directory. If no custom
-    path is provided, try global environmental variable
-    instead.
-    """
-    if directory is None:
-        if "EO_TIDES_TIDE_MODELS" in os.environ:
-            directory = os.environ["EO_TIDES_TIDE_MODELS"]
-        else:
-            raise Exception(
-                "No tide model directory provided via `directory`, and/or no "
-                "`EO_TIDES_TIDE_MODELS` environment variable found. "
-                "Please provide a valid path to your tide model directory."
-            )
-
-    # Verify path exists
-    directory = pathlib.Path(directory).expanduser()
-    if not directory.exists():
-        raise FileNotFoundError(f"No valid tide model directory found at path `{directory}`")
-    else:
-        return directory
-
-
-def _standardise_time(
-    time: DatetimeLike | None,
-) -> np.ndarray | None:
-    """
-    Accept any time format accepted by `pd.to_datetime`,
-    and return a datetime64 ndarray. Return None if None
-    passed.
-    """
-    # Return time as-is if None
-    if time is None:
-        return None
-
-    # Use pd.to_datetime for conversion, then convert to numpy array
-    time = pd.to_datetime(time).to_numpy().astype("datetime64[ns]")
-
-    # Ensure that data has at least one dimension
-    return np.atleast_1d(time)
-
-
-def list_models(
-    directory: str | os.PathLike | None = None,
-    show_available: bool = True,
-    show_supported: bool = True,
-    raise_error: bool = False,
-) -> tuple[list[str], list[str]]:
-    """
-    List all tide models available for tide modelling.
-
-    This function scans the specified tide model directory
-    and returns a list of models that are available in the
-    directory as well as the full list of all models supported
-    by `eo-tides` and `pyTMD`.
-
-    For instructions on setting up tide models, see:
-    <https://geoscienceaustralia.github.io/eo-tides/setup/>
-
-    Parameters
-    ----------
-    directory : str, optional
-        The directory containing tide model data files. If no path is
-        provided, this will default to the environment variable
-        `EO_TIDES_TIDE_MODELS` if set, or raise an error if not.
-        Tide modelling files should be stored in sub-folders for each
-        model that match the structure required by `pyTMD`
-        (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
-    show_available : bool, optional
-        Whether to print a list of locally available models.
-    show_supported : bool, optional
-        Whether to print a list of all supported models, in
-        addition to models available locally.
-    raise_error : bool, optional
-        If True, raise an error if no available models are found.
-        If False, raise a warning.
-
-    Returns
-    -------
-    available_models : list of str
-        A list of all tide models available within `directory`.
-    supported_models : list of str
-        A list of all tide models supported by `eo-tides`.
-    """
-    init()  # Initialize colorama
-
-    # Set tide modelling files directory. If no custom path is
-    # provided, try global environment variable.
-    directory = _set_directory(directory)
-
-    # Get full list of supported models from pyTMD database
-    model_database = load_database()["elevation"]
-    supported_models = list(model_database.keys())
-
-    # Extract expected model paths
-    expected_paths = {}
-    for m in supported_models:
-        model_file = model_database[m]["model_file"]
-        model_file = model_file[0] if isinstance(model_file, list) else model_file
-        expected_paths[m] = str(directory / pathlib.Path(model_file).expanduser().parent)
-
-    # Define column widths
-    status_width = 4  # Width for emoji
-    name_width = max(len(name) for name in supported_models)
-    path_width = max(len(path) for path in expected_paths.values())
-
-    # Print list of supported models, marking available and
-    # unavailable models and appending available to list
-    if show_available or show_supported:
-        total_width = min(status_width + name_width + path_width + 6, 80)
-        print("─" * total_width)
-        print(f"{'󠀠🌊':^{status_width}} | {'Model':<{name_width}} | {'Expected path':<{path_width}}")
-        print("─" * total_width)
-
-    available_models = []
-    for m in supported_models:
-        try:
-            model_file = model(directory=directory).elevation(m=m)
-            available_models.append(m)
-
-            if show_available:
-                # Mark available models with a green tick
-                status = "✅"
-                print(f"{status:^{status_width}}│ {m:<{name_width}} │ {expected_paths[m]:<{path_width}}")
-        except FileNotFoundError:
-            if show_supported:
-                # Mark unavailable models with a red cross
-                status = "❌"
-                print(
-                    f"{status:^{status_width}}│ {Style.DIM}{m:<{name_width}} │ {expected_paths[m]:<{path_width}}{Style.RESET_ALL}"
-                )
-
-    if show_available or show_supported:
-        print("─" * total_width)
-
-        # Print summary
-        print(f"\n{Style.BRIGHT}Summary:{Style.RESET_ALL}")
-        print(f"Available models: {len(available_models)}/{len(supported_models)}")
-
-    # Raise error or warning if no models are available
-    if not available_models:
-        warning_msg = textwrap.dedent(
-            f"""
-            No valid tide models are available in `{directory}`.
-            Are you sure you have provided the correct `directory` path, or set the
-            `EO_TIDES_TIDE_MODELS` environment variable to point to the location of your
-            tide model directory?
-            """
-        ).strip()
-
-        if raise_error:
-            raise Exception(warning_msg)
-        else:
-            warnings.warn(warning_msg, UserWarning)
-
-    # Return list of available and supported models
-    return available_models, supported_models
+from .utils import DatetimeLike, _set_directory, _standardise_time, idw, list_models
 
 
 def _ensemble_model(
@@ -379,15 +210,20 @@ def _parallel_splits(
     min_points_per_split : int, default=1000
         Minimum number of points that should be processed in each split
     """
-    # Available CPUs
+    # Get available CPUs. First see if `CPU_GUARANTEE` exists in
+    # environment (if running in JupyterHub); if not use psutil
+    # followed by standard CPU count
     if parallel_max is None:
-        try:
-            parallel_max = psutil.cpu_count(logical=False)
-        except:
-            parallel_max = os.cpu_count()
+        # Take the first valid output
+        raw_value = os.environ.get("CPU_GUARANTEE") or psutil.cpu_count(logical=False) or os.cpu_count() or 1
+
+        # Convert to integer
+        if isinstance(raw_value, str):
+            parallel_max = int(float(raw_value))
+        else:
+            parallel_max = int(raw_value)
 
     # Calculate optimal number of splits based on constraints
-    assert parallel_max is not None
     splits_by_size = total_points / min_points_per_split
     splits_by_cpu = parallel_max / model_count
     optimal_splits = min(splits_by_size, splits_by_cpu)
@@ -444,7 +280,7 @@ def _model_tides(
         # print(pd.DataFrame({"amplitude": amp}))
 
     # Raise error if constituent files no not cover analysis extent
-    except IndexError as e:
+    except IndexError:
         error_msg = f"""
         The {model} tide model constituent files do not cover the requested analysis extent.
         This can occur if you are using clipped model files to improve run times.

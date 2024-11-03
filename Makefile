@@ -50,19 +50,26 @@ test-eo: ## Test eo module with pytest
 	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
 	uv run python -m pytest tests/test_eo.py --verbose
 
+.PHONY: test-stats
+test-stats: ## Test stats module with pytest
+	@echo "🚀 Testing stats module: Running pytest"
+	@tar --skip-old-files -xzf ./tests/data/tide_models.tar.gz -C ./tests/data
+	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
+	uv run python -m pytest tests/test_stats.py --verbose
+
+.PHONY: test-utils
+test-utils: ## Test utils module with pytest
+	@echo "🚀 Testing utils module: Running pytest"
+	@tar --skip-old-files -xzf ./tests/data/tide_models.tar.gz -C ./tests/data
+	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
+	uv run python -m pytest tests/test_utils.py --verbose
+
 .PHONY: test-notebooks
 test-notebooks: ## Test notebooks with pytest
 	@echo "🚀 Testing notebooks: Running pytest"
 	@tar --skip-old-files -xzf ./tests/data/tide_models.tar.gz -C ./tests/data
 	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
     uv run python -m pytest --nbval-lax docs/notebooks/ --verbose
-
-.PHONY: test-stats
-test-stats: ## Test eo module with pytest
-	@echo "🚀 Testing eo module: Running pytest"
-	@tar --skip-old-files -xzf ./tests/data/tide_models.tar.gz -C ./tests/data
-	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
-	uv run python -m pytest tests/test_stats.py --verbose
 
 .PHONY: build
 build: clean-build ## Build wheel file
