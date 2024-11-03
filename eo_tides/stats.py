@@ -16,7 +16,8 @@ if TYPE_CHECKING:
     from odc.geo.geobox import GeoBox
 
 from .eo import _standardise_inputs, pixel_tides, tag_tides
-from .model import DatetimeLike, model_tides
+from .model import model_tides
+from .utils import DatetimeLike
 
 
 def _plot_biases(
