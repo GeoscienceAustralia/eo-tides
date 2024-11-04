@@ -220,7 +220,7 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
 !!! tip
 
-    To allow you to improve tide modelling performance by clipping your tide model files ([see below](#Clipping-model-files-to-improve-performance)), we recommend downloading NetCDF-format versions of tide models wherever possible.
+    To allow you to improve tide modelling performance by clipping your tide model files ([see below](#clipping-model-files-to-improve-performance)), we recommend downloading NetCDF-format versions of tide models wherever possible.
 
 ## Configuring `eo-tides` to use tide model directory
 
