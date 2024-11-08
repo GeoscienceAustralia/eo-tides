@@ -282,7 +282,8 @@ def _model_tides(
     # Raise error if constituent files no not cover analysis extent
     except IndexError:
         error_msg = f"""
-        The {model} tide model constituent files do not cover the requested analysis extent.
+        The {model} tide model constituent files do not cover the analysis extent
+        ({min(lon):.2f}, {max(lon):.2f}, {min(lat):.2f}, {max(lat):.2f}).
         This can occur if you are using clipped model files to improve run times.
         Consider using model files that cover your entire analysis area, or set `crop=False`
         to reduce the extent of tide model constituent files that is loaded.
