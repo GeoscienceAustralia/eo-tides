@@ -1,11 +1,22 @@
 import pathlib
+import tempfile
 from datetime import datetime
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from eo_tides.utils import _standardise_time, idw, list_models
+from eo_tides.utils import _standardise_time, clip_models, idw, list_models
+
+
+def test_clip_models():
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        clip_models(
+            input_directory="tests/data/tide_models", output_directory=tmpdirname, bbox=(122.27, -18.07, 122.29, -18.05)
+        )
+
+        output_files = [i.stem for i in pathlib.Path(tmpdirname).iterdir()]
+        assert output_files == ["GOT5", "EOT20", "hamtide"]
 
 
 @pytest.mark.parametrize(
