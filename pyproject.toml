@@ -2,7 +2,12 @@
 name = "eo-tides"
 version = "0.3.0"
 description = "Tide modelling tools for large-scale satellite earth observation analysis"
-authors = [{ name = "Robbi Bishop-Taylor", email = "Robbi.BishopTaylor@ga.gov.au" }]
+authors = [
+    { name = "Robbi Bishop-Taylor", email = "Robbi.BishopTaylor@ga.gov.au" },
+    { name = "Stephen Sagar" },
+    { name = "Claire Phillips" },
+    { name = "Vanessa Newey" }
+]
 readme = "README.md"
 keywords = [
     "earth observation",
@@ -26,7 +31,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    # "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.13",
 ]
 requires-python = ">=3.9,<4.0"
 dependencies = [
