@@ -1,6 +1,6 @@
 # `eo-tides`: Tide modelling tools for large-scale satellite earth observation analysis
 
-<img align="right" width="200" src="docs/assets/eo-tides-logo.gif" alt="eo-tides logo" style="margin-right: 40px;">
+<img align="right" width="200" src="https://github.com/GeoscienceAustralia/eo-tides/blob/main/docs/assets/eo-tides-logo.gif?raw=true" alt="eo-tides logo" style="margin-right: 40px;">
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
 [![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/main.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/main.yml?query=branch%3Amain)
@@ -9,7 +9,8 @@
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
 
 - ⚙️ **Github repository**: <https://github.com/GeoscienceAustralia/eo-tides/>
-- 📘 **Documentation** <https://GeoscienceAustralia.github.io/eo-tides/>
+- 📘 **Documentation**: <https://GeoscienceAustralia.github.io/eo-tides/>
+- 🐍 **PyPI**: <https://pypi.org/project/eo-tides/>
 
 > [!CAUTION]
 > This package is a work in progress, and not currently ready for operational use.
@@ -20,7 +21,7 @@
 
 These tools can be applied to petabytes of freely available satellite data (e.g. from [Digital Earth Australia](https://knowledge.dea.ga.gov.au/) or [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/)) loaded via Open Data Cube's [`odc-stac`](https://odc-stac.readthedocs.io/en/latest/) or [`datacube`](https://opendatacube.readthedocs.io/en/latest/) packages, supporting coastal and ocean earth observation analysis for any time period or location globally.
 
-![eo-tides abstract showing satellite data, tide data array and tide animation](docs/assets/eo-tides-abstract.gif)
+![eo-tides abstract showing satellite data, tide data array and tide animation](https://github.com/GeoscienceAustralia/eo-tides/blob/main/docs/assets/eo-tides-abstract.gif?raw=true)
 
 ## Highlights
 
