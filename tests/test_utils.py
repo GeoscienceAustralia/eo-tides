@@ -15,8 +15,8 @@ def test_clip_models():
             input_directory="tests/data/tide_models", output_directory=tmpdirname, bbox=(122.27, -18.07, 122.29, -18.05)
         )
 
-        output_files = [i.stem for i in pathlib.Path(tmpdirname).iterdir()]
-        assert output_files == ["GOT5", "EOT20", "hamtide"]
+        output_files = set([i.stem for i in pathlib.Path(tmpdirname).iterdir()])
+        assert output_files == set(["GOT5", "EOT20", "hamtide"])
 
 
 @pytest.mark.parametrize(
