@@ -276,7 +276,7 @@ def _model_tides(
         )
 
         # TODO: Return constituents
-        print(model, amp.shape)
+        # print(model, amp.shape)
         # print(amp.shape, ph.shape, c)
         # print(pd.DataFrame({"amplitude": amp}))
 

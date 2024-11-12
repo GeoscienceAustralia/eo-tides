@@ -70,9 +70,9 @@ def _standardise_time(
 
 def _standardise_models(
     model: str | list[str],
-    directory: str,
+    directory: str | os.PathLike,
     ensemble_models: list[str] | None = None,
-) -> tuple[list, list, list]:
+) -> tuple[list[str], list[str], list[str] | None]:
     """
     Take an input model name or list of names, and return a list
     of models to process, requested models, and ensemble models,
