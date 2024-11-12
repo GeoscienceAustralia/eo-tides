@@ -512,7 +512,6 @@ def model_tides(
 
     """
     # Turn inputs into arrays for consistent handling
-    # models_requested = list(np.atleast_1d(model))
     x = np.atleast_1d(x)
     y = np.atleast_1d(y)
     time = _standardise_time(time)
@@ -547,59 +546,6 @@ def model_tides(
         directory=directory,
         ensemble_models=ensemble_models,
     )
-
-    # # Get full list of supported models from pyTMD database;
-    # # add ensemble option to list of models
-    # available_models, valid_models = list_models(
-    #     directory, show_available=False, show_supported=False, raise_error=True
-    # )
-    # # TODO: This is hacky, find a better way. Perhaps a kwarg that
-    # # turns ensemble functionality on, and checks that supplied
-    # # models match models expected for ensemble?
-    # available_models = available_models + ["ensemble"]
-    # valid_models = valid_models + ["ensemble"]
-
-    # # Error if any models are not supported
-    # if not all(m in valid_models for m in models_requested):
-    #     error_text = (
-    #         f"One or more of the requested models are not valid:\n"
-    #         f"{models_requested}\n\n"
-    #         "The following models are supported:\n"
-    #         f"{valid_models}"
-    #     )
-    #     raise ValueError(error_text)
-
-    # # Error if any models are not available in `directory`
-    # if not all(m in available_models for m in models_requested):
-    #     error_text = (
-    #         f"One or more of the requested models are valid, but not available in `{directory}`:\n"
-    #         f"{models_requested}\n\n"
-    #         f"The following models are available in `{directory}`:\n"
-    #         f"{available_models}"
-    #     )
-    #     raise ValueError(error_text)
-
-    # # If ensemble modelling is requested, use a custom list of models
-    # # for subsequent processing
-    # if "ensemble" in models_requested:
-    #     print("Running ensemble tide modelling")
-    #     models_to_process = (
-    #         ensemble_models
-    #         if ensemble_models is not None
-    #         else [
-    #             "FES2014",
-    #             "TPXO9-atlas-v5",
-    #             "EOT20",
-    #             "HAMTIDE11",
-    #             "GOT4.10",
-    #             "FES2012",
-    #             "TPXO8-atlas-v1",
-    #         ]
-    #     )
-
-    # # Otherwise, models to process are the same as those requested
-    # else:
-    #     models_to_process = models_requested
 
     # Update tide modelling func to add default keyword arguments that
     # are used for every iteration during parallel processing
