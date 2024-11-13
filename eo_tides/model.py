@@ -21,7 +21,7 @@ import pyproj
 import pyTMD
 from tqdm import tqdm
 
-from .utils import DatetimeLike, _set_directory, _standardise_time, idw, list_models
+from .utils import DatetimeLike, _set_directory, _standardise_models, _standardise_time, idw, list_models
 
 
 def _ensemble_model(
@@ -276,6 +276,7 @@ def _model_tides(
         )
 
         # TODO: Return constituents
+        # print(model, amp.shape)
         # print(amp.shape, ph.shape, c)
         # print(pd.DataFrame({"amplitude": amp}))
 
@@ -511,7 +512,6 @@ def model_tides(
 
     """
     # Turn inputs into arrays for consistent handling
-    models_requested = list(np.atleast_1d(model))
     x = np.atleast_1d(x)
     y = np.atleast_1d(y)
     time = _standardise_time(time)
@@ -540,58 +540,12 @@ def model_tides(
     # provided, try global environment variable.
     directory = _set_directory(directory)
 
-    # Get full list of supported models from pyTMD database;
-    # add ensemble option to list of models
-    available_models, valid_models = list_models(
-        directory, show_available=False, show_supported=False, raise_error=True
+    # Standardise model list, handling "all" and "ensemble" functionality
+    models_to_process, models_requested, ensemble_models = _standardise_models(
+        model=model,
+        directory=directory,
+        ensemble_models=ensemble_models,
     )
-    # TODO: This is hacky, find a better way. Perhaps a kwarg that
-    # turns ensemble functionality on, and checks that supplied
-    # models match models expected for ensemble?
-    available_models = available_models + ["ensemble"]
-    valid_models = valid_models + ["ensemble"]
-
-    # Error if any models are not supported
-    if not all(m in valid_models for m in models_requested):
-        error_text = (
-            f"One or more of the requested models are not valid:\n"
-            f"{models_requested}\n\n"
-            "The following models are supported:\n"
-            f"{valid_models}"
-        )
-        raise ValueError(error_text)
-
-    # Error if any models are not available in `directory`
-    if not all(m in available_models for m in models_requested):
-        error_text = (
-            f"One or more of the requested models are valid, but not available in `{directory}`:\n"
-            f"{models_requested}\n\n"
-            f"The following models are available in `{directory}`:\n"
-            f"{available_models}"
-        )
-        raise ValueError(error_text)
-
-    # If ensemble modelling is requested, use a custom list of models
-    # for subsequent processing
-    if "ensemble" in models_requested:
-        print("Running ensemble tide modelling")
-        models_to_process = (
-            ensemble_models
-            if ensemble_models is not None
-            else [
-                "FES2014",
-                "TPXO9-atlas-v5",
-                "EOT20",
-                "HAMTIDE11",
-                "GOT4.10",
-                "FES2012",
-                "TPXO8-atlas-v1",
-            ]
-        )
-
-    # Otherwise, models to process are the same as those requested
-    else:
-        models_to_process = models_requested
 
     # Update tide modelling func to add default keyword arguments that
     # are used for every iteration during parallel processing
@@ -685,7 +639,7 @@ def model_tides(
 
     # Optionally compute ensemble model and add to dataframe
     if "ensemble" in models_requested:
-        ensemble_df = _ensemble_model(tide_df, crs, models_to_process, **ensemble_kwargs)
+        ensemble_df = _ensemble_model(tide_df, crs, ensemble_models, **ensemble_kwargs)
 
         # Update requested models with any custom ensemble models, then
         # filter the dataframe to keep only models originally requested

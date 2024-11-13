@@ -68,6 +68,92 @@ def _standardise_time(
     return np.atleast_1d(time)
 
 
+def _standardise_models(
+    model: str | list[str],
+    directory: str | os.PathLike,
+    ensemble_models: list[str] | None = None,
+) -> tuple[list[str], list[str], list[str] | None]:
+    """
+    Take an input model name or list of names, and return a list
+    of models to process, requested models, and ensemble models,
+    as required by the `model_tides` function.
+
+    Handles two special values passed to `model`: "all", which
+    will model tides for all models available in `directory`, and
+    "ensemble", which will model tides for all models in a list
+    of custom ensemble models.
+    """
+
+    # Turn inputs into arrays for consistent handling
+    models_requested = list(np.atleast_1d(model))
+
+    # Get full list of supported models from pyTMD database
+    available_models, valid_models = list_models(
+        directory, show_available=False, show_supported=False, raise_error=True
+    )
+    custom_options = ["ensemble", "all"]
+
+    # Error if any models are not supported
+    if not all(m in valid_models + custom_options for m in models_requested):
+        error_text = (
+            f"One or more of the requested models are not valid:\n"
+            f"{models_requested}\n\n"
+            "The following models are supported:\n"
+            f"{valid_models}"
+        )
+        raise ValueError(error_text)
+
+    # Error if any models are not available in `directory`
+    if not all(m in available_models + custom_options for m in models_requested):
+        error_text = (
+            f"One or more of the requested models are valid, but not available in `{directory}`:\n"
+            f"{models_requested}\n\n"
+            f"The following models are available in `{directory}`:\n"
+            f"{available_models}"
+        )
+        raise ValueError(error_text)
+
+    # If "all" models are requested, update requested list to include available models
+    if "all" in models_requested:
+        models_requested = available_models + [m for m in models_requested if m != "all"]
+
+    # If "ensemble" modeling is requested, use custom list of ensemble models
+    if "ensemble" in models_requested:
+        print("Running ensemble tide modelling")
+        ensemble_models = (
+            ensemble_models
+            if ensemble_models is not None
+            else [
+                "FES2014",
+                "TPXO9-atlas-v5",
+                "EOT20",
+                "HAMTIDE11",
+                "GOT4.10",
+                "FES2012",
+                "TPXO8-atlas-v1",
+            ]
+        )
+
+        # Error if any ensemble models are not available in `directory`
+        if not all(m in available_models for m in ensemble_models):
+            error_text = (
+                f"One or more of the requested ensemble models are not available in `{directory}`:\n"
+                f"{ensemble_models}\n\n"
+                f"The following models are available in `{directory}`:\n"
+                f"{available_models}"
+            )
+            raise ValueError(error_text)
+
+        # Return set of all ensemble plus any other requested models
+        models_to_process = sorted(list(set(ensemble_models + [m for m in models_requested if m != "ensemble"])))
+
+    # Otherwise, models to process are the same as those requested
+    else:
+        models_to_process = models_requested
+
+    return models_to_process, models_requested, ensemble_models
+
+
 def _clip_model_file(
     nc: xr.Dataset,
     bbox: BoundingBox,
@@ -393,7 +479,14 @@ def list_models(
     expected_paths = {}
     for m in supported_models:
         model_file = model_database[m]["model_file"]
-        model_file = model_file[0] if isinstance(model_file, list) else model_file
+
+        # Handle GOT5.6 differently to ensure we test for presence of GOT5.6 constituents
+        if m in ("GOT5.6", "GOT5.6_extrapolated"):
+            model_file = [file for file in model_file if "GOT5.6" in file][0]
+        else:
+            model_file = model_file[0] if isinstance(model_file, list) else model_file
+
+        # Add path to dict
         expected_paths[m] = str(directory / pathlib.Path(model_file).expanduser().parent)
 
     # Define column widths

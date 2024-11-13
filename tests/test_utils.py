@@ -6,7 +6,50 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from eo_tides.utils import _standardise_time, clip_models, idw, list_models
+from eo_tides.utils import _standardise_models, _standardise_time, clip_models, idw, list_models
+
+
+@pytest.mark.parametrize(
+    "model, ensemble_models, exp_process, exp_request, exp_ensemble",
+    [
+        # Case 1, 2: Specific model in str and list format
+        ("EOT20", None, ["EOT20"], ["EOT20"], None),
+        (["EOT20"], None, ["EOT20"], ["EOT20"], None),
+        # Case 3, 4: Using "all" to request all available models
+        ("all", None, ["EOT20", "GOT5.5", "HAMTIDE11"], ["EOT20", "GOT5.5", "HAMTIDE11"], None),
+        (["all"], None, ["EOT20", "GOT5.5", "HAMTIDE11"], ["EOT20", "GOT5.5", "HAMTIDE11"], None),
+        # Case 5, 6: Using "ensemble" to model tides for specific set of ensemble models
+        ("ensemble", ["EOT20", "HAMTIDE11"], ["EOT20", "HAMTIDE11"], ["ensemble"], ["EOT20", "HAMTIDE11"]),
+        (["ensemble"], ["EOT20", "HAMTIDE11"], ["EOT20", "HAMTIDE11"], ["ensemble"], ["EOT20", "HAMTIDE11"]),
+        # Case 7: Modelling tides using ensemble set and an additional model
+        (
+            ["ensemble", "GOT5.5"],
+            ["EOT20", "HAMTIDE11"],
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            ["ensemble", "GOT5.5"],
+            ["EOT20", "HAMTIDE11"],
+        ),
+        # Case 8: Modelling tides for all available models, AND ensemble set
+        (
+            ["all", "ensemble"],
+            ["EOT20", "HAMTIDE11"],
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            ["EOT20", "GOT5.5", "HAMTIDE11", "ensemble"],
+            ["EOT20", "HAMTIDE11"],
+        ),
+    ],
+)
+def test_standardise_models(model, ensemble_models, exp_process, exp_request, exp_ensemble):
+    # Return lists of models
+    models_to_process, models_requested, ensemble_models = _standardise_models(
+        model=model,
+        directory="tests/data/tide_models",
+        ensemble_models=ensemble_models,
+    )
+
+    assert models_to_process == exp_process
+    assert models_requested == exp_request
+    assert (sorted(ensemble_models) if ensemble_models else None) == (sorted(exp_ensemble) if exp_ensemble else None)
 
 
 def test_clip_models():
