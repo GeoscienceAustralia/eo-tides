@@ -1,12 +1,13 @@
 [project]
 name = "eo-tides"
-version = "0.3.0"
+version = "0.3.1"
 description = "Tide modelling tools for large-scale satellite earth observation analysis"
 authors = [
-    { name = "Robbi Bishop-Taylor", email = "Robbi.BishopTaylor@ga.gov.au" },
+    { name = "Robbi Bishop-Taylor" },
     { name = "Stephen Sagar" },
     { name = "Claire Phillips" },
-    { name = "Vanessa Newey" }
+    { name = "Vanessa Newey" },
+    { email = "Robbi.BishopTaylor@ga.gov.au"}
 ]
 readme = "README.md"
 keywords = [
