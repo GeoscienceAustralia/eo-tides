@@ -44,7 +44,6 @@ cd eo-tides
 python3 -m pip install -e .
 ```
 
-
 ## Next steps
 
 Once you have installed `eo-tides`, you will need to [download and set up at least one tide model](setup.md) before you can model tides.
