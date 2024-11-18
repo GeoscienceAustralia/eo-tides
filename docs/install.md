@@ -25,6 +25,10 @@ To install the latest unstable development version of `eo-tides` directly from G
 python3 -m pip install git+https://github.com/GeoscienceAustralia/eo-tides.git
 ```
 
+!!! important
+
+    Unstable development versions of `eo-tides` may contain bugs and untested new features. Unless you need access to a specific unpublished feature, we recommend installing the latest stable version instead.
+
 ### Cloning locally
 
 To clone the `eo-tides` repository locally:
@@ -40,9 +44,6 @@ cd eo-tides
 python3 -m pip install -e .
 ```
 
-!!! important
-
-    Unstable development versions of `eo-tides` may contain bugs and untested new features. Unless you need access to a specific unpublished feature, we recommend installing the latest stable version instead.
 
 ## Next steps
 
