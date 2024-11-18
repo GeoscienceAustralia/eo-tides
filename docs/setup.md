@@ -226,7 +226,7 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
 `eo-tides` can be pointed to the location of your [tide model directory](#setting-up-a-tide-model-directory) and your downloaded tide model data in two ways:
 
-### Using the `directory` function parameter
+### 1. Using the `directory` function parameter
 
 All tide modelling functions from `eo-tides` provide a `directory` parameter that can be used to specify the location of your tide model directory.
 For example, using the [`eo_tides.model.model_tides`](api.md#eo_tides.model.model_tides) function:
@@ -243,7 +243,7 @@ model_tides(
 )
 ```
 
-### Advanced: setting the `EO_TIDES_TIDE_MODELS` environmental variable
+### 2. (Advanced) Setting the `EO_TIDES_TIDE_MODELS` environmental variable
 
 For more advanced usage, you can set the path to your [tide model directory](#setting-up-a-tide-model-directory) by setting the `EO_TIDES_TIDE_MODELS` environment variable:
 
