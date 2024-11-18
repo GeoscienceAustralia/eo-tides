@@ -36,7 +36,7 @@ git clone https://github.com/GeoscienceAustralia/eo-tides.git
 Navigate to the project directory and install in editable mode from your local copy of the repository:
 
 ```console
-cd eo_tides
+cd eo-tides
 python3 -m pip install -e .
 ```
 
