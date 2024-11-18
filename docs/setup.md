@@ -285,6 +285,9 @@ Summary:
 Available models: 2/50
 ```
 
+!!! tip
+> If the models that you uploaded are not marked as available in this summary, check that your models were uploaded to the expected path as identified in the summary table.
+
 ## Clipping model files to improve performance
 
 !!! important "Highly recommended"
