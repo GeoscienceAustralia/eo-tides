@@ -226,7 +226,7 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
 `eo-tides` can be pointed to the location of your [tide model directory](#setting-up-a-tide-model-directory) and your downloaded tide model data in two ways:
 
-### Using the `directory` function parameter
+### 1. Using the `directory` function parameter
 
 All tide modelling functions from `eo-tides` provide a `directory` parameter that can be used to specify the location of your tide model directory.
 For example, using the [`eo_tides.model.model_tides`](api.md#eo_tides.model.model_tides) function:
@@ -243,7 +243,7 @@ model_tides(
 )
 ```
 
-### Advanced: setting the `EO_TIDES_TIDE_MODELS` environmental variable
+### 2. (Advanced) Setting the `EO_TIDES_TIDE_MODELS` environmental variable
 
 For more advanced usage, you can set the path to your [tide model directory](#setting-up-a-tide-model-directory) by setting the `EO_TIDES_TIDE_MODELS` environment variable:
 
@@ -285,6 +285,10 @@ Summary:
 Available models: 2/50
 ```
 
+!!! tip
+
+> If the models that you uploaded are not marked as available in this summary, check that your models were uploaded to the expected path as identified in the summary table.
+
 ## Clipping model files to improve performance
 
 !!! important "Highly recommended"
@@ -307,7 +311,7 @@ clip_models(
 )
 ```
 
-When you run `clip_models`, the function will automatically identify suitable NetCDF-format models in your input directory, and clip each of them to the extent of your bounding box (specified as `(left, bottom, right, top)`).
+When you run `clip_models`, the function will automatically identify suitable NetCDF-format models in your input directory, and clip each of them to the extent of your bounding box (specified as `(left, bottom, right, top)` in EPSG:4326 degree coordinates).
 After each model is clipped, the result is exported to your selected output directory and verified to ensure the clipped data is suitable for tide modelling:
 
 ```text
