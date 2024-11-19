@@ -311,7 +311,7 @@ clip_models(
 )
 ```
 
-When you run `clip_models`, the function will automatically identify suitable NetCDF-format models in your input directory, and clip each of them to the extent of your bounding box (specified as `(left, bottom, right, top)`).
+When you run `clip_models`, the function will automatically identify suitable NetCDF-format models in your input directory, and clip each of them to the extent of your bounding box (specified as `(left, bottom, right, top)` in EPSG:4326 degree coordinates).
 After each model is clipped, the result is exported to your selected output directory and verified to ensure the clipped data is suitable for tide modelling:
 
 ```text
