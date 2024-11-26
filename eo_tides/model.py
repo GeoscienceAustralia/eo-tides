@@ -30,7 +30,7 @@ def _ensemble_model(
     ensemble_models,
     ensemble_func=None,
     ensemble_top_n=3,
-    ranking_points="https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/derivative/dea_intertidal/supplementary/rankings_ensemble_2017-2019.geojson",
+    ranking_points="https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/derivative/dea_intertidal/supplementary/rankings_ensemble_2017-2019.fgb",
     ranking_valid_perc=0.02,
     **idw_kwargs,
 ):
@@ -42,7 +42,7 @@ def _ensemble_model(
     This function performs the following steps:
     1. Takes a dataframe of tide heights from multiple tide models, as
        produced by `eo_tides.model.model_tides`
-    1. Loads model ranking points from a GeoJSON file, filters them
+    1. Loads model ranking points from an external file, filters them
        based on the valid data percentage, and retains relevant columns
     2. Interpolates the model rankings into the "x" and "y" coordinates
        of the original dataframe using Inverse Weighted Interpolation (IDW)
@@ -77,8 +77,8 @@ def _ensemble_model(
         If `ensemble_func` is None, this sets the number of top models
         to include in the mean ensemble calculation. Defaults to 3.
     ranking_points : str, optional
-        Path to the GeoJSON file containing model ranking points. This
-        dataset should include columns containing rankings for each tide
+        Path to the file containing model ranking points. This dataset
+        should include columns containing rankings for each tide
         model, named with the prefix "rank_". e.g. "rank_EOT20".
         Low values should represent high rankings (e.g. 1 = top ranked).
     ranking_valid_perc : float, optional
@@ -110,12 +110,20 @@ def _ensemble_model(
 
     # Load model ranks points and reproject to same CRS as x and y
     model_ranking_cols = [f"rank_{m}" for m in ensemble_models]
-    model_ranks_gdf = (
-        gpd.read_file(ranking_points)
-        .to_crs(crs)
-        .query(f"valid_perc > {ranking_valid_perc}")
-        .dropna()[model_ranking_cols + ["geometry"]]
-    )
+    try:
+        model_ranks_gdf = (
+            gpd.read_file(ranking_points, engine="pyogrio")
+            .to_crs(crs)
+            .query(f"valid_perc > {ranking_valid_perc}")
+            .dropna()[model_ranking_cols + ["geometry"]]
+        )
+    except KeyError:
+        error_msg = f"""
+        Not all of the expected "rank_" columns {model_ranking_cols} were
+        found in the columns of the ranking points file ({ranking_points}).
+        Consider passing a custom list of models using `ensemble_models`.
+        """
+        raise Exception(textwrap.dedent(error_msg).strip()) from None
 
     # Use points to interpolate model rankings into requested x and y
     id_kwargs_str = "" if idw_kwargs == {} else idw_kwargs
@@ -419,6 +427,7 @@ def model_tides(
         any format that can be converted by `pandas.to_datetime()`;
         e.g. np.ndarray[datetime64], pd.DatetimeIndex, pd.Timestamp,
         datetime.datetime and strings (e.g. "2020-01-01 23:00").
+        For example: `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
         The tide model (or models) to use to model tides.
         Defaults to "EOT20"; for a full list of available/supported
@@ -494,8 +503,9 @@ def model_tides(
     ensemble_models : list of str, optional
         An optional list of models used to generate the ensemble tide
         model if "ensemble" tide modelling is requested. Defaults to
-        ["FES2014", "TPXO9-atlas-v5", "EOT20", "HAMTIDE11", "GOT4.10",
-        "FES2012", "TPXO8-atlas-v1"].
+        `["EOT20", "FES2012", "FES2014_extrapolated", "FES2022_extrapolated",
+        "GOT4.10", "GOT5.5_extrapolated", "GOT5.6_extrapolated",
+        "TPXO10-atlas-v2-nc", "TPXO8-atlas-nc", "TPXO9-atlas-v5-nc"]`.
     **ensemble_kwargs :
         Keyword arguments used to customise the generation of optional
         ensemble tide models if "ensemble" modelling are requested.
@@ -701,6 +711,7 @@ def model_phases(
         any format that can be converted by `pandas.to_datetime()`;
         e.g. np.ndarray[datetime64], pd.DatetimeIndex, pd.Timestamp,
         datetime.datetime and strings (e.g. "2020-01-01 23:00").
+        For example: `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
         The tide model (or models) to use to compute tide phases.
         Defaults to "EOT20"; for a full list of available/supported

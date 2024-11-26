@@ -6,6 +6,7 @@ import os
 import pathlib
 import textwrap
 import warnings
+from collections import Counter
 from typing import List, Union
 
 import numpy as np
@@ -21,6 +22,14 @@ from tqdm import tqdm
 
 # Type alias for all possible inputs to "time" params
 DatetimeLike = Union[np.ndarray, pd.DatetimeIndex, pd.Timestamp, datetime.datetime, str, List[str]]
+
+
+def _get_duplicates(array):
+    """
+    Return any duplicates in a list or array.
+    """
+    c = Counter(array)
+    return [k for k in c if c[k] > 1]
 
 
 def _set_directory(
@@ -87,6 +96,11 @@ def _standardise_models(
     # Turn inputs into arrays for consistent handling
     models_requested = list(np.atleast_1d(model))
 
+    # Raise error if list contains duplications
+    duplicates = _get_duplicates(models_requested)
+    if len(duplicates) > 0:
+        raise ValueError(f"The model parameter contains duplicate values: {duplicates}")
+
     # Get full list of supported models from pyTMD database
     available_models, valid_models = list_models(
         directory, show_available=False, show_supported=False, raise_error=True
@@ -124,13 +138,15 @@ def _standardise_models(
             ensemble_models
             if ensemble_models is not None
             else [
-                "FES2014",
-                "TPXO9-atlas-v5",
                 "EOT20",
-                "HAMTIDE11",
-                "GOT4.10",
                 "FES2012",
-                "TPXO8-atlas-v1",
+                "FES2014_extrapolated",
+                "FES2022_extrapolated",
+                "GOT4.10",
+                "GOT5.6_extrapolated",
+                "TPXO10-atlas-v2-nc",
+                "TPXO8-atlas-nc",
+                "TPXO9-atlas-v5-nc",
             ]
         )
 
