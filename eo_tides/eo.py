@@ -39,7 +39,7 @@ def _resample_chunks(
         return data.shape
 
     # if data has chunks, then return just spatial chunks
-    if data.chunks is not None:
+    if data.chunks:
         y_dim, x_dim = data.odc.spatial_dims
         return data.chunks[y_dim], data.chunks[x_dim]
 
