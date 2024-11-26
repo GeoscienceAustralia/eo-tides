@@ -5,6 +5,7 @@ from numbers import Number
 
 import geopandas as gpd
 import pandas as pd
+import tqdm
 from odc.geo.geom import BoundingBox
 from pandas.tseries.offsets import MonthBegin, MonthEnd, YearBegin, YearEnd
 from scipy import stats
@@ -152,21 +153,24 @@ def _load_gauge_metadata(metadata_path):
 
 
 def _load_gesla_dataset(site, path, na_value):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", FutureWarning)
-        gesla_df = (
-            pd.read_csv(
-                path,
-                skiprows=41,
-                names=["date", "time", "sea_level", "qc_flag", "use_flag"],
-                sep=r"\s+",  # sep="\s+",
-                parse_dates=[[0, 1]],
-                index_col=0,
-                na_values=na_value,
-            )
-            .rename_axis("time")
-            .assign(site_code=site)
+    # Read dataset
+    gesla_df = pd.read_csv(
+        path,
+        skiprows=41,
+        names=["date", "time", "sea_level", "qc_flag", "use_flag"],
+        sep=r"\s+",
+        na_values=na_value,
+    )
+
+    # Combine two date fields
+    gesla_df = (
+        gesla_df.assign(
+            time=pd.to_datetime(gesla_df["date"] + " " + gesla_df["time"]),
+            site_code=site,
         )
+        .drop(columns=["date"])
+        .set_index("time")
+    )
 
     return gesla_df
 
@@ -301,13 +305,11 @@ def load_gauge_gesla(
     paths_na = metadata_df.loc[site_code, ["file_name", "null_value"]]
 
     # Load and combine into a single dataframe
-    data_df = (
-        pd.concat([_load_gesla_dataset(s, p, na_value=na) for s, p, na in paths_na.itertuples()])
-        .sort_index()
-        .loc[slice(start_time, end_time)]
-        .reset_index()
-        .set_index("site_code")
-    )
+    gauge_list = [
+        _load_gesla_dataset(s, p, na_value=na)
+        for s, p, na in tqdm.tqdm(paths_na.itertuples(), total=len(paths_na), desc="Loading GESLA gauges")
+    ]
+    data_df = pd.concat(gauge_list).sort_index().loc[slice(start_time, end_time)].reset_index().set_index("site_code")
 
     # Optionally filter by use flag column
     if filter_use_flag:
