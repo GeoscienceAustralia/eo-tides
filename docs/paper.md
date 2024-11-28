@@ -37,8 +37,12 @@ date: 27 November 2024
 # Summary
 A summary describing the high-level functionality and purpose of the software for a diverse, non-specialist audience.
 
+
+
 # Statement of need
 A Statement of need section that clearly illustrates the research purpose of the software and places it in the context of related work.
+
+Satellite Earth observation offers an unparalleled method to view and examine dynamic coastal environments over large temporal and spatial scales. The variable influence of tide in these regions provides an added dimension that influences the utility of coastal Earth obseration data. Numerous global tide models exist that can be used to estimate tide height for any given location, date and time and the [`pyTMD`](https://pytmd.readthedocs.io/en/latest/) package is a python-based prediction software that enables tidal estimation from a variety of these models. `eo-tides` combines advanced tide modelling functionality from [`pyTMD`](https://pytmd.readthedocs.io/en/latest/) with [`pandas`](https://pandas.pydata.org/docs/index.html), [`xarray`](https://docs.xarray.dev/en/stable/) and [`odc-geo`](https://odc-geo.readthedocs.io/en/latest/), enabling pixel based tide height attribution to Earth obseravtion data. `eo-tides` provides a suite of flexible, parallelized tools for efficient analysis of coastal and ocean Earth observation data – from regional to continental and global scale.
 
 # References
 A list of key references, including to other software addressing related needs. Note that the references should include full names of venues, e.g., journals and conferences, not abbreviations only understood in the context of a specific discipline.
