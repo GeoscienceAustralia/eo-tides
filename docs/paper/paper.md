@@ -42,6 +42,12 @@ Satellite Earth observation offers an unparalleled method to view and examine dy
 
 The `eo-tides` tool-suite supports a wide variety of global ocean models to "tag" satellite data with tide heights corresponding to exact moments of image acquisition. Furthermore, it supports pixel based tide modelling through time to produce three-dimensional `xarray` style datacubes that can be integrated with satellite data. Additional functionality enables parallelized modelling of tide heights and phases (e.g. high, low, ebb, flow tides), calculation of statistics describing local tide dynamics and biases caused by interactions between tidal processes and satellite orbits as well as validation of modelled tides using measured sea levels from coastal tide gauges (e.g. [GESLA Global Extreme Sea Level Analysis](https://gesla.org/)). `eo-tides` provides a suite of flexible, parallelized tools for efficient analysis of coastal and ocean Earth observation data – from regional to continental and the global scale.
 
+# Functionality
+## Modelling tides
+The `model_tides` function is the primary workhorse of the `eo-tides` package, modelling tide heights across multiple coordinates and/or timesteps using one or more ocean tide models.
+
+[Insert text here about the core function of the `pyTMD` package with comment on the range of supported global tide models. Segue into `eo-tides`]
+
 # References
 A list of key references, including to other software addressing related needs. Note that the references should include full names of venues, e.g., journals and conferences, not abbreviations only understood in the context of a specific discipline.
 https://joss.readthedocs.io/en/latest/paper.html#internal-references
