@@ -44,9 +44,17 @@ The `eo-tides` tool-suite supports a wide variety of global ocean models to "tag
 
 # Functionality
 ## Modelling tides
-The `model_tides` function is the primary workhorse of the `eo-tides` package, modelling tide heights across multiple coordinates and/or timesteps using one or more ocean tide models.
+The underlying `pyTMD` tide modelling capability provides the foundation of the `eo_tides` package. `eo_tides` in turn upscales the application of the sophisticated `pyTMD` modelling to scales appropriate to Earth observation data e.g. 10m spatial pixel resolution with Sentinel-2 imagery.
 
-[Insert text here about the core function of the `pyTMD` package with comment on the range of supported global tide models. Segue into `eo-tides`]
+[TODO: Insert text here about the core functions of the `pyTMD` package with comment on the range of supported global tide models. Segue into how `eo-tides` enables the application of `pyTMD` modelling at EO appropriate scale]
+
+The tide modelling functionality in `eo-tides` can be used independently of Earth observation (EO) data, e.g. for any application where you need to generate a time series of tide heights. However, it also underpins the more complex EO-related functions in the `eo-tides` package. Tide modelling functionality is also provided to support modelling of tidal phase at any location and time. This can be used to classify tides into high and low tide observations, or determine whether the tide was rising (i.e. flow tide) or falling (i.e. ebb tide) at any point in time.
+
+## Combining tides with satellite data
+
+## Calculating tide statistics and satellite biases
+
+## Validating modelled tide heights
 
 # References
 A list of key references, including to other software addressing related needs. Note that the references should include full names of venues, e.g., journals and conferences, not abbreviations only understood in the context of a specific discipline.
