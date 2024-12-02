@@ -91,7 +91,13 @@ Modelling tides with EOT20
 Applying `eo-tides` statistical functionality at the pixel scale produces rasterised output datasets that can be used to explore spatial relationships to satellite-tide bias in your input dataset.
 
 ## Validating modelled tide heights
+The tide models supported by eo-tides can vary significantly in accuracy across the world's coastlines. Evaluating the accuracy of your modelled tides is critical for ensuring that resulting marine or coastal EO analyses are reliable and useful.
 
+Validation functionality in `eo-tides` provides a convenient tool for loading high-quality sea-level measurements from the GESLA Global Extreme Sea Level Analysis (REFERENCE) archive – a global archive of almost 90,713 years of sea level data from 5,119 records across the world. This data can be used to compare against tides modelled using `eo-tides` to calculate the accuracy of your tide modelling and identify the optimal tide models to use for your study area.
+
+To streamline validation analyses and ensure comparability with tide height datasets, `eo-tides` has designed the loading of GESLA data to be identical in format to the tide modelling data load. Correlations between GESLA data and modelled tide heights are quantified in `eo-tides` with the calculation of accuracy statistics that include the Root Mean Square Error (RMSE), Mean Absolute Error (MAE), R-squared and bias.
+
+Furthermore, different ocean tide models perform differently in different locations, meaning it can be valuable to compare the accuracy of different models against measured gauge data. This can help users make an informed decision about the best model to use for a given application or study area. `eo-tides` allows users to compare tide models and evaluate them against GESLA data, empowering users to consider the accuracy metrics to choose the tide model that best suits their location for added confidence in the selection the optimal tide model to attribute heights to coastal EO data.
 
 # References
 A list of key references, including to other software addressing related needs. Note that the references should include full names of venues, e.g., journals and conferences, not abbreviations only understood in the context of a specific discipline.
