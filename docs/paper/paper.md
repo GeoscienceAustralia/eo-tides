@@ -44,13 +44,18 @@ The `eo-tides` tool-suite supports a wide variety of global ocean models to "tag
 
 # Functionality
 ## Modelling tides
-The underlying `pyTMD` tide modelling capability provides the foundation of the `eo_tides` package. `eo_tides` in turn upscales the application of the sophisticated `pyTMD` modelling to scales appropriate to Earth observation data e.g. 10m spatial pixel resolution with Sentinel-2 imagery.
+The underlying `pyTMD` tide modelling capability provides the foundation of the `eo_tides` package. `eo_tides` in turn upscales the sophisticated tide modelling in `pyTMD` to scales appropriate to Earth observation data e.g. 10m spatial pixel resolution with Sentinel-2 imagery.
 
 [TODO: Insert text here about the core functions of the `pyTMD` package with comment on the range of supported global tide models. Segue into how `eo-tides` enables the application of `pyTMD` modelling at EO appropriate scale]
 
 The tide modelling functionality in `eo-tides` can be used independently of Earth observation (EO) data, e.g. for any application where you need to generate a time series of tide heights. However, it also underpins the more complex EO-related functions in the `eo-tides` package. Tide modelling functionality is also provided to support modelling of tidal phase at any location and time. This can be used to classify tides into high and low tide observations, or determine whether the tide was rising (i.e. flow tide) or falling (i.e. ebb tide) at any point in time.
 
 ## Combining tides with satellite data
+When combining tide heights with satellite data, `eo-tides` offers two approaches that differ in their complexity and performance. A fast and efficient method for assigning tide heights to whole timesteps is offered that best suits small scale applications where tides are unlikely to vary across a study area. In contrast, for large scale, seamless coastal EO detasets, `eo-tides` offers an approach that models tides through both time and space, returning a tide height for every satellite pixel in the dataset. However, the complexity of this approach naturally comes at the expense of performance.
+
+Using the former approach, the tide height at the geographic-centroid of the dataset is attributed to each timestep, representing the relative trend of the tide dynamics at that moment in time. Having tide_height as a variable allows us to select and analyse our satellite data using information about tides. For example, in any area of interest, we could sort all available timesteps by tide height, then identify and compare the lowest and highest tide images in our time series.
+
+However, in reality, tides vary spatially – potentially by several metres in areas of complex tidal dynamics. This means that an individual satellite image can capture a range of tide conditions. The pixel-based, seamless tide height attribution approach is well suited for applications that require localised information on tides. For efficient processing, this approach first models tides into a low resolution grid surrounding each satellite image in the time series. This lower resolution data includes a buffer around the extent of the satellite data so that tides can be modelled seamlessly across analysis boundaries. Optionally, users can interpolate and re-project the low resolution tide data back into the resolution of the input satellite image, resulting in an individual tide height for every pixel in the dataset through time and space.
 
 ## Calculating tide statistics and satellite biases
 
