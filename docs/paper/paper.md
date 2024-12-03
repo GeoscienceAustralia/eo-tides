@@ -107,10 +107,10 @@ Mention (if applicable) a representative set of past or ongoing research project
 # Acknowledgements
 Acknowledgement of any financial support.
 
----
+# Notes
 CP notes:
 https://joss.readthedocs.io/en/latest/paper.html#what-should-my-paper-contain
 - I think that the summary and statement of need could be better defined and perhaps expanded upon.
 - I worry that the functionality section may be considered a replication of the API documentation and removed by reviewers. This content, along with the pyTMD section may need to be absorbed into the statement of need (or re-framed)
----
+
 # References
