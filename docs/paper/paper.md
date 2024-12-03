@@ -87,7 +87,7 @@ For either an area-of-interest or pixel-based application of tide modelling usin
   - The mean observed tide height was 0.69 metres higher than the mean modelled astronomical tide height.
 ```
 ![](../assets/Sen2_tide_stats.png)
-<div style="margin-left: 40px; margin-right: 40px; margin-bottom: 20px">
+<div style="margin-left: 40px; margin-right: 40px; margin-bottom: 20px;">
 <b> Figure 1 </b> In this satellite dataset where tide modelling is applied for the geometric centroid 122.21, -18.00, using tide model EOT20,the satellite captured a biased proportion of the tide range at this location: only observing ~68% of the tide range, and never observing the lowest 24% of tides. The plot visually demonstrates the relationships between satellite observed tide-height and modelled astronomical tide height for this location.</div>
 
 Applying `eo-tides` statistical functionality at the pixel scale produces rasterised output datasets of the tidal statistics and biases represented in *Figure 1* that can be used to explore spatial relationships to satellite-tide bias in your input dataset.
