@@ -68,7 +68,7 @@ To ensure that coastal EO analyses are not inadvertently affected by tide biases
   2. Offset high: The proportion of the highest tides not observed by satellites at any time, as a proportion of the full modelled astronomical tidal range. A high value indicates that the satellite data is biased towards never capturing high tides.
   3. Offset low: The proportion of the lowest tides not observed by satellites at any time, as a proportion of the full modelled astronomical tidal range. A high value indicates that the satellite data is biased towards never capturing low tides.
 
-For either an area-of-interest or pixel-based application of tide modelling using `eo-tides`, the statistical functionality can be used to summarise your dataset, adding insightful tide-based context to your coastal satellite data. For example, application of an `eo-tides` statistical function over your dataset will return a report of the tidal characteristics for your dataset with an associated plot to visualise the data (\autoref{fig:1}).
+For either an area-of-interest or pixel-based application of tide modelling using `eo-tides`, the statistical functionality can be used to summarise your dataset, adding insightful tide-based context to your coastal satellite data. For example, application of an `eo-tides` statistical function over your dataset will return a report of the tidal characteristics for your dataset with an associated plot to visualise the data (*Figure 1*).
 
 ```
   Using tide modelling location: 122.21, -18.00
@@ -86,31 +86,20 @@ For either an area-of-interest or pixel-based application of tide modelling usin
 
   - The mean observed tide height was 0.69 metres higher than the mean modelled astronomical tide height.
 ```
-[In this satellite dataset where tide modelling is applied for the geometric centroid 122.21, -18.00, using tide model EOT20,the satellite captured a biased proportion of the tide range at this location: only observing ~68% of the tide range, and never observing the lowest 24% of tides The plot visually demonstrates the relationships between satellite observed tide-height and modelled astronomical tide height for this location.\label{fig:Figure 1}]
+![](../assets/Sen2_tide_stats.png)
+<div style="margin-left: 40px; margin-right: 40px; margin-bottom: 20px">
+<b> Figure 1 </b> In this satellite dataset where tide modelling is applied for the geometric centroid 122.21, -18.00, using tide model EOT20,the satellite captured a biased proportion of the tide range at this location: only observing ~68% of the tide range, and never observing the lowest 24% of tides. The plot visually demonstrates the relationships between satellite observed tide-height and modelled astronomical tide height for this location.</div>
 
-![Test image []{label="figx"}](../assets/eo-tides-logo-128.png)
-
-test fig text \autoref{figx} 
-
-<div style="margin-left: 20px;">
-<b> Figure 1 </b> In this satellite dataset where tide modelling is applied for the geometric centroid 122.21, -18.00, using tide model EOT20,the satellite captured a biased proportion of the tide range at this location: only observing ~68% of the tide range, and never observing the lowest 24% of tides. The plot visually demonstrates the relationships between satellite observed tide-height and modelled astronomical tide height for this location.
-</div>
-
-Applying `eo-tides` statistical functionality at the pixel scale produces rasterised output datasets of the tidal statistics and biases represented in (\autoref{fig:1}) *Figure 1* that can be used to explore spatial relationships to satellite-tide bias in your input dataset.
+Applying `eo-tides` statistical functionality at the pixel scale produces rasterised output datasets of the tidal statistics and biases represented in *Figure 1* that can be used to explore spatial relationships to satellite-tide bias in your input dataset.
 
 ## Validating modelled tide heights
 The tide models supported by `eo-tides` can vary significantly in accuracy across the world's coastlines. Evaluating the accuracy of your modelled tides is critical for ensuring that resulting marine or coastal EO analyses are reliable and useful.
 
-Validation functionality in `eo-tides` provides a convenient tool for loading high-quality sea-level measurements from the GESLA Global Extreme Sea Level Analysis (REFERENCE) archive – a global archive of almost 90,713 years of sea level data from 5,119 records across the world. This data can be used to compare against tides modelled using `eo-tides` to calculate the accuracy of your tide modelling and identify the optimal tide models to use for your study area.
+Validation functionality in `eo-tides` provides a convenient tool for loading high-quality sea-level measurements from the GESLA Global Extreme Sea Level Analysis [@GESLAv3] archive – a global archive of almost 90,713 years of sea level data from 5,119 records across the world. This data can be used to compare against tides modelled using `eo-tides` to calculate the accuracy of your tide modelling and identify the optimal tide models to use for your study area.
 
 To streamline validation analyses and ensure comparability with tide height datasets, `eo-tides` has designed the loading of GESLA data to be identical in format to the tide modelling data load. Correlations between GESLA data and modelled tide heights are quantified in `eo-tides` with the calculation of accuracy statistics that include the Root Mean Square Error (RMSE), Mean Absolute Error (MAE), R-squared and bias.
 
 Furthermore, different ocean tide models perform differently in different locations, meaning it can be valuable to compare the accuracy of multiple different models against measured gauge data. This can help users make an informed decision about the best model to use for a given application or study area. `eo-tides` allows users to compare tide models and evaluate them against GESLA data, empowering users to consider the accuracy metrics and choose the optimal tide model that best suits their location with confidence.
-
-# References
-A list of key references, including to other software addressing related needs. Note that the references should include full names of venues, e.g., journals and conferences, not abbreviations only understood in the context of a specific discipline.
-https://joss.readthedocs.io/en/latest/paper.html#internal-references
-https://joss.readthedocs.io/en/latest/paper.html#citations
 
 # Research projects
 Mention (if applicable) a representative set of past or ongoing research projects using the software and recent scholarly publications enabled by it.
@@ -119,6 +108,9 @@ Mention (if applicable) a representative set of past or ongoing research project
 Acknowledgement of any financial support.
 
 ---
-Check that the paper complies with Pandoc compilation into PDF
-https://joss.readthedocs.io/en/latest/paper.html#checking-that-your-paper-compiles
+CP notes:
+https://joss.readthedocs.io/en/latest/paper.html#what-should-my-paper-contain
+- I think that the summary and statement of need could be better defined and perhaps expanded upon.
+- I worry that the functionality section may be considered a replication of the API documentation and removed by reviewers. This content, along with the pyTMD section may need to be absorbed into the statement of need (or re-framed)
 ---
+# References
