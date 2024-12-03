@@ -88,7 +88,7 @@ For either an area-of-interest or pixel-based application of tide modelling usin
 ```
 [In this satellite dataset where tide modelling is applied for the geometric centroid 122.21, -18.00, using tide model EOT20,the satellite captured a biased proportion of the tide range at this location: only observing ~68% of the tide range, and never observing the lowest 24% of tides The plot visually demonstrates the relationships between satellite observed tide-height and modelled astronomical tide height for this location.\label{fig:Figure 1}]
 
-![Test image]{label="figx"}(../assets/eo-tides-logo-128.png)
+![Test image []{label="figx"}](../assets/eo-tides-logo-128.png)
 
 test fig text \autoref{figx} 
 
