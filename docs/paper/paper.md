@@ -20,11 +20,11 @@ authors:
     orcid: 0009-0003-9882-9131
 affiliations:
   - name: Geoscience Australia, Australia
-   index: 1
-   ror: 04ge02x20
+    index: 1
+    ror: 04ge02x20
   - name: University of Washington Applied Physics Laboratory, United States of America
-   index: 2
-   ror: 03d17d270
+    index: 2
+    ror: 03d17d270
 date: 27 November 2024
 bibliography: paper.bib
 
