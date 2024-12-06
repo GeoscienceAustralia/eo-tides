@@ -93,7 +93,7 @@ The tide models supported by `eo-tides` can vary significantly in accuracy acros
 
 Validation functionality in `eo-tides` provides a convenient tool for loading high-quality sea-level measurements from the GESLA Global Extreme Sea Level Analysis [@GESLAv3] archive – a global dataset of almost 90,713 years of sea level data from 5,119 records across the world. This data can be used to compare against tides modelled using `eo-tides` to calculate the accuracy of your tide modelling and identify the optimal tide models to use for your study area.
 
- `eo-tides` has designed the loading of GESLA data to be identical in format to the tide modelling data load and correlations between GESLA data and modelled tide heights are quantified through the calculation of accuracy statistics that include the Root Mean Square Error (RMSE), Mean Absolute Error (MAE), R-squared and bias.
+`eo-tides` has designed the loading of GESLA data to be identical in format to the tide modelling data load and correlations between GESLA data and modelled tide heights are quantified through the calculation of accuracy statistics that include the Root Mean Square Error (RMSE), Mean Absolute Error (MAE), R-squared and bias.
 
 Furthermore, different ocean tide models perform differently in different locations. `eo-tides` supports the comparison of multiple tide models, evaluating them against GESLA data, to empower users to make informed decisions and choose the optimal tide model that best suits their location or application with confidence.
 
