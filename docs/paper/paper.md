@@ -91,24 +91,14 @@ To ensure that coastal EO analyses are not inadvertently affected by tide biases
   2. High-tide offset: The proportion of the highest tides never observed by satellites, relative to the modelled astronomical tidal range. A high value indicates that the satellite data never captures the highest tides.
   3. Low-tide offset: The proportion of the lowest tides never observed by satellites, relative to the modelled astronomical tidal range. A high value indicates that the satellite data never captures the lowest tides.
 
-An interrogation of satellite tide bias in any area of interest using `eo-tides` statistical functionality will return a report and plot (*Figure 1*), adding insightful tide-based context to a coastal EO analysis:
+An interrogation of satellite tide bias in any area of interest using `eo-tides` statistical functionality will return a report and plot \autoref{fig:stats}, adding insightful tide-based context to a coastal EO analysis:
 
-```
-🌊 Modelled astronomical tide range: 9.30 metres.
-🛰️ Observed tide range: 6.29 metres.
-
-🔴 68% of the modelled astronomical tide range was observed at this location.
-🟢 The highest 8% (0.77 metres) of the tide range was never observed.
-🔴 The lowest 24% (2.25 metres) of the tide range was never observed.
-
-🌊 Mean modelled astronomical tide height: -0.00 metres.
-🛰️ Mean observed tide height: 0.69 metres.
-
-⬆️ The mean observed tide height was 0.69 metres higher than the mean modelled astronomical tide height.
-```
-![](../assets/Sen2_tide_stats.png)
+<!-- ![](../assets/Sen2_tide_stats.png)
 <div style="margin-left: 40px; margin-right: 40px; margin-bottom: 20px;">
-<b> Figure 1 </b> In this example satellite time series, the data captured a biased proportion of the tide range: only observing ~68% of the modelled astronomical tide range, and never observing the lowest 24% of tides. The plot visually demonstrates the relationships between satellite observed tide heights (black dots) and modelled astronomical tide height (blue lines) at this location.</div>
+<b> Figure 1 </b> In this example satellite time series, the data captured a biased proportion of the tide range: only observing ~68% of the modelled astronomical tide range, and never observing the lowest 24% of tides. The plot visually demonstrates the relationships between satellite observed tide heights (black dots) and modelled astronomical tide height (blue lines) at this location.</div> -->
+
+![In this example satellite time series, the data captured a biased proportion of the tide range: only observing ~68% of the modelled astronomical tide range, and never observing the lowest 24% of tides. The plot visually demonstrates the relationships between satellite observed tide heights (black dots) and modelled astronomical tide height (blue lines) at this location.\label{fig:stats}](figures/joss_fig_stats.png)
+
 
 ## Validating modelled tide heights
 The tide models supported by `eo-tides` can vary significantly in accuracy across the world's coastlines. Evaluating the accuracy of modelled tides is critical for ensuring that resulting marine or coastal EO analyses are reliable and useful.
