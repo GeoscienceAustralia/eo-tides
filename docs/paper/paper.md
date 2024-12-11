@@ -73,24 +73,17 @@ The `tag_tides` function provides a fast and efficient method for small scale ap
 
 However, in reality tides vary spatially – potentially by many metres in areas of complex and extreme tidal dynamics. This means that an individual satellite image can capture a range of contrasting tide conditions. For larger scale coastal EO analysis, the `pixel_tides` function can be used to seamlessly model tides through both time and space, producing three-dimensional "tide height" datacube that can be integrated with satellite data. For efficient processing, `pixel_tides` `models tides into a customisable low resolution grid surrounding each satellite image in the time series. These modelled tides are then re-projected back into the original resolution of the input satellite image, returning a unique tide height for every individual satellite pixel through time.
 
-<!-- Table 1: Comparison of the `tag_tides` and `pixel_tides` functions for attributing satellite EO with tide heights.
+Table: Comparison of the `tag_tides` and `pixel_tides` functions for attributing satellite EO with tide heights. \label{tab:tide_stats}
 
 | `tag_tides`                                                                 | `pixel_tides`                                                                                              |
 |-----------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
 | Assigns a single tide height to each timestep/satellite image                         | Assigns a tide height to every individual pixel through time to capture spatial tide dynamics                                               |
 | Ideal for local or site-scale analysis                                      | Ideal for regional to global-scale coastal product generation                                              |
 | Fast, low memory use                                                        | Slower, higher memory use                                                                                  |
-| Single tide height per image can produce artefacts in complex tidal regions | Produce spatially seamless results across large extents by applying analyses at the pixel level | -->
-
-
-Table: In this example table, we present the key statistical summaries of the tide measurements, highlighting the discrepancies between satellite observations and modelled astronomical tide data. \label{tab:tide_stats}
-
-| Column 1 | Column 2 | Column 3 |
-|----------|----------|----------|
-| Data 1   | Data 2   | Data 3   |
+| Single tide height per image can produce artefacts in complex tidal regions | Produce spatially seamless results across large extents by applying analyses at the pixel level |
 
 ## Calculating tide statistics and satellite biases
-The `eo_tides.stats` module contains tools for calculating statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits. Complex tide aliasing interactions between temporal tide dynamics and the regular overpass timing of sun-synchronous satellite sensors mean that satellites often do not always observe the entire tidal cycle [@eleveld2014estuarine]. Biases in satellite coverage of the tidal cycle can mean that tidal extremes (e.g. the lowest or highest tides at a location) or particular tidal processes may either never be captured by satellites, or be over-represented in the satellite EO record. Local tide dynamics can cause these biases to vary greatly both through time and space [@bishop2019NIDEM], making it challenging to compare coastal processes consistently - particularly for large-scale coastal EO analyses.
+The `eo_tides.stats` module contains tools for calculating statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits. Complex tide aliasing interactions between temporal tide dynamics and the regular overpass timing of sun-synchronous satellite sensors mean that satellites often do not always observe the entire tidal cycle [@eleveld2014estuarine]. Biases in satellite coverage of the tidal cycle can mean that tidal extremes (e.g. the lowest or highest tides at a location) or particular tidal processes may either never be captured by satellites, or be over-represented in the satellite record. Local tide dynamics can cause these biases to vary greatly both through time and space [@bishop2019NIDEM], making it challenging to compare coastal processes consistently - particularly for large-scale coastal EO analyses.
 
 To ensure that coastal EO analyses are not inadvertently affected by tide biases, it is important to understand and compare how well the tides observed by satellites match the full range of modelled tides at a location. The `tide_stats` function compares the subset of tides observed by satellite data against the full range of tides modelled at a regular interval through time across the entire time period covered by the satellite dataset. This comparison is used to calculate several useful statistics that summarise how well a satellite time series captures the full range of real-world tidal conditions [@bishop2019NIDEM]. These statistics include:
 
@@ -113,7 +106,7 @@ Validation functionality in `eo-tides` provides a convenient tool for loading hi
 Furthermore, different ocean tide models perform differently in different locations. `eo-tides` supports the comparison of multiple tide models, evaluating them against GESLA data, to empower users to make informed decisions and choose the optimal tide model that best suits their location or application with confidence.
 
 # Research projects
-Early versions of functions provided in `eo-tides` has been used to support continental-scale modelling of the elevation and exposure of Australia's intertidal zone, and to support tide correction for satellite-derived shorelines as part of the `CoastSeg` Python package [@Fitzpatrick2024].
+Early versions of functions provided in `eo-tides` has been used to support continental-scale modelling of the elevation and exposure of Australia's intertidal zone [@deaintertidal], and to support tide correction for satellite-derived shorelines as part of the `CoastSeg` Python package [@Fitzpatrick2024].
 
 # Acknowledgements
 Functions from `eo-tides` were originally developed in the Digital Earth Australia Notebooks and Tools repository [@krause2021dea]. The authors would like to thank all DEA Notebooks contributers and maintainers for their invaluable assistance with code review, feature suggestions and code edits. This paper is published with the permission of the Chief Executive Officer, Geoscience Australia.
