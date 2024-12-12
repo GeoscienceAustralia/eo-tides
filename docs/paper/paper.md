@@ -32,27 +32,23 @@ affiliations:
     ror: 03d17d270
 date: 27 November 2024
 bibliography: paper.bib
-
-# Optional fields if submitting to a AAS journal too, see this blog post:
-# https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
-# aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
-# aas-journal: Astrophysical Journal <- The name of the AAS journal.
-
 ---
 
 # Summary
-The `eo-tides` package provides powerful parallelized tools for integrating satellite Earth observation (EO) data with ocean tide modelling. The package provides a flexible Python-based API that facilitates the modelling and attribution of tide heights to a time-series of satellite images based on the spatial extent and acquisition time of each satellite observation.
+The `eo-tides` package provides powerful parallelized tools for integrating satellite Earth observation (EO) data with ocean tide modelling (\autoref{fig:abstract}). The package provides a flexible Python-based API that facilitates the modelling and attribution of tide heights to a time-series of satellite images based on the spatial extent and acquisition time of each satellite observation.
 
-`eo-tides` leverages advanced tide modelling functionality from the `pyTMD` [@tyler_sutterley_2024] tide prediction software, combining this fundamental tide modelling capability with EO spatial analysis tools from `odc-geo` [@odc-geo]. This allows tides to be modelled in parallel automatically using over 50 supported tide models, and returned in standardised `pandas` [@The_pandas_development_team_pandas-dev_pandas_Pandas] and `xarray` [@Hoyer_xarray_N-D_labeled_2017] data formats for further analysis.
+`eo-tides` leverages advanced tide modelling functionality from the `pyTMD` [@tyler_sutterley_2024] tide prediction software, combining this fundamental tide modelling capability with EO spatial analysis tools from `odc-geo` [@odcgeo]. This allows tides to be modelled in parallel automatically using over 50 supported tide models, and returned in standardised `pandas` [@reback2020pandas, @mckinney-proc-scipy-2010] and `xarray` [@Hoyer_xarray_N-D_labeled_2017] data formats for further analysis.
 
 Tools from the `eo-tides` package are designed to be applied directly to petabytes of freely available satellite data loaded from the cloud using Open Data Cube's `odc-stac` or `datacube` packages (e.g. using [Digital Earth Australia](https://knowledge.dea.ga.gov.au/guides/setup/gis/stac/) or [Microsoft Planetary Computer's](https://planetarycomputer.microsoft.com/) SpatioTemporal Asset Catalogue). Additional functionality enables evaluating potential satellite-tide biases, and validating modelled tides using external tide gauge data — both important considerations for assessing the reliability and accuracy of coastal EO workflows. In combination, these open source tools support the efficient, scalable and robust analysis of coastal EO data for any time period or location globally.
+
+![Example abstract.\label{fig:abstract}](../assets/eo-tides-abstract.gif)
 
 # Statement of need
 Satellite remote sensing offers an unparalleled method to view and examine dynamic coastal environments over large temporal and spatial scales. However, the variable and sometimes extreme influence of ocean tides in these regions can complicate analyses, making it difficult to separate the influence of changing tides from patterns of true coastal change over time. This is a particularly significant challenge for continental- to global-scale coastal EO analyses, where failing to account for complex tide dynamics can lead to inaccurate or misleading insights into coastal processes observed by satellites.
 
 Conversely, information about ocean tides can also provide unique environmental insights that can greatly enhance the utility of coastal EO data. Conventionally, satellite data dimensions consider the geographical "where" and the temporal "when" of data acquisition. The addition of tide height as a new analysis dimension allows data to be filtered, sorted and analysed with respect to tidal processes, delivering a powerful re-imagining of traditional multi-temporal EO data analysis. For example, satellite data can be analysed to focus on specific ecologically-significant portions of the local tide range (e.g. high or low tide), or by each image's position in the tidal cycle (e.g. spring, neap, ebb or flow tides).
 
-This concept has been used to map tidally-corrected annual coastlines from Landsat satellite data at continental scale [@bishop2021mapping], generate digital elevation models of the intertidal zone [@bishop2019NIDEM], and create tidally-constrained imagery composites of the coastline at low and high tide [@sagar2018composites]. However, these approaches have been historically based on bespoke, closed-source tide modelling tools, limiting the reproducibility and portability of these techniques to new coastal EO applications. To support the next generation of coastal EO workflows, there is a critical need for new open-source approaches for combining satellite data with tide modelling.
+This concept has been used to map tidally-corrected annual coastlines from Landsat satellite data at continental scale [@bishop2021mapping], generate maps of the extent and elevation of the intertidal zone [@murray2012continental, @sagar2017item, @bishop2019NIDEM], and create tidally-constrained imagery composites of the coastline at low and high tide [@sagar2018composites]. However, these approaches have been historically based on bespoke, closed-source tide modelling tools, limiting the reproducibility and portability of these techniques to new coastal EO applications. To support the next generation of coastal EO workflows, there is a critical need for new open-source approaches for combining satellite data with tide modelling.
 
 The `eo-tides` package aims to address these challenges by providing a set of performant open-source Python tools for attributing satellite EO data with modelled ocean tides. This functionality is provided in four main analysis modules (`model`, `eo`, `stats` and `validation`) which are described briefly below.
 
@@ -77,9 +73,9 @@ Table: Comparison of the `tag_tides` and `pixel_tides` functions for attributing
 
 | `tag_tides`                                                                 | `pixel_tides`                                                                                              |
 |-----------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| Assigns a single tide height to each timestep/satellite image                         | Assigns a tide height to every individual pixel through time to capture spatial tide dynamics                                               |
-| Ideal for local or site-scale analysis                                      | Ideal for regional to global-scale coastal product generation                                              |
-| Fast, low memory use                                                        | Slower, higher memory use                                                                                  |
+| Assigns a single tide height to each timestep/satellite image                         | Assigns a tide height to every individual pixel through time to capture spatial tide dynamics<br>                                               |
+| Ideal for local or site-scale analysis                                      | Ideal for regional to global-scale coastal product generation<br>                                              |
+| Fast, low memory use                                                        | Slower, higher memory use<br>                                                                                  |
 | Single tide height per image can produce artefacts in complex tidal regions | Produce spatially seamless results across large extents by applying analyses at the pixel level |
 
 ## Calculating tide statistics and satellite biases
