@@ -37,7 +37,7 @@ bibliography: paper.bib
 # Summary
 The `eo-tides` package provides powerful parallelized tools for integrating satellite Earth observation (EO) data with ocean tide modelling. The package provides a flexible Python-based API that facilitates the modelling and attribution of tide heights to a time-series of satellite images based on the spatial extent and acquisition time of each satellite observation (\autoref{fig:abstract}).
 
-`eo-tides` leverages advanced tide modelling functionality from the `pyTMD` [@tyler_sutterley_2024] tide prediction software, combining this fundamental tide modelling capability with EO spatial analysis tools from `odc-geo` [@odcgeo]. This allows tides to be modelled in parallel automatically using over 50 supported tide models, and returned in standardised `pandas` [@reback2020pandas; @mckinney-proc-scipy-2010] and `xarray` [@Hoyer_xarray_N-D_labeled_2017] data formats for further analysis.
+`eo-tides` leverages advanced tide modelling functionality from the `pyTMD` [@pytmd] tide prediction software, combining this fundamental tide modelling capability with EO spatial analysis tools from `odc-geo` [@odcgeo]. This allows tides to be modelled in parallel automatically using over 50 supported tide models, and returned in standardised `pandas` [@reback2020pandas; @mckinney-proc-scipy-2010] and `xarray` [@Hoyer_xarray_N-D_labeled_2017] data formats for further analysis.
 
 Tools from `eo-tides` are designed to be applied directly to petabytes of freely available satellite data loaded from the cloud using Open Data Cube's `odc-stac` or `datacube` packages (e.g. using [Digital Earth Australia](https://knowledge.dea.ga.gov.au/guides/setup/gis/stac/) or [Microsoft Planetary Computer's](https://planetarycomputer.microsoft.com/) SpatioTemporal Asset Catalogue). Additional functionality enables evaluating potential satellite-tide biases, and validating modelled tides using external tide gauge data — both important considerations for assessing the reliability and accuracy of coastal EO workflows. In combination, these open source tools support the efficient, scalable and robust analysis of coastal EO data for any time period or location globally.
 
@@ -62,7 +62,7 @@ These tools are accompanied by comprehensive documentation explaining [how to se
 ![An example output from `list_tides`, providing a useful summary table which clearly identifies available tide models.\label{fig:list}](figures/joss_fig_list.png)
 
 ## Modelling tides
-The `eo_tides.model` module builds upon advanced tide modelling capability provided by the `pyTMD` tide prediction software [@tyler_sutterley_2024].
+The `eo_tides.model` module builds upon advanced tide modelling capability provided by the `pyTMD` tide prediction software [@pytmd].
 
 [TODO Tyler: Insert brief paragraph here about the core capability of the `pyTMD` package, with general background to the science used to predict tides and the range of supported global tide models]
 
