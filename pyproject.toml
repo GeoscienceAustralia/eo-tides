@@ -10,6 +10,7 @@ authors = [
     { email = "Robbi.BishopTaylor@ga.gov.au"}
 ]
 readme = "README.md"
+packages = ["eo_tides"]
 keywords = [
     "earth observation",
     "tide modelling",
