@@ -64,6 +64,7 @@ jobs:
       #   run: uv run gdalinfo --format GTiff
 
       - name: Run Python unit tests
+        timeout-minutes: 10
         run: uv run python -m pytest tests --cov --cov-config=pyproject.toml --cov-report=xml --verbose
 
       - name: Run Jupyter Notebook integration tests
