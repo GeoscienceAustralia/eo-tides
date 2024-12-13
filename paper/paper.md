@@ -112,13 +112,15 @@ A satellite tide bias investigation for a coastal area of interest will return a
 
 The `eo_tides.validation` module contains tools for validating modelled tides against observed sea level data. The tide models supported by `eo-tides` can vary significantly in accuracy across the world's coastlines. Evaluating the accuracy of modelled tides is critical for ensuring that resulting marine or coastal EO analyses are reliable and useful.
 
-Validation functionality in `eo-tides` provides a convenient tool for loading high-quality sea-level measurements from the GESLA Global Extreme Sea Level Analysis [@GESLAv3] archive – a global dataset of almost 90,713 years of sea level data from 5,119 records across the world. The `load_gauge_gesla` function allows GESLA data to be loaded for the same location and time period as a satellite time series. Differences between modelled and observed tide heights can then be quantified through the calculation of accuracy statistics that include the Root Mean Square Error (RMSE), Mean Absolute Error (MAE), R-squared and bias.
+Validation functionality in `eo-tides` provides a convenient tool for loading high-quality sea-level measurements from the GESLA Global Extreme Sea Level Analysis [@GESLAv3] archive – a global dataset of almost 90,713 years of sea level data from 5,119 records across the world. The `load_gauge_gesla` function allows GESLA data to be loaded for the same location and time period as a satellite time series. Differences between modelled and observed tide heights can then be quantified through the calculation of accuracy statistics that include the Root Mean Square Error (RMSE), Mean Absolute Error (MAE), R-squared and bias (\autoref{fig:gesla}).
 
-Furthermore, different ocean tide models perform differently in different coastal locations. `eo-tides` allows multiple tide models to be compared against GESLA data simultaneously, empowering users to make informed decisions and choose the optimal tide model that best suits their specific location or application.
+Furthermore, different ocean tide models perform differently in different coastal locations. `eo-tides` allows multiple tide models to be compared against GESLA data simultaneously (\autoref{fig:gesla}), empowering users to make informed decisions and choose the optimal tide model that best suits their specific location or application.
+
+![An example comparison of modelled tides from multiple global ocean tide models (EOT20, GOT5.5, HAMTIDE11) against observed sea level data from the Broome 62650 GESLA tide gauge, Western Australia.\label{fig:gesla}](figures/joss_fig_gesla.png)
 
 # Research projects
 
-Early versions of functions provided in `eo-tides` has been for continental-scale modelling of the elevation and exposure of Australia's intertidal zone [@deaintertidal], and to support tide correction for satellite-derived shorelines as part of the `CoastSeg` Python package [@Fitzpatrick2024].
+Early versions of functions provided in `eo-tides` has been used for continental-scale modelling of the elevation and exposure of Australia's intertidal zone [@deaintertidal], and to support tide correction for satellite-derived shorelines as part of the `CoastSeg` Python package [@Fitzpatrick2024].
 
 # Acknowledgements
 
