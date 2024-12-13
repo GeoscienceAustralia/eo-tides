@@ -78,7 +78,7 @@ The `tag_tides` function provides a fast and efficient method for small scale ap
 
 However, in reality tides vary spatially – potentially by many metres in areas of complex and extreme tidal dynamics. This means that an individual satellite image can capture a range of contrasting tide conditions. For larger scale coastal EO analysis, the `pixel_tides` function can be used to seamlessly model tides through both time and space, producing three-dimensional "tide height" datacube that can be integrated with satellite data. For efficient processing, `pixel_tides` `models tides into a customisable low resolution grid surrounding each satellite image in the time series. These modelled tides are then re-projected back into the original resolution of the input satellite image, returning a unique tide height for every individual satellite pixel through time (\autoref{fig:pixel}).
 
-Table: Comparison of the `tag_tides` and `pixel_tides` functions for attributing satellite EO with tides. \label{tab:tide_stats}
+Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tide_stats}
 
 | `tag_tides`                                                                 | `pixel_tides`                                                                                              |
 |-----------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
