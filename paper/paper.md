@@ -62,7 +62,7 @@ Running tide modelling using the default tide modelling data provided by externa
 
 These tools are accompanied by comprehensive documentation explaining [how to set up several of the most commonly used global ocean tide models](https://geoscienceaustralia.github.io/eo-tides/setup/), including details on how to download or request access to model files, and how to uncompress and arrange the data on disk.
 
-![An example output from `list_tides`, providing a useful summary table which clearly identifies available tide models.\label{fig:list}](figures/joss_fig_list.png)
+![An example output from `list_tides`, providing a useful summary table which clearly identifies available and supported tide models.\label{fig:list}](figures/joss_fig_list.png)
 
 ## Modelling tides
 
