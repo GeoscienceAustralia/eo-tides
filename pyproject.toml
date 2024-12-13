@@ -89,6 +89,9 @@ dev = [
 requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = ["eo_tides"]
+
 [tool.mypy]
 files = ["eo_tides"]
 python_version = "3.10"
@@ -126,6 +129,3 @@ exclude_lines = [
 [tool.coverage.run]
 branch = true
 source = ["eo_tides"]
-
-[tool.setuptools]
-packages = ["eo_tides"]
