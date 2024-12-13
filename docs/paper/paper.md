@@ -87,7 +87,7 @@ Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tid
 | - Fast, low memory use                                                        | - Slower, higher memory use                                                                                |
 | - Single tide height per image can produce artefacts in complex tidal regions | - Produce spatially seamless results across large extents by applying analyses at the pixel level |
 
-![An example tide height output produced by the `pixel_tides` function, showing spatial variability in tides across the Australiasia for a single timestep.\label{fig:pixel}](figures/joss_fig_pixel.png)
+![An example tide height output produced by the `pixel_tides` function, showing spatial variability in tides across the Australasia for a single timestep.\label{fig:pixel}](figures/joss_fig_pixel.png)
 
 ## Calculating tide statistics and satellite biases
 The `eo_tides.stats` module contains tools for calculating statistics describing local tide dynamics, as well as biases caused by interactions between tidal processes and satellite orbits. Complex tide aliasing interactions between temporal tide dynamics and the regular overpass timing of sun-synchronous satellite sensors mean that satellites often do not always observe the entire tidal cycle [@eleveld2014estuarine]. Biases in satellite coverage of the tidal cycle can mean that tidal extremes (e.g. the lowest or highest tides at a location) or particular tidal processes may either never be captured by satellites, or be over-represented in the satellite record. Local tide dynamics can cause these biases to vary greatly both through time and space [@bishop2019NIDEM], making it challenging to compare coastal processes consistently - particularly for large-scale coastal EO analyses.
@@ -107,10 +107,10 @@ The `eo_tides.validation` module contains tools for validating modelled tides ag
 
 Validation functionality in `eo-tides` provides a convenient tool for loading high-quality sea-level measurements from the GESLA Global Extreme Sea Level Analysis [@GESLAv3] archive – a global dataset of almost 90,713 years of sea level data from 5,119 records across the world. The `load_gauge_gesla` function allows GESLA data to be loaded for the same location and time period as a satellite time series. Differences between modelled and observed tide heights can then be quantified through the calculation of accuracy statistics that include the Root Mean Square Error (RMSE), Mean Absolute Error (MAE), R-squared and bias.
 
-Furthermore, different ocean tide models perform differently in different coastal locations. `eo-tides` supports the comparison of multiple tide models against GESLA data simultaneously, empowering users to make informed decisions and choose the optimal tide model that best suits their location or application with confidence.
+Furthermore, different ocean tide models perform differently in different coastal locations. `eo-tides` allows multiple tide models to be compared against GESLA data simultaneously, empowering users to make informed decisions and choose the optimal tide model that best suits their location or application.
 
 # Research projects
-Early versions of functions provided in `eo-tides` has been used to support continental-scale modelling of the elevation and exposure of Australia's intertidal zone [@deaintertidal], and to support tide correction for satellite-derived shorelines as part of the `CoastSeg` Python package [@Fitzpatrick2024].
+Early versions of functions provided in `eo-tides` has been for continental-scale modelling of the elevation and exposure of Australia's intertidal zone [@deaintertidal], and to support tide correction for satellite-derived shorelines as part of the `CoastSeg` Python package [@Fitzpatrick2024].
 
 # Acknowledgements
 Functions from `eo-tides` were originally developed in the Digital Earth Australia Notebooks and Tools repository [@krause2021dea]. The authors would like to thank all DEA Notebooks contributers and maintainers for their invaluable assistance with code review, feature suggestions and code edits. This paper is published with the permission of the Chief Executive Officer, Geoscience Australia.
