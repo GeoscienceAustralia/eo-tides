@@ -10,7 +10,6 @@ authors = [
     { email = "Robbi.BishopTaylor@ga.gov.au"}
 ]
 readme = "README.md"
-packages = ["eo_tides"]
 keywords = [
     "earth observation",
     "tide modelling",
@@ -127,3 +126,6 @@ exclude_lines = [
 [tool.coverage.run]
 branch = true
 source = ["eo_tides"]
+
+[tool.setuptools]
+packages = ["eo_tides"]
