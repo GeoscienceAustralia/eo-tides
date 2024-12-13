@@ -115,7 +115,7 @@ def _ensemble_model(
             gpd.read_file(ranking_points, engine="pyogrio")
             .to_crs(crs)
             .query(f"valid_perc > {ranking_valid_perc}")
-            .dropna()[model_ranking_cols + ["geometry"]]
+            .dropna(how="all")[model_ranking_cols + ["geometry"]]
         )
     except KeyError:
         error_msg = f"""
@@ -248,12 +248,13 @@ def _model_tides(
     time,
     directory,
     crs,
-    crop,
+    mode,
+    output_units,
     method,
     extrapolate,
     cutoff,
-    output_units,
-    mode,
+    crop,
+    crop_buffer,
 ):
     """Worker function applied in parallel by `model_tides`. Handles the
     extraction of tide modelling constituents and tide modelling using
@@ -276,11 +277,11 @@ def _model_tides(
             lat,
             type=pytmd_model.type,
             crop=crop,
+            buffer=crop_buffer,
             method=method,
             extrapolate=extrapolate,
             cutoff=cutoff,
             append_node=False,
-            # append_node=True,
         )
 
         # TODO: Return constituents
@@ -379,16 +380,17 @@ def model_tides(
     model: str | list[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     crs: str = "EPSG:4326",
-    crop: bool = True,
+    mode: str = "one-to-many",
+    output_format: str = "long",
+    output_units: str = "m",
     method: str = "linear",
     extrapolate: bool = True,
     cutoff: float | None = None,
-    mode: str = "one-to-many",
+    crop: bool = True,
+    crop_buffer: float | None = None,
     parallel: bool = True,
     parallel_splits: int | str = "auto",
     parallel_max: int | None = None,
-    output_units: str = "m",
-    output_format: str = "long",
     ensemble_models: list[str] | None = None,
     **ensemble_kwargs,
 ) -> pd.DataFrame:
@@ -442,10 +444,29 @@ def model_tides(
     crs : str, optional
         Input coordinate reference system for x and y coordinates.
         Defaults to "EPSG:4326" (WGS84; degrees latitude, longitude).
-    crop : bool, optional
-        Whether to crop tide model constituent files on-the-fly to
-        improve performance. Cropping will be performed based on a
-        1 degree buffer around all input points. Defaults to True.
+    mode : str, optional
+        The analysis mode to use for tide modelling. Supports two options:
+
+        - "one-to-many": Models tides for every timestep in "time" at
+        every input x and y coordinate point. This is useful if you
+        want to model tides for a specific list of timesteps across
+        multiple spatial points (e.g. for the same set of satellite
+        acquisition times at various locations across your study area).
+        - "one-to-one": Model tides using a unique timestep for each
+        set of x and y coordinates. In this mode, the number of x and
+        y points must equal the number of timesteps provided in "time".
+    output_format : str, optional
+        Whether to return the output dataframe in long format (with
+        results stacked vertically along "tide_model" and "tide_height"
+        columns), or wide format (with a column for each tide model).
+        Defaults to "long".
+    output_units : str, optional
+        Whether to return modelled tides in floating point metre units,
+        or integer centimetre units (i.e. scaled by 100) or integer
+        millimetre units (i.e. scaled by 1000. Returning outputs in
+        integer units can be useful for reducing memory usage.
+        Defaults to "m" for metres; set to "cm" for centimetres or "mm"
+        for millimetres.
     method : str, optional
         Method used to interpolate tidal constituents
         from model files. Defaults to "linear"; options include:
@@ -460,18 +481,14 @@ def model_tides(
         Extrapolation cutoff in kilometers. The default is None, which
         will extrapolate for all points regardless of distance from the
         valid tide modelling domain.
-    mode : str, optional
-        The analysis mode to use for tide modelling. Supports two options:
-
-        - "one-to-many": Models tides for every timestep in "time" at
-        every input x and y coordinate point. This is useful if you
-        want to model tides for a specific list of timesteps across
-        multiple spatial points (e.g. for the same set of satellite
-        acquisition times at various locations across your study area).
-        - "one-to-one": Model tides using a unique timestep for each
-        set of x and y coordinates. In this mode, the number of x and
-        y points must equal the number of timesteps provided in "time".
-
+    crop : bool, optional
+        Whether to crop tide model constituent files on-the-fly to
+        improve performance. Defaults to True; set `crop_buffer`
+        to customise the buffer distance used to crop the files.
+    crop_buffer : int or float, optional
+        The buffer distance in degrees used to crop tide model
+        constituent files around the modelling area. Defaults to None,
+        which will apply a four model-domain pixel buffer.
     parallel : bool, optional
         Whether to parallelise tide modelling using `concurrent.futures`.
         If multiple tide models are requested, these will be run in
@@ -488,18 +505,6 @@ def model_tides(
     parallel_max : int, optional
         Maximum number of processes to run in parallel. The default of
         None will automatically determine this from your available CPUs.
-    output_units : str, optional
-        Whether to return modelled tides in floating point metre units,
-        or integer centimetre units (i.e. scaled by 100) or integer
-        millimetre units (i.e. scaled by 1000. Returning outputs in
-        integer units can be useful for reducing memory usage.
-        Defaults to "m" for metres; set to "cm" for centimetres or "mm"
-        for millimetres.
-    output_format : str, optional
-        Whether to return the output dataframe in long format (with
-        results stacked vertically along "tide_model" and "tide_height"
-        columns), or wide format (with a column for each tide model).
-        Defaults to "long".
     ensemble_models : list of str, optional
         An optional list of models used to generate the ensemble tide
         model if "ensemble" tide modelling is requested. Defaults to
@@ -563,12 +568,13 @@ def model_tides(
         _model_tides,
         directory=directory,
         crs=crs,
-        crop=crop,
+        mode=mode,
+        output_units=output_units,
         method=method,
         extrapolate=extrapolate,
         cutoff=np.inf if cutoff is None else cutoff,
-        output_units=output_units,
-        mode=mode,
+        crop=crop,
+        crop_buffer=crop_buffer,
     )
 
     # If automatic parallel splits, calculate optimal value
@@ -587,7 +593,6 @@ def model_tides(
         raise ValueError(f"Parallel splits ({parallel_splits}) cannot be larger than the number of points ({len(x)}).")
 
     # Parallelise if either multiple models or multiple splits requested
-
     if parallel & ((len(models_to_process) > 1) | (parallel_splits > 1)):
         with ProcessPoolExecutor(max_workers=parallel_max) as executor:
             print(
