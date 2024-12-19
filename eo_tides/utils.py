@@ -280,7 +280,7 @@ def clip_models(
     output_directory: str | os.PathLike,
     bbox: tuple[float, float, float, float],
     model: list | None = None,
-    buffer: float = 1,
+    buffer: float = 5,
     overwrite: bool = False,
 ):
     """
@@ -313,7 +313,7 @@ def clip_models(
         in the input directly.
     buffer : float, optional
         Buffer distance (in degrees) added to the bounding box to provide
-        sufficient data on edges of study area. Defaults to 1 degree.
+        sufficient data on edges of study area. Defaults to 5 degrees.
     overwrite : bool, optional
         If True, overwrite existing files in the output directory.
         Defaults to False.

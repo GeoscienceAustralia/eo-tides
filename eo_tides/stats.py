@@ -450,10 +450,12 @@ def pixel_stats(
         that can be converted by `pandas.to_datetime()`. For example:
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
-        The tide model (or models) to use to model tides. If a list is
-        provided, a new "tide_model" dimension will be added to `data`.
-        Defaults to "EOT20"; for a full list of available/supported
-        models, run `eo_tides.model.list_models`.
+        The tide model (or list of models) to use to model tides.
+        If a list is provided, a new "tide_model" dimension will be
+        added to the `xarray.DataArray` outputs. Defaults to "EOT20";
+        specify "all" to use all models available in `directory`.
+        For a full list of available and supported models, run
+        `eo_tides.model.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable

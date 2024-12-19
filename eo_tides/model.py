@@ -24,179 +24,6 @@ from tqdm import tqdm
 from .utils import DatetimeLike, _set_directory, _standardise_models, _standardise_time, idw, list_models
 
 
-def _ensemble_model(
-    tide_df,
-    crs,
-    ensemble_models,
-    ensemble_func=None,
-    ensemble_top_n=3,
-    ranking_points="https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/derivative/dea_intertidal/supplementary/rankings_ensemble_2017-2019.fgb",
-    ranking_valid_perc=0.02,
-    **idw_kwargs,
-):
-    """Combine multiple tide models into a single locally optimised
-    ensemble tide model using external model ranking data (e.g.
-    satellite altimetry or NDWI-tide correlations along the coastline)
-    to inform the selection of the best local models.
-
-    This function performs the following steps:
-    1. Takes a dataframe of tide heights from multiple tide models, as
-       produced by `eo_tides.model.model_tides`
-    1. Loads model ranking points from an external file, filters them
-       based on the valid data percentage, and retains relevant columns
-    2. Interpolates the model rankings into the "x" and "y" coordinates
-       of the original dataframe using Inverse Weighted Interpolation (IDW)
-    3. Uses rankings to combine multiple tide models into a single
-       optimised ensemble model (by default, by taking the mean of the
-       top 3 ranked models)
-    4. Returns a new dataFrame with the combined ensemble model predictions
-
-    Parameters
-    ----------
-    tide_df : pandas.DataFrame
-        DataFrame produced by `eo_tides.model.model_tides`, containing
-        tide model predictions with columns:
-        `["time", "x", "y", "tide_height", "tide_model"]`.
-    crs : string
-        Coordinate reference system for the "x" and "y" coordinates in
-        `tide_df`. Used to ensure that interpolations are performed
-        in the correct CRS.
-    ensemble_models : list
-        A list of models to include in the ensemble modelling process.
-        All values must exist as columns with the prefix "rank_" in
-        `ranking_points`.
-    ensemble_func : dict, optional
-        By default, a simple ensemble model will be calculated by taking
-        the mean of the `ensemble_top_n` tide models at each location.
-        However, a dictionary containing more complex ensemble
-        calculations can also be provided. Dictionary keys are used
-        to name output ensemble models; functions should take a column
-        named "rank" and convert it to a weighting, e.g.:
-        `ensemble_func = {"ensemble-custom": lambda x: x["rank"] <= 3}`
-    ensemble_top_n : int, optional
-        If `ensemble_func` is None, this sets the number of top models
-        to include in the mean ensemble calculation. Defaults to 3.
-    ranking_points : str, optional
-        Path to the file containing model ranking points. This dataset
-        should include columns containing rankings for each tide
-        model, named with the prefix "rank_". e.g. "rank_EOT20".
-        Low values should represent high rankings (e.g. 1 = top ranked).
-    ranking_valid_perc : float, optional
-        Minimum percentage of valid data required to include a model
-        rank point in the analysis, as defined in a column named
-        "valid_perc". Defaults to 0.02.
-    **idw_kwargs
-        Optional keyword arguments to pass to the `idw` function used
-        for interpolation. Useful values include `k` (number of nearest
-        neighbours to use in interpolation), `max_dist` (maximum
-        distance to nearest neighbours), and `k_min` (minimum number of
-        neighbours required after `max_dist` is applied).
-
-    Returns
-    -------
-    pandas.DataFrame
-        DataFrame containing the ensemble model predictions, matching
-        the format of the input `tide_df` (e.g. columns `["time", "x",
-        "y", "tide_height", "tide_model"]`. By default the 'tide_model'
-        column will be labeled "ensemble" for the combined model
-        predictions (but if a custom dictionary of ensemble functions is
-        provided via `ensemble_func`, each ensemble will be named using
-        the provided dictionary keys).
-
-    """
-    # Extract x and y coords from dataframe
-    x = tide_df.index.get_level_values(level="x")
-    y = tide_df.index.get_level_values(level="y")
-
-    # Load model ranks points and reproject to same CRS as x and y
-    model_ranking_cols = [f"rank_{m}" for m in ensemble_models]
-    try:
-        model_ranks_gdf = (
-            gpd.read_file(ranking_points, engine="pyogrio")
-            .to_crs(crs)
-            .query(f"valid_perc > {ranking_valid_perc}")
-            .dropna(how="all")[model_ranking_cols + ["geometry"]]
-        )
-    except KeyError:
-        error_msg = f"""
-        Not all of the expected "rank_" columns {model_ranking_cols} were
-        found in the columns of the ranking points file ({ranking_points}).
-        Consider passing a custom list of models using `ensemble_models`.
-        """
-        raise Exception(textwrap.dedent(error_msg).strip()) from None
-
-    # Use points to interpolate model rankings into requested x and y
-    id_kwargs_str = "" if idw_kwargs == {} else idw_kwargs
-    print(f"Interpolating model rankings using IDW interpolation {id_kwargs_str}")
-    ensemble_ranks_df = (
-        # Run IDW interpolation on subset of ranking columns
-        pd.DataFrame(
-            idw(
-                input_z=model_ranks_gdf[model_ranking_cols],
-                input_x=model_ranks_gdf.geometry.x,
-                input_y=model_ranks_gdf.geometry.y,
-                output_x=x,
-                output_y=y,
-                **idw_kwargs,
-            ),
-            columns=model_ranking_cols,
-        )
-        .assign(x=x, y=y)
-        # Drop any duplicates then melt columns into long format
-        .drop_duplicates()
-        .melt(id_vars=["x", "y"], var_name="tide_model", value_name="rank")
-        # Remore "rank_" prefix to get plain model names
-        .replace({"^rank_": ""}, regex=True)
-        # Set index columns and rank across groups
-        .set_index(["tide_model", "x", "y"])
-        .groupby(["x", "y"])
-        .rank()
-    )
-
-    # If no custom ensemble funcs are provided, use a default ensemble
-    # calculation that takes the mean of the top N tide models
-    if ensemble_func is None:
-        ensemble_func = {"ensemble": lambda x: x["rank"] <= ensemble_top_n}
-
-    # Create output list to hold computed ensemble model outputs
-    ensemble_list = []
-
-    # Loop through all provided ensemble generation functions
-    for ensemble_n, ensemble_f in ensemble_func.items():
-        print(f"Combining models into single {ensemble_n} model")
-
-        # Join ranks to input tide data, compute weightings and group
-        grouped = (
-            # Add tide model as an index so we can join with model ranks
-            tide_df.set_index("tide_model", append=True)
-            .join(ensemble_ranks_df)
-            # Add temp columns containing weightings and weighted values
-            .assign(
-                weights=ensemble_f,  # use custom func to compute weights
-                weighted=lambda i: i.tide_height * i.weights,
-            )
-            # Groupby is specified in a weird order here as this seems
-            # to be the easiest way to preserve correct index sorting
-            .groupby(["x", "y", "time"])
-        )
-
-        # Use weightings to combine multiple models into single ensemble
-        ensemble_df = (
-            # Calculate weighted mean and convert back to dataframe
-            grouped.weighted.sum()
-            .div(grouped.weights.sum())
-            .to_frame("tide_height")
-            # Label ensemble model and ensure indexes are in expected order
-            .assign(tide_model=ensemble_n)
-            .reorder_levels(["time", "x", "y"], axis=0)
-        )
-
-        ensemble_list.append(ensemble_df)
-
-    # Combine all ensemble models and return as a single dataframe
-    return pd.concat(ensemble_list)
-
-
 def _parallel_splits(
     total_points: int,
     model_count: int,
@@ -373,6 +200,188 @@ def _model_tides(
     return tide_df
 
 
+def ensemble_tides(
+    tide_df,
+    crs,
+    ensemble_models,
+    ensemble_func=None,
+    ensemble_top_n=3,
+    ranking_points="https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/derivative/dea_intertidal/supplementary/rankings_ensemble_2017-2019.fgb",
+    ranking_valid_perc=0.02,
+    **idw_kwargs,
+):
+    """Combine multiple tide models into a single locally optimised
+    ensemble tide model using external model ranking data (e.g.
+    satellite altimetry or NDWI-tide correlations along the coastline)
+    to inform the selection of the best local models.
+
+    This function performs the following steps:
+    1. Takes a dataframe of tide heights from multiple tide models, as
+       produced by `eo_tides.model.model_tides`
+    1. Loads model ranking points from an external file, filters them
+       based on the valid data percentage, and retains relevant columns
+    2. Interpolates the model rankings into the coordinates of the
+       original dataframe using Inverse Weighted Interpolation (IDW)
+    3. Uses rankings to combine multiple tide models into a single
+       optimised ensemble model (by default, by taking the mean of the
+       top 3 ranked models)
+    4. Returns a new dataFrame with the combined ensemble model predictions
+
+    Parameters
+    ----------
+    tide_df : pandas.DataFrame
+        DataFrame produced by `eo_tides.model.model_tides`, containing
+        tide model predictions in long format with columns:
+        `["time", "x", "y", "tide_height", "tide_model"]`.
+    crs : string
+        Coordinate reference system for the "x" and "y" coordinates in
+        `tide_df`. Used to ensure that interpolations are performed
+        in the correct CRS.
+    ensemble_models : list
+        A list of models to include in the ensemble modelling process.
+        All values must exist as columns with the prefix "rank_" in
+        `ranking_points`.
+    ensemble_func : dict, optional
+        By default, a simple ensemble model will be calculated by taking
+        the mean of the `ensemble_top_n` tide models at each location.
+        However, a dictionary containing more complex ensemble
+        calculations can also be provided. Dictionary keys are used
+        to name output ensemble models; functions should take a column
+        named "rank" and convert it to a weighting, e.g.:
+        `ensemble_func = {"ensemble-custom": lambda x: x["rank"] <= 3}`
+    ensemble_top_n : int, optional
+        If `ensemble_func` is None, this sets the number of top models
+        to include in the mean ensemble calculation. Defaults to 3.
+    ranking_points : str, optional
+        Path to the file containing model ranking points. This dataset
+        should include columns containing rankings for each tide
+        model, named with the prefix "rank_". e.g. "rank_EOT20".
+        Low values should represent high rankings (e.g. 1 = top ranked).
+        The default value points to an example file covering Australia.
+    ranking_valid_perc : float, optional
+        Minimum percentage of valid data required to include a model
+        rank point in the analysis, as defined in a column named
+        "valid_perc". Defaults to 0.02.
+    **idw_kwargs
+        Optional keyword arguments to pass to the `idw` function used
+        for interpolation. Useful values include `k` (number of nearest
+        neighbours to use in interpolation), `max_dist` (maximum
+        distance to nearest neighbours), and `k_min` (minimum number of
+        neighbours required after `max_dist` is applied).
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame containing the ensemble model predictions, matching
+        the format of the input `tide_df` (e.g. columns `["time", "x",
+        "y", "tide_height", "tide_model"]`. By default the 'tide_model'
+        column will be labeled "ensemble" for the combined model
+        predictions (but if a custom dictionary of ensemble functions is
+        provided via `ensemble_func`, each ensemble will be named using
+        the provided dictionary keys).
+
+    """
+    # Raise data if `tide_df` provided in wide format
+    if "tide_model" not in tide_df:
+        raise Exception(
+            "`tide_df` does not contain the expected 'tide_model' and "
+            "'tide_height' columns. Ensure that tides were modelled in "
+            "long format (i.e. `output_format='long'` in `model_tides`)."
+        )
+
+    # Extract x and y coords from dataframe
+    x = tide_df.index.get_level_values(level="x")
+    y = tide_df.index.get_level_values(level="y")
+
+    # Load model ranks points and reproject to same CRS as x and y
+    model_ranking_cols = [f"rank_{m}" for m in ensemble_models]
+    try:
+        model_ranks_gdf = (
+            gpd.read_file(ranking_points, engine="pyogrio")
+            .to_crs(crs)
+            .query(f"valid_perc > {ranking_valid_perc}")
+            .dropna(how="all")[model_ranking_cols + ["geometry"]]
+        )
+    except KeyError:
+        error_msg = f"""
+        Not all of the expected "rank_" columns {model_ranking_cols} were
+        found in the columns of the ranking points file ({ranking_points}).
+        Consider passing a custom list of models using `ensemble_models`.
+        """
+        raise Exception(textwrap.dedent(error_msg).strip()) from None
+
+    # Use points to interpolate model rankings into requested x and y
+    id_kwargs_str = "" if idw_kwargs == {} else idw_kwargs
+    print(f"Interpolating model rankings using IDW interpolation {id_kwargs_str}")
+    ensemble_ranks_df = (
+        # Run IDW interpolation on subset of ranking columns
+        pd.DataFrame(
+            idw(
+                input_z=model_ranks_gdf[model_ranking_cols],
+                input_x=model_ranks_gdf.geometry.x,
+                input_y=model_ranks_gdf.geometry.y,
+                output_x=x,
+                output_y=y,
+                **idw_kwargs,
+            ),
+            columns=model_ranking_cols,
+        )
+        .assign(x=x, y=y)
+        # Drop any duplicates then melt columns into long format
+        .drop_duplicates()
+        .melt(id_vars=["x", "y"], var_name="tide_model", value_name="rank")
+        # Remore "rank_" prefix to get plain model names
+        .replace({"^rank_": ""}, regex=True)
+        # Set index columns and rank across groups
+        .set_index(["tide_model", "x", "y"])
+        .groupby(["x", "y"])
+        .rank()
+    )
+
+    # If no custom ensemble funcs are provided, use a default ensemble
+    # calculation that takes the mean of the top N tide models
+    if ensemble_func is None:
+        ensemble_func = {"ensemble": lambda x: x["rank"] <= ensemble_top_n}
+
+    # Create output list to hold computed ensemble model outputs
+    ensemble_list = []
+
+    # Loop through all provided ensemble generation functions
+    for ensemble_n, ensemble_f in ensemble_func.items():
+        print(f"Combining models into single {ensemble_n} model")
+
+        # Join ranks to input tide data, compute weightings and group
+        grouped = (
+            # Add tide model as an index so we can join with model ranks
+            tide_df.set_index("tide_model", append=True)
+            .join(ensemble_ranks_df)
+            # Add temp columns containing weightings and weighted values
+            .assign(
+                weights=ensemble_f,  # use custom func to compute weights
+                weighted=lambda i: i.tide_height * i.weights,
+            )
+            # Groupby is specified in a weird order here as this seems
+            # to be the easiest way to preserve correct index sorting
+            .groupby(["x", "y", "time"])
+        )
+
+        # Use weightings to combine multiple models into single ensemble
+        ensemble_df = (
+            # Calculate weighted mean and convert back to dataframe
+            grouped.weighted.sum()
+            .div(grouped.weights.sum())
+            .to_frame("tide_height")
+            # Label ensemble model and ensure indexes are in expected order
+            .assign(tide_model=ensemble_n)
+            .reorder_levels(["time", "x", "y"], axis=0)
+        )
+
+        ensemble_list.append(ensemble_df)
+
+    # Combine all ensemble models and return as a single dataframe
+    return pd.concat(ensemble_list)
+
+
 def model_tides(
     x: float | list[float] | xr.DataArray,
     y: float | list[float] | xr.DataArray,
@@ -387,7 +396,7 @@ def model_tides(
     extrapolate: bool = True,
     cutoff: float | None = None,
     crop: bool = True,
-    crop_buffer: float | None = None,
+    crop_buffer: float | None = 5,
     parallel: bool = True,
     parallel_splits: int | str = "auto",
     parallel_max: int | None = None,
@@ -431,9 +440,10 @@ def model_tides(
         datetime.datetime and strings (e.g. "2020-01-01 23:00").
         For example: `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
-        The tide model (or models) to use to model tides.
-        Defaults to "EOT20"; for a full list of available/supported
-        models, run `eo_tides.model.list_models`.
+        The tide model (or list of models) to use to model tides.
+        Defaults to "EOT20"; specify "all" to use all models available
+        in `directory`. For a full list of available and supported models,
+        run `eo_tides.model.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -483,18 +493,19 @@ def model_tides(
         valid tide modelling domain.
     crop : bool, optional
         Whether to crop tide model constituent files on-the-fly to
-        improve performance. Defaults to True; set `crop_buffer`
+        improve performance. Defaults to True; use `crop_buffer`
         to customise the buffer distance used to crop the files.
     crop_buffer : int or float, optional
         The buffer distance in degrees used to crop tide model
-        constituent files around the modelling area. Defaults to None,
-        which will apply a four model-domain pixel buffer.
+        constituent files around the modelling area. Defaults to 5,
+        which will crop constituents using a five degree buffer on either
+        side of the analysis extent.
     parallel : bool, optional
-        Whether to parallelise tide modelling using `concurrent.futures`.
-        If multiple tide models are requested, these will be run in
-        parallel. Optionally, tide modelling can also be run in parallel
-        across input x and y coordinates (see "parallel_splits" below).
-        Default is True.
+        Whether to parallelise tide modelling. If multiple tide models are
+        requested, these will be run in parallel using `concurrent.futures`.
+        If enough workers are available, the analysis will also be split
+        into spatial chunks for additional parallelisation (see "parallel_splits"
+        below). Default is True.
     parallel_splits : str or int, optional
         Whether to split the input x and y coordinates into smaller,
         evenly-sized chunks that are processed in parallel. This can
@@ -654,7 +665,7 @@ def model_tides(
 
     # Optionally compute ensemble model and add to dataframe
     if "ensemble" in models_requested:
-        ensemble_df = _ensemble_model(tide_df, crs, ensemble_models, **ensemble_kwargs)
+        ensemble_df = ensemble_tides(tide_df, crs, ensemble_models, **ensemble_kwargs)
 
         # Update requested models with any custom ensemble models, then
         # filter the dataframe to keep only models originally requested
@@ -718,9 +729,10 @@ def model_phases(
         datetime.datetime and strings (e.g. "2020-01-01 23:00").
         For example: `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
-        The tide model (or models) to use to compute tide phases.
-        Defaults to "EOT20"; for a full list of available/supported
-        models, run `eo_tides.model.list_models`.
+        The tide model (or list of models) to use to model tides.
+        Defaults to "EOT20"; specify "all" to use all models available
+        in `directory`. For a full list of available and supported models,
+        run `eo_tides.model.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
