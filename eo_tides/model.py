@@ -218,14 +218,14 @@ def ensemble_tides(
     This function performs the following steps:
     1. Takes a dataframe of tide heights from multiple tide models, as
        produced by `eo_tides.model.model_tides`
-    1. Loads model ranking points from an external file, filters them
+    2. Loads model ranking points from an external file, filters them
        based on the valid data percentage, and retains relevant columns
-    2. Interpolates the model rankings into the coordinates of the
+    3. Interpolates the model rankings into the coordinates of the
        original dataframe using Inverse Weighted Interpolation (IDW)
-    3. Uses rankings to combine multiple tide models into a single
+    4. Uses rankings to combine multiple tide models into a single
        optimised ensemble model (by default, by taking the mean of the
        top 3 ranked models)
-    4. Returns a new dataFrame with the combined ensemble model predictions
+    5. Returns a new dataFrame with the combined ensemble model predictions
 
     Parameters
     ----------
