@@ -49,6 +49,21 @@ The `ds` param in all satellite data functions (`tag_tides`, `pixel_tides`, `tid
     tag_tides(data=your_data)
     ```
 
+## `times` param renamed to `time`, accepts any format supported by `pandas.to_datetime()`
+
+The `times` parameter has been renamed to `time`, and updated to more flexibly accept any time format that can be converted by `pandas.to_datetime()`; e.g. `np.ndarray[datetime64]`, `pd.DatetimeIndex`, `pd.Timestamp`, `datetime.datetime` and strings (e.g. `"2020-01-01 23:00"`). For example: `time=pd.date_range(start="2000", end="2001", freq="5h")`.
+
+!!! tip "Action required"
+
+    Update:
+    ```
+    model_tides(..., times=...)
+    ```
+    To:
+    ```
+    model_tides(..., time=...)
+    ```
+
 ### `tag_tides` now returns an array instead of updating data in-place
 
 The `tag_tides` function now returns an `xarray.DataArray` output containing tide heights, rather than appending tide height data to the original input dataset in-place. This change provides better consistency with `pixel_tides`, which also returns an array of tide heights.

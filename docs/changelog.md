@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.3.2 (upcoming)
+
+### New features
+
+- Publishes ensemble tide modelling code for combining multiple global ocean tide models into a single locally optimised ensemble tide model using external model ranking data (e.g. satellite altimetry or NDWI-tide correlations along the coastline)
+  - Update ensemble code to latest version that includes FES2022, GOT5.6 and TPXO10
+  - Make ensemble model calculation function a top level function (i.e. rename from `_ensemble_model` to `ensemble_tides`)
+  - Load tide model ranking points from external flatgeobuff format file for faster cloud access
+- Make buffer distance applied when cropping model files configurable via the `crop_buffer` param, with a default of 5 degrees
+- Reorder `model_tides` params to provide more logical flow and move more common params like `mode`, `output_format` and `output_units` higher
+
+### Bug fixes
+
+- Fix warnings from `load_gauge_gesla` function
+
 ## v0.3.1 (2024-11-15)
 
 ### New features
