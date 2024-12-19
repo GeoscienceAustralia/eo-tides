@@ -779,7 +779,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2.0" },
     { name = "planetary-computer", marker = "extra == 'notebooks'", specifier = ">=1.0.0" },
     { name = "psutil", specifier = ">=5.8.0" },
-    { name = "pyogrio", specifier = ">=0.6.0" },
+    { name = "pyogrio", specifier = ">=0.7.0" },
     { name = "pyproj", specifier = ">=3.6.1" },
     { name = "pystac-client", marker = "extra == 'notebooks'", specifier = ">=0.8.3" },
     { name = "pytmd", specifier = "==2.1.8" },
