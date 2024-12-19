@@ -216,6 +216,7 @@ def ensemble_tides(
     to inform the selection of the best local models.
 
     This function performs the following steps:
+
     1. Takes a dataframe of tide heights from multiple tide models, as
        produced by `eo_tides.model.model_tides`
     2. Loads model ranking points from an external file, filters them

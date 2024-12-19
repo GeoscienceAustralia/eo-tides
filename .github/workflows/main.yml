@@ -54,13 +54,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
           resolution: ${{ matrix.resolution }}
 
-      # - name: Check gdal version
-      #   run: uv run gdalinfo --format GTiff
-
       - name: Run Python unit tests
+        timeout-minutes: 10
         run: uv run python -m pytest tests --cov --cov-config=pyproject.toml --cov-report=xml --verbose
 
       - name: Run Jupyter Notebook integration tests
+        timeout-minutes: 10
         run: uv run python -m pytest --nbval-lax docs/notebooks/
 
       - name: Check typing
