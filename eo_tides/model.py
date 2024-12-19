@@ -226,7 +226,7 @@ def ensemble_tides(
     4. Uses rankings to combine multiple tide models into a single
        optimised ensemble model (by default, by taking the mean of the
        top 3 ranked models)
-    5. Returns a new dataFrame with the combined ensemble model predictions
+    5. Returns a new dataframe with the combined ensemble model predictions
 
     Parameters
     ----------
