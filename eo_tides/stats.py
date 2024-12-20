@@ -146,7 +146,8 @@ def _stats_figure(
             marker="o",
             linewidth=0.0,
             color="black" if point_col is None else point_col,
-            markersize=4,
+            markeredgecolor="black",
+            markeredgewidth=0.6,
             label="Satellite observations",
         )
 

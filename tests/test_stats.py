@@ -68,6 +68,36 @@ def test_tidal_stats_models(satellite_ds, models):
         assert isinstance(tidal_stats_df, pd.Series)
 
 
+# Test if plotting a custom variable runs without errors
+def test_tide_stats_plotvar(satellite_ds):
+    # Test on custom coordinate
+    satellite_ds_withcoords = satellite_ds.assign_coords(coord=("time", [1, 1, 2, 2, 3, 4, 5]))
+    tide_stats(
+        satellite_ds_withcoords,
+        plot_var="coord",
+    )
+
+    # Test on custom data variable
+    satellite_ds_withvar = satellite_ds.assign(var=("time", [1, 1, 2, 2, 3, 4, 5]))
+    tide_stats(
+        satellite_ds_withvar,
+        plot_var="var",
+    )
+
+    # Test configuring color when plotting variable
+    tide_stats(
+        satellite_ds_withvar,
+        plot_var="var",
+        point_col="red",
+    )
+
+    # Test when not plotting variable
+    tide_stats(
+        satellite_ds_withvar,
+        point_col="red",
+    )
+
+
 # Run test for multiple models and with resampling on and off
 @pytest.mark.parametrize(
     "models, resample",
