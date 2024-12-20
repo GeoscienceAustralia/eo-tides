@@ -10,17 +10,20 @@ GAUGE_Y = -18.0008
 
 # Run test for multiple modelled frequencies
 @pytest.mark.parametrize(
-    "modelled_freq",
+    "modelled_freq, tidepost_lon, tidepost_lat",
     [
-        ("2h"),  # Model tides every two hours
-        ("120min"),  # Model tides every 120 minutes
+        ("2h", None, None),  # Model tides every two hours
+        ("120min", None, None),  # Model tides every 120 minutes
+        ("2h", 122.218, -18.001),  # Custom tidepost
     ],
 )
-def test_tidal_stats(satellite_ds, modelled_freq):
+def test_tidal_stats(satellite_ds, modelled_freq, tidepost_lon, tidepost_lat):
     # Calculate tidal stats
     tidal_stats_df = tide_stats(
         satellite_ds,
         modelled_freq=modelled_freq,
+        tidepost_lon=tidepost_lon,
+        tidepost_lat=tidepost_lat,
     )
 
     # Compare outputs to expected results (within 2% or 0.02 m)
@@ -39,7 +42,7 @@ def test_tidal_stats(satellite_ds, modelled_freq):
         "x": 122.218,
         "y": -18.001,
     })
-    assert np.allclose(tidal_stats_df, expected_results, atol=0.01)
+    assert np.allclose(tidal_stats_df, expected_results, atol=0.02)
 
 
 # Run test for one or multiple model inputs
