@@ -101,6 +101,7 @@ def _pixel_tides_resample(
     resample_method="bilinear",
     dask_chunks=None,
     dask_compute=True,
+    name="tide_height",
 ):
     """Resamples low resolution tides modelled by `pixel_tides` into the
     geobox (e.g. spatial resolution and extent) of the original higher
@@ -125,6 +126,8 @@ def _pixel_tides_resample(
         Whether to compute results of the resampling step using Dask.
         If False, this will return `tides_highres` as a lazy loaded
         Dask-enabled array.
+    name : str, optional
+        The name used for the output array. Defaults to "tide_height".
 
     Returns
     -------
@@ -145,7 +148,11 @@ def _pixel_tides_resample(
         how=gbox,
         chunks=dask_chunks,
         resampling=resample_method,
-    ).rename("tide_height")
+    )
+
+    # Set output name
+    if name is not None:
+        tides_highres = tides_highres.rename(name)
 
     # Optionally process and load into memory with Dask
     if dask_compute:
@@ -373,7 +380,7 @@ def pixel_tides(
         `data` has a geographic CRS (e.g. degree units).
     resample_method : str, optional
         If resampling is requested (see `resample` above), use this
-        resampling method when converting from low resolution to high
+        resampling method when resampling from low resolution to high
         resolution pixels. Defaults to "bilinear"; valid options include
         "nearest", "cubic", "min", "max", "average" etc.
     dask_chunks : tuple of float, optional
@@ -385,7 +392,7 @@ def pixel_tides(
         `(2048, 2048)`.
     dask_compute : bool, optional
         Whether to compute results of the resampling step using Dask.
-        If False, `tides_highres` will be returned as a Dask array.
+        If False, `tides_highres` will be returned as a Dask-enabled array.
     **model_tides_kwargs :
         Optional parameters passed to the `eo_tides.model.model_tides`
         function. Important parameters include `cutoff` (used to

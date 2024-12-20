@@ -21,7 +21,7 @@ import pyproj
 import pyTMD
 from tqdm import tqdm
 
-from .utils import DatetimeLike, _set_directory, _standardise_models, _standardise_time, idw, list_models
+from .utils import DatetimeLike, _set_directory, _standardise_models, _standardise_time, idw
 
 
 def _parallel_splits(
@@ -486,7 +486,7 @@ def model_tides(
         - "spline": scipy bivariate spline interpolation
         - "bilinear": quick bilinear interpolation
     extrapolate : bool, optional
-        Whether to extrapolate tides for x and y coordinates outside of
+        Whether to extrapolate tides into x and y coordinates outside of
         the valid tide modelling domain using nearest-neighbor.
     cutoff : float, optional
         Extrapolation cutoff in kilometers. The default is None, which
@@ -544,7 +544,7 @@ def model_tides(
     time = _standardise_time(time)
 
     # Validate input arguments
-    assert time is not None, "Times for modelling tides muyst be provided via `time`."
+    assert time is not None, "Times for modelling tides must be provided via `time`."
     assert method in ("bilinear", "spline", "linear", "nearest")
     assert output_units in (
         "m",
@@ -555,6 +555,8 @@ def model_tides(
         "long",
         "wide",
     ), "Output format must be either 'long' or 'wide'."
+    assert np.issubdtype(x.dtype, np.number), "`x` must contain only valid numeric values, and must not be None."
+    assert np.issubdtype(y.dtype, np.number), "`y` must contain only valid numeric values, and must not be None.."
     assert len(x) == len(y), "x and y must be the same length."
     if mode == "one-to-one":
         assert len(x) == len(time), (
