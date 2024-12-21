@@ -1,6 +1,6 @@
 [project]
 name = "eo-tides"
-version = "0.3.1"
+version = "0.4.0"
 description = "Tide modelling tools for large-scale satellite earth observation analysis"
 authors = [
     { name = "Robbi Bishop-Taylor" },

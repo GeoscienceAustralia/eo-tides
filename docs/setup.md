@@ -195,7 +195,7 @@ Follow the guides below for some of the most commonly used global ocean tide mod
     ### TPXO Global Tidal Models
 
     1. Visit [TPXO Registration](https://www.tpxo.net/tpxo-products-and-registration)
-    2. Follow instructions to email TPXO authors for access, providing your name, institution, your intended application/use case, and which TPXO models you need ("TPXO10-atlas-v2 netcdf" or "TPXO9-atlas-v5 netcdf" are recommended to [enable clipping](#Clipping-model-files-to-improve-performance)).
+    2. Follow instructions to email TPXO authors for access, providing your name, institution, your intended application/use case, and which TPXO models you need ("TPXO10-atlas-v2 netcdf" or "TPXO9-atlas-v5 netcdf" are recommended to [enable clipping](#clipping-model-files-to-improve-performance)).
     3. If your request is approved, you will be emailed an invite to an app.box.com folder. Open this link, then click "Download" on the top-right to download your zipped model files.
 
         ![image](assets/tpxo_download.jpg)
