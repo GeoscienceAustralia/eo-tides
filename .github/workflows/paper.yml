@@ -7,6 +7,10 @@ on:
     paths:
       - paper/**
       - .github/workflows/paper.yml
+  pull_request:
+    paths:
+      - paper/**
+      - .github/workflows/paper.yml
 
 jobs:
   paper:
