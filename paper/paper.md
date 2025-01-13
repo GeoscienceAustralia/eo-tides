@@ -74,7 +74,7 @@ Table: An example benchmark comparison of tide modelling performance with parall
 
 | Cores | Parallelisation   | No parallelisation | Speedup |
 | ----- | ----------------- | ------------------ | ------- |
-| 8     | 2min 46s ± 663 ms | 9min 28s ± 536 ms  | 3.4x   |
+| 8     | 2min 46s ± 663 ms | 9min 28s ± 536 ms  | 3.4x    |
 | 32    | 54.2 s ± 276 ms   | 9min 24s ± 1.51 s  | 10.4x   |
 
 The `model_tides` function is primarily intended to support more complex EO-related tide modelling functionality in the downstream `eo_tides.eo` module. However it can also be used independently of EO data, for example for any application that requires a time series of modelled tide heights. In addition to modelling tide heights, the `model_phases` function can also be used to calculate the phase of the tide at any location and time. This can be used to classify tides into high and low tide observations, or determine whether the tide was rising (i.e. flow tide) or falling (i.e. ebb tide) — information that can be critical for correctly interpreting satellite-observed coastal processes like changing turbidity and ocean colour (@sent2025time).
