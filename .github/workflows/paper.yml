@@ -28,12 +28,3 @@ jobs:
           # Note, this should be the same directory as the input
           # paper.md
           path: paper/paper.pdf
-  upload:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Post comment
-        uses: live-codes/pr-comment-from-artifact@v1
-        with:
-          GITHUB_TOKEN: ${{ github.token }}  
