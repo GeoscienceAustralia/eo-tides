@@ -30,7 +30,7 @@ affiliations:
   - name: University of Washington Applied Physics Laboratory, United States of America
     index: 2
     ror: 03d17d270
-date: 27 November 2024
+date: 14 January 2025
 bibliography: paper.bib
 ---
 
@@ -48,7 +48,7 @@ Tools from `eo-tides` are designed to be applied directly to petabytes of freely
 
 Satellite remote sensing offers an unparalleled method to view and examine dynamic coastal environments over large temporal and spatial scales [@turner2021satellite; @vitousek2023future]. However, the variable and sometimes extreme influence of ocean tides in these regions can complicate analyses, making it difficult to separate the influence of changing tides from patterns of true coastal change over time [@vos2019coastsat]. This is a particularly significant challenge for continental- to global-scale coastal EO analyses, where failing to account for complex tide dynamics can lead to inaccurate or misleading insights into coastal processes observed by satellites.
 
-Conversely, information about ocean tides can also provide unique environmental insights that can greatly enhance the utility of coastal EO data. Conventionally, satellite data dimensions consider the geographical "where" and the temporal "when" of data acquisition. The addition of tide height as a new analysis dimension allows data to be filtered, sorted and analysed with respect to tidal processes, delivering a powerful re-imagining of traditional multi-temporal EO data analysis [@sagar2017item]. For example, satellite data can be analysed to focus on specific ecologically-significant tidal stages (e.g. high, low tide, spring or neap tides) or on particular tidal processes (e.g. ebb or flow tides).
+Conversely, information about ocean tides can also provide unique environmental insights that can greatly enhance the utility of coastal EO data. Conventionally, satellite data dimensions consider the geographical "where" and the temporal "when" of data acquisition. The addition of tide height as a new analysis dimension allows data to be filtered, sorted and analysed with respect to tidal processes, delivering a powerful re-imagining of traditional multi-temporal EO data analysis [@sagar2017item]. For example, satellite data can be analysed to focus on specific ecologically-significant tidal stages (e.g. high, low tide, spring or neap tides) or on particular tidal processes (e.g. ebb or flow tides; @sent2025time).
 
 This concept has been used to map tidally-corrected annual coastlines from Landsat satellite data at continental scale [@bishop2021mapping], generate maps of the extent and elevation of the intertidal zone [@murray2012continental; @sagar2017item; @bishop2019NIDEM], and create tidally-constrained imagery composites of the coastline at low and high tide [@sagar2018composites]. However, these approaches have been historically based on bespoke, closed-source or difficult to install tide modelling tools, limiting the reproducibility and portability of these techniques to new coastal EO applications. To support the next generation of coastal EO workflows, there is a pressing need for new open-source approaches for combining satellite data with tide modelling.
 
@@ -72,12 +72,12 @@ To support integration with satellite EO data, the `model_tides` function from `
 
 Table: An example benchmark comparison of tide modelling performance with parallelisation on vs. off. This comparison was performed across an 8-core and 32-core Linux machine, for a typical large-scale analysis involving a month of hourly tides modelled using three tide models (FES2022, TPXO10, GOT5.6) at 10,000 modelling locations. \label{tab:benchmark}
 
-| Cores | Parallelisation  | No parallelisation | Speedup |
-| ----- | ---------------- | ------------------ | ------- |
-| 8     | 180.2 s ± 119 ms | 357.4 s ± 235 ms   | 2.3x    |
-| 32    | 54.2 s ± 276 ms  | 9min 24s ± 1.51 s  | 10.4x   |
+| Cores | Parallelisation   | No parallelisation | Speedup |
+| ----- | ----------------- | ------------------ | ------- |
+| 8     | 2min 46s ± 663 ms |    |     |
+| 32    | 54.2 s ± 276 ms   | 9min 24s ± 1.51 s  | 10.4x   |
 
-The `model_tides` function is primarily intended to support more complex EO-related tide modelling functionality in the downstream `eo_tides.eo` module. However it can also be used independently of EO data, for example for any application that requires a time series of modelled tide heights. In addition to modelling tide heights, the `model_phases` function allows users to calculate tidal phases at any location and time. This can be used to classify tides into high and low tide observations, or determine whether the tide was rising (i.e. flow tide) or falling (i.e. ebb tide) at any point in time.
+The `model_tides` function is primarily intended to support more complex EO-related tide modelling functionality in the downstream `eo_tides.eo` module. However it can also be used independently of EO data, for example for any application that requires a time series of modelled tide heights. In addition to modelling tide heights, the `model_phases` function can also be used to calculate the phase of the tide at any location and time. This can be used to classify tides into high and low tide observations, or determine whether the tide was rising (i.e. flow tide) or falling (i.e. ebb tide) — information that can be critical for correctly interpreting satellite-observed coastal processes like changing turbidity patterns (@sent2025time).
 
 ## Combining tides with satellite data
 
@@ -119,7 +119,7 @@ The `eo_tides.validation` module contains tools for validating modelled tides ag
 
 Validation functionality in `eo-tides` provides a convenient tool for loading high-quality sea-level measurements from the GESLA Global Extreme Sea Level Analysis [@GESLAv3] archive – a global dataset of almost 90,713 years of sea level data from 5,119 records across the world. The `load_gauge_gesla` function allows GESLA data to be loaded for the same location and time period as a satellite time series. Differences between modelled and observed tide heights can then be quantified through the calculation of accuracy statistics that include the Root Mean Square Error (RMSE), Mean Absolute Error (MAE), R-squared and bias (\autoref{fig:gesla}).
 
-Furthermore, different ocean tide models perform differently in different coastal locations. `eo-tides` allows multiple tide models to be compared against GESLA data simultaneously (\autoref{fig:gesla}), empowering users to make informed decisions and choose the optimal tide model that best suits their specific location or application.
+Furthermore, different ocean tide models perform differently in different coastal locations. `eo-tides` allows multiple tide models to be compared against GESLA data simultaneously (\autoref{fig:gesla}), empowering users to make informed decisions and choose the optimal tide models for their specific location or application.
 
 ![An example comparison of modelled tides from multiple global ocean tide models (EOT20, GOT5.5, HAMTIDE11) against observed sea level data from the Broome 62650 GESLA tide gauge, Western Australia.\label{fig:gesla}](figures/joss_fig_gesla.png)
 
