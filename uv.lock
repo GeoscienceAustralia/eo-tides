@@ -718,7 +718,7 @@ wheels = [
 
 [[package]]
 name = "eo-tides"
-version = "0.3.1"
+version = "0.4.0"
 source = { editable = "." }
 dependencies = [
     { name = "colorama" },
@@ -728,6 +728,7 @@ dependencies = [
     { name = "odc-geo" },
     { name = "pandas" },
     { name = "psutil" },
+    { name = "pyogrio" },
     { name = "pyproj" },
     { name = "pytmd" },
     { name = "scikit-learn" },
@@ -778,9 +779,10 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2.0" },
     { name = "planetary-computer", marker = "extra == 'notebooks'", specifier = ">=1.0.0" },
     { name = "psutil", specifier = ">=5.8.0" },
+    { name = "pyogrio", specifier = ">=0.7.0" },
     { name = "pyproj", specifier = ">=3.6.1" },
     { name = "pystac-client", marker = "extra == 'notebooks'", specifier = ">=0.8.3" },
-    { name = "pytmd", specifier = "==2.1.8" },
+    { name = "pytmd", specifier = "==2.2.0" },
     { name = "scikit-learn", specifier = ">=1.4.0" },
     { name = "scipy", specifier = ">=1.11.2" },
     { name = "shapely", specifier = ">=2.0.6" },
@@ -2723,7 +2725,7 @@ wheels = [
 
 [[package]]
 name = "pytmd"
-version = "2.1.8"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lxml" },
@@ -2735,9 +2737,9 @@ dependencies = [
     { name = "setuptools-scm" },
     { name = "timescale" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/98/c6/2c07b885cd62a8198d98bfb090d5a2fc7be86739f6d1d9f51a026cf4faec/pytmd-2.1.8.tar.gz", hash = "sha256:2bfd5e8428843937c6fbcf0fb023221f049ef4af8475a736d17e5736f4f890dc", size = 6356387 }
+sdist = { url = "https://files.pythonhosted.org/packages/89/4d/a9984a6e590961c631289be0b05a7336ec0aafb390493b0b378143ad04ef/pytmd-2.2.0.tar.gz", hash = "sha256:b18aba6d2d78e69a17b3cf1937acc5524e8795af250e29585c920a5443c4af7d", size = 6354754 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fc/bc/49378fc92b8427a7569ea7ca5235da191cf85719fc50aba23499590c8cb4/pyTMD-2.1.8-py3-none-any.whl", hash = "sha256:300537e50569f00e6b4b61618bee82fab26898ea0a939632c9cd1e08cb55797b", size = 6457745 },
+    { url = "https://files.pythonhosted.org/packages/03/8f/48d5b64a0c6555becc89e76f3be5985e645dde754432d99848d9899f878c/pyTMD-2.2.0-py3-none-any.whl", hash = "sha256:7f727a138a9b7028ca12e033e99f406688ab9f013e6e9f7a78bff48d4393c184", size = 6456124 },
 ]
 
 [[package]]

@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.4.0
+
+### New features
+
+- Publishes ensemble tide modelling code for combining multiple global ocean tide models into a single locally optimised ensemble tide model using external model ranking data (e.g. satellite altimetry or NDWI-tide correlations along the coastline).
+
+  - Update ensemble code to latest version that includes FES2022, GOT5.6 and TPXO10 tide models
+  - Make ensemble model calculation function a top level function (i.e. rename from `_ensemble_model` to `ensemble_tides`)
+  - Load tide model ranking points from external `flatgeobuf` format file for faster cloud access
+
+- Major refactor to statistics functions to standardise code across both `pixel_stats` and `tide_stats` and add support for multiple models
+
+  - `tide_stats` will now return a `pandas.Series` if one model is requested, and a `pandas.DataFrame` if multiple are requested
+  - Added a new `point_col` parameter to `tide_stats` to control the colour of plotted points. If `plot_var` is also provided, points will now be coloured differently by default.
+
+- Added a new `crop_buffer` parameter to configure buffer distance when cropping model files with `crop=True` (defaults to 5 degrees)
+- Reorder `model_tides` parameters to provide more logical flow and move more common params like `mode`, `output_format` and `output_units` higher
+
+### Bug fixes
+
+- Fix warnings from `load_gauge_gesla` function
+
+### Breaking changes
+
+- The `plot_col` parameter from `tide_stats` has been renamed to `plot_var`
+
 ## v0.3.1 (2024-11-15)
 
 ### New features

@@ -39,7 +39,7 @@ def _resample_chunks(
         return data.shape
 
     # if data has chunks, then return just spatial chunks
-    if data.chunks is not None:
+    if data.chunks:
         y_dim, x_dim = data.odc.spatial_dims
         return data.chunks[y_dim], data.chunks[x_dim]
 
@@ -101,6 +101,7 @@ def _pixel_tides_resample(
     resample_method="bilinear",
     dask_chunks=None,
     dask_compute=True,
+    name="tide_height",
 ):
     """Resamples low resolution tides modelled by `pixel_tides` into the
     geobox (e.g. spatial resolution and extent) of the original higher
@@ -125,6 +126,8 @@ def _pixel_tides_resample(
         Whether to compute results of the resampling step using Dask.
         If False, this will return `tides_highres` as a lazy loaded
         Dask-enabled array.
+    name : str, optional
+        The name used for the output array. Defaults to "tide_height".
 
     Returns
     -------
@@ -145,7 +148,11 @@ def _pixel_tides_resample(
         how=gbox,
         chunks=dask_chunks,
         resampling=resample_method,
-    ).rename("tide_height")
+    )
+
+    # Set output name
+    if name is not None:
+        tides_highres = tides_highres.rename(name)
 
     # Optionally process and load into memory with Dask
     if dask_compute:
@@ -197,10 +204,12 @@ def tag_tides(
         that can be converted by `pandas.to_datetime()`. For example:
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
-        The tide model (or models) used to model tides. If a list is
-        provided, a new "tide_model" dimension will be added to the
-        `xarray.DataArray` outputs. Defaults to "EOT20"; for a full
-        list of available/supported models, run `eo_tides.utils.list_models`.
+        The tide model (or list of models) to use to model tides.
+        If a list is provided, a new "tide_model" dimension will be
+        added to the `xarray.DataArray` outputs. Defaults to "EOT20";
+        specify "all" to use all models available in `directory`.
+        For a full list of available and supported models, run
+        `eo_tides.utils.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -326,10 +335,12 @@ def pixel_tides(
         that can be converted by `pandas.to_datetime()`. For example:
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
-        The tide model (or models) used to model tides. If a list is
-        provided, a new "tide_model" dimension will be added to the
-        `xarray.DataArray` outputs. Defaults to "EOT20"; for a full
-        list of available/supported models, run `eo_tides.utils.list_models`.
+        The tide model (or list of models) to use to model tides.
+        If a list is provided, a new "tide_model" dimension will be
+        added to the `xarray.DataArray` outputs. Defaults to "EOT20";
+        specify "all" to use all models available in `directory`.
+        For a full list of available and supported models, run
+        `eo_tides.utils.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -369,7 +380,7 @@ def pixel_tides(
         `data` has a geographic CRS (e.g. degree units).
     resample_method : str, optional
         If resampling is requested (see `resample` above), use this
-        resampling method when converting from low resolution to high
+        resampling method when resampling from low resolution to high
         resolution pixels. Defaults to "bilinear"; valid options include
         "nearest", "cubic", "min", "max", "average" etc.
     dask_chunks : tuple of float, optional
@@ -381,7 +392,7 @@ def pixel_tides(
         `(2048, 2048)`.
     dask_compute : bool, optional
         Whether to compute results of the resampling step using Dask.
-        If False, `tides_highres` will be returned as a Dask array.
+        If False, `tides_highres` will be returned as a Dask-enabled array.
     **model_tides_kwargs :
         Optional parameters passed to the `eo_tides.model.model_tides`
         function. Important parameters include `cutoff` (used to

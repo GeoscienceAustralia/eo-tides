@@ -1,6 +1,6 @@
 [project]
 name = "eo-tides"
-version = "0.3.1"
+version = "0.4.0"
 description = "Tide modelling tools for large-scale satellite earth observation analysis"
 authors = [
     { name = "Robbi Bishop-Taylor" },
@@ -43,8 +43,9 @@ dependencies = [
     "odc-geo>=0.4.7",
     "pandas>=2.2.0",
     "psutil>=5.8.0",
+    "pyogrio>=0.7.0",
     "pyproj>=3.6.1",
-    "pyTMD==2.1.8",
+    "pyTMD==2.2.0",
     "scikit-learn>=1.4.0",
     "scipy>=1.11.2",
     "shapely>=2.0.6",
@@ -117,6 +118,7 @@ preview = true
 [tool.deptry.per_rule_ignores]
 DEP002 = [
     "folium",
+    "pyogrio",
 ]
 
 [tool.coverage.report]

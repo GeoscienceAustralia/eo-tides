@@ -10,66 +10,98 @@ GAUGE_Y = -18.0008
 
 # Run test for multiple modelled frequencies
 @pytest.mark.parametrize(
-    "modelled_freq",
+    "modelled_freq, tidepost_lon, tidepost_lat",
     [
-        ("2h"),  # Model tides every two hours
-        ("120min"),  # Model tides every 120 minutes
+        ("2h", None, None),  # Model tides every two hours
+        ("120min", None, None),  # Model tides every 120 minutes
+        ("2h", 122.218, -18.001),  # Custom tidepost
     ],
 )
-def test_tidal_stats(satellite_ds, modelled_freq):
+def test_tidal_stats(satellite_ds, modelled_freq, tidepost_lon, tidepost_lat):
     # Calculate tidal stats
     tidal_stats_df = tide_stats(
         satellite_ds,
         modelled_freq=modelled_freq,
+        tidepost_lon=tidepost_lon,
+        tidepost_lat=tidepost_lat,
     )
 
     # Compare outputs to expected results (within 2% or 0.02 m)
     expected_results = pd.Series({
-        "tidepost_lat": -18.001,
-        "tidepost_lon": 122.218,
-        "observed_mean_m": -0.417,
-        "all_mean_m": -0.005,
-        "observed_min_m": -2.141,
-        "all_min_m": -4.321,
-        "observed_max_m": 1.674,
-        "all_max_m": 4.259,
-        "observed_range_m": 3.814,
-        "all_range_m": 8.580,
+        "mot": -0.417,
+        "mat": -0.005,
+        "hot": 1.674,
+        "hat": 4.259,
+        "lot": -2.141,
+        "lat": -4.321,
+        "otr": 3.814,
+        "tr": 8.580,
         "spread": 0.445,
-        "low_tide_offset": 0.254,
-        "high_tide_offset": 0.301,
+        "offset_low": 0.254,
+        "offset_high": 0.301,
+        "x": 122.218,
+        "y": -18.001,
     })
     assert np.allclose(tidal_stats_df, expected_results, atol=0.02)
 
-    # Test linear regression
-    tidal_stats_linreg_df = tide_stats(
+
+# Run test for one or multiple model inputs
+@pytest.mark.parametrize(
+    "models",
+    [
+        (["EOT20"]),
+        (["EOT20", "GOT5.5"]),
+    ],
+)
+def test_tidal_stats_models(satellite_ds, models):
+    # Calculate tidal stats
+    tidal_stats_df = tide_stats(
         satellite_ds,
-        modelled_freq=modelled_freq,
-        linear_reg=True,
+        model=models,
     )
 
-    # Compare outputs to expected results (within 2% or 0.02 m)
-    expected_results = pd.Series({
-        "tidepost_lat": -18.001,
-        "tidepost_lon": 122.218,
-        "observed_mean_m": -0.417,
-        "all_mean_m": -0.005,
-        "observed_min_m": -2.141,
-        "all_min_m": -4.321,
-        "observed_max_m": 1.674,
-        "all_max_m": 4.259,
-        "observed_range_m": 3.814,
-        "all_range_m": 8.580,
-        "spread": 0.445,
-        "low_tide_offset": 0.254,
-        "high_tide_offset": 0.301,
-        "observed_slope": 6.952,
-        "observed_pval": 0.573,
-    })
-    assert np.allclose(tidal_stats_linreg_df, expected_results, atol=0.02)
+    # If multiple models, verify data is a pandas.DataFrame with expected rows
+    if len(models) > 1:
+        assert isinstance(tidal_stats_df, pd.DataFrame)
+        assert len(tidal_stats_df.index) == len(models)
+        assert models == tidal_stats_df.index.get_level_values("tide_model").tolist()
+
+    # If just one, verify data is a pandas.Series
+    else:
+        assert isinstance(tidal_stats_df, pd.Series)
 
 
-# Run test for multiple modelled frequencies
+# Test if plotting a custom variable runs without errors
+def test_tide_stats_plotvar(satellite_ds):
+    # Test on custom coordinate
+    satellite_ds_withcoords = satellite_ds.assign_coords(coord=("time", [1, 1, 2, 2, 3, 4, 5]))
+    tide_stats(
+        satellite_ds_withcoords,
+        plot_var="coord",
+    )
+
+    # Test on custom data variable
+    satellite_ds_withvar = satellite_ds.assign(var=("time", [1, 1, 2, 2, 3, 4, 5]))
+    tide_stats(
+        satellite_ds_withvar,
+        plot_var="var",
+    )
+
+    # Test configuring color when plotting variable
+    tide_stats(
+        satellite_ds_withvar,
+        plot_var="var",
+        point_col="red",
+    )
+
+    # Test when not plotting variable
+    tide_stats(
+        satellite_ds_withvar,
+        point_col="red",
+    )
+
+
+# Run test for multiple models and with resampling on and off
 @pytest.mark.parametrize(
     "models, resample",
     [
@@ -89,7 +121,7 @@ def test_pixel_stats(satellite_ds, models, resample):
     assert stats_ds.odc.spatial_dims == satellite_ds.odc.spatial_dims
 
     # Verify vars are as expected
-    expected_vars = ["hat", "hot", "lat", "lot", "otr", "tr", "spread", "offset_low", "offset_high"]
+    expected_vars = ["mot", "mat", "hot", "hat", "lot", "lat", "otr", "tr", "spread", "offset_low", "offset_high"]
     assert set(expected_vars) == set(stats_ds.data_vars)
 
     # Verify tide models are correct
