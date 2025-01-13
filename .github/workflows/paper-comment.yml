@@ -2,7 +2,7 @@ name: Comment on pull request
 
 on:
   workflow_run:
-    workflows: ["paper"] # the workflow that created the artifact
+    workflows: ["Draft paper PDF"] # the workflow that created the artifact
     types:
       - completed
 
