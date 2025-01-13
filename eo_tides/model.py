@@ -422,7 +422,7 @@ def model_tides(
     model : str or list of str, optional
         The tide model (or models) to use to model tides.
         Defaults to "EOT20"; for a full list of available/supported
-        models, run `eo_tides.model.list_models`.
+        models, run `eo_tides.utils.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -704,7 +704,7 @@ def model_phases(
     model : str or list of str, optional
         The tide model (or models) to use to compute tide phases.
         Defaults to "EOT20"; for a full list of available/supported
-        models, run `eo_tides.model.list_models`.
+        models, run `eo_tides.utils.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable

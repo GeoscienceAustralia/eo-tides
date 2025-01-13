@@ -184,7 +184,7 @@ def tide_stats(
     model : str, optional
         The tide model to use to model tides. Defaults to "EOT20";
         for a full list of available/supported models, run
-        `eo_tides.model.list_models`.
+        `eo_tides.utils.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -453,7 +453,7 @@ def pixel_stats(
         The tide model (or models) to use to model tides. If a list is
         provided, a new "tide_model" dimension will be added to `data`.
         Defaults to "EOT20"; for a full list of available/supported
-        models, run `eo_tides.model.list_models`.
+        models, run `eo_tides.utils.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable

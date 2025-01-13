@@ -200,7 +200,7 @@ def tag_tides(
         The tide model (or models) used to model tides. If a list is
         provided, a new "tide_model" dimension will be added to the
         `xarray.DataArray` outputs. Defaults to "EOT20"; for a full
-        list of available/supported models, run `eo_tides.model.list_models`.
+        list of available/supported models, run `eo_tides.utils.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -329,7 +329,7 @@ def pixel_tides(
         The tide model (or models) used to model tides. If a list is
         provided, a new "tide_model" dimension will be added to the
         `xarray.DataArray` outputs. Defaults to "EOT20"; for a full
-        list of available/supported models, run `eo_tides.model.list_models`.
+        list of available/supported models, run `eo_tides.utils.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
