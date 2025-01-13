@@ -30,8 +30,8 @@ jobs:
           path: paper/paper.pdf
       - name: Post comment
         uses: live-codes/pr-comment-from-artifact@v1
-        if: >
-          github.event.workflow_run.event == 'pull_request' &&
-          github.event.workflow_run.conclusion == 'success'
+        # if: >
+        #   github.event.workflow_run.event == 'pull_request' &&
+        #   github.event.workflow_run.conclusion == 'success'
         with:
           GITHUB_TOKEN: ${{ github.token }}
