@@ -66,7 +66,7 @@ These tools are accompanied by comprehensive documentation explaining [how to se
 
 ## Modelling tides
 
-The [`eo_tides.model`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.model) module is powered by advanced tide modelling functionality from the `pyTMD` Python package [@pytmd]. 
+The [`eo_tides.model`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.model) module is powered by advanced tide modelling functionality from the `pyTMD` Python package [@pytmd].
 
 `pyTMD` is an open-source tidal prediction software that aims to simplify the calculation of ocean and earth tides. Tides are frequently decomposed into harmonic constants (or constituents) associated with the relative positions of the sun, moon and Earth. For ocean tides, `pyTMD.io` contains routines for reading major constituent values from commonly available tide models, and interpolating those values to spatial locations. Information for each of the supported tide models is stored within a JSON database that is supplied with `pyTMD`. `pyTMD.astro` contains routines for computing the positions of celestial bodies for a given time. Namely for ocean tides, `pyTMD` computes the longitudes of the sun (S), moon (H), lunar perigree (P), ascending lunar node (N) and solar perigree (PP). `pyTMD.arguments` contains routines for combining the astronomical coefficients with the "Doodson number" of each constituent, along with routines for adjusting the amplitude and phase of each constituent based on their modulations over the 18.6 year nodal period. Finally, `pyTMD.predict` uses results from those underlying functions to predict tidal values at a given location and time.
 
