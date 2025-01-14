@@ -1,6 +1,6 @@
 # `eo-tides`: Tide modelling tools for large-scale satellite earth observation analysis
 
-<img align="right" width="200" src="https://github.com/GeoscienceAustralia/eo-tides/blob/main/docs/assets/eo-tides-logo.gif?raw=true" alt="eo-tides logo" style="margin-right: 40px;">
+<img align="right" width="180" src="https://github.com/GeoscienceAustralia/eo-tides/blob/main/docs/assets/eo-tides-logo.gif?raw=true" alt="eo-tides logo" style="margin-right: 40px;">
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
 [![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/main.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/main.yml?query=branch%3Amain)
@@ -12,7 +12,9 @@
 - 📘 **Documentation**: <https://GeoscienceAustralia.github.io/eo-tides/>
 - 🐍 **PyPI**: <https://pypi.org/project/eo-tides/>
 
-`eo-tides` provides powerful parallelized tools for integrating satellite Earth observation data with tide modelling. 🛠️🌊🛰️
+<br>
+
+**`eo-tides` provides powerful parallelized tools for integrating satellite Earth observation data with tide modelling. 🛠️🌊🛰️**
 
 `eo-tides` combines advanced tide modelling functionality from the [`pyTMD`](https://pytmd.readthedocs.io/en/latest/) package with [`pandas`](https://pandas.pydata.org/docs/index.html), [`xarray`](https://docs.xarray.dev/en/stable/) and [`odc-geo`](https://odc-geo.readthedocs.io/en/latest/), providing a suite of flexible tools for efficient analysis of coastal and ocean Earth observation data – from regional, continental, to global scale.
 
