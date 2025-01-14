@@ -36,7 +36,7 @@ bibliography: paper.bib
 
 # Summary
 
-The `eo-tides` package provides powerful parallelized tools for integrating satellite Earth observation (EO) data with ocean tide modelling. The package provides a flexible Python-based API that facilitates the modelling and attribution of tide heights to a time-series of satellite images based on the spatial extent and acquisition time of each satellite observation (\autoref{fig:abstract}).
+The `eo-tides` package provides powerful parallelized tools for integrating satellite Earth observation (EO) data with ocean tide modelling. The package provides a flexible Python-based API for modelling and attributing tide heights to a time-series of satellite images based on the spatial extent and acquisition time of each satellite observation (\autoref{fig:abstract}).
 
 `eo-tides` leverages advanced tide modelling functionality from the `pyTMD` tide prediction software [@pytmd], combining this fundamental tide modelling capability with EO spatial analysis tools from `odc-geo` [@odcgeo]. This allows tides to be modelled in parallel automatically using over 50 supported tide models, and returned in standardised `pandas` [@reback2020pandas; @mckinney-proc-scipy-2010] and `xarray` [@Hoyer_xarray_N-D_labeled_2017] data formats for further analysis.
 
@@ -53,6 +53,8 @@ Conversely, information about ocean tides can also provide unique environmental 
 This concept has been used to map tidally-corrected annual coastlines from Landsat satellite data at continental scale [@bishop2021mapping], generate maps of the extent and elevation of the intertidal zone [@murray2012continental; @sagar2017item; @bishop2019NIDEM], and create tidally-constrained imagery composites of the coastline at low and high tide [@sagar2018composites]. However, these approaches have been historically based on bespoke, closed-source or difficult to install tide modelling tools, limiting the reproducibility and portability of these techniques to new coastal EO applications. To support the next generation of coastal EO workflows, there is a pressing need for new open-source approaches for combining satellite data with tide modelling.
 
 The `eo-tides` package aims to address these challenges by providing a set of performant open-source Python tools for attributing satellite EO data with modelled ocean tides. This functionality is provided in five main analysis modules (`utils`, `model`, `eo`, `stats`, `validation`) which are described briefly below.
+
+# Key functionality
 
 ## Setting up tide models
 
@@ -72,12 +74,12 @@ The [`eo_tides.model`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_ti
 
 To support integration with satellite EO data, the `model_tides` function from `eo_tides.model` wraps `pyTMD` functionality to return predicted tides in a standardised `pandas.DataFrame` format containing information about the tide model, location and time period of each modelled tide. This allows large analyses to be broken into smaller discrete chunks that can be processed in parallel before being combined as a final step. Parallelisation in `eo-tides` is automatically optimised based on the number of available workers and the number of requested tide models and tide modelling locations. This built-in parallelisation can significantly improve tide modelling performance, especially when run on a large multi-core machine (\autoref{tab:benchmark}).
 
-Table: An example benchmark comparison of tide modelling performance with parallelisation on vs. off. This comparison was performed across an 8-core and 32-core Linux machine, for a typical large-scale analysis involving a month of hourly tides modelled using three tide models (FES2022, TPXO10, GOT5.6) at 10,000 modelling locations. \label{tab:benchmark}
+Table: An example benchmark comparison of tide modelling performance with parallelisation on vs. off. This comparison was performed across an 8-core and 32-core Linux machine, for a typical large-scale analysis involving a month of hourly tides modelled at 10,000 modelling locations using three tide models (FES2022, TPXO10, GOT5.6). \label{tab:benchmark}
 
 | Cores | Parallelisation   | No parallelisation | Speedup |
 | ----- | ----------------- | ------------------ | ------- |
 | 8     | 2min 46s ± 663 ms | 9min 28s ± 536 ms  | 3.4x    |
-| 32    | 54.2 s ± 276 ms   | 9min 24s ± 1.51 s  | 10.4x   |
+| 32    | 55.9 s ± 560 ms   | 9min 24s ± 749 ms  | 10.1x   |
 
 The `model_tides` function is primarily intended to support more complex EO-related tide modelling functionality in the downstream `eo_tides.eo` module. However it can also be used independently of EO data, for example for any application that requires a time series of modelled tide heights. In addition to modelling tide heights, the `model_phases` function can also be used to calculate the phase of the tide at any location and time. This can be used to classify tides into high and low tide observations, or determine whether the tide was rising (i.e. flow tide) or falling (i.e. ebb tide) — information that can be critical for correctly interpreting satellite-observed coastal processes like changing turbidity and ocean colour [@sent2025time].
 
