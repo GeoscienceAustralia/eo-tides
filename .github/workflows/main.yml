@@ -38,8 +38,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"] # , "3.13" # waiting on pyproj
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
         resolution: ["highest", "lowest-direct"]
+        exclude: # Temporarily excluded due to 3.13 only supported by Numpy >=2.0
+          - python-version: "3.13"
+            resolution: "lowest-direct"
       fail-fast: false
       max-parallel: 10
     defaults:
