@@ -1,0 +1,47 @@
+name: Draft paper PDF
+on:
+  push:
+    branches:
+      - main
+      - JOSS_paper
+    paths:
+      - paper/**
+      - .github/workflows/paper.yml
+  pull_request:
+    branches:
+      - main
+      - JOSS_paper
+    paths:
+      - paper/**
+      - .github/workflows/paper.yml
+
+jobs:
+  paper:
+    runs-on: ubuntu-latest
+    name: Generate paper draft
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build draft PDF
+        uses: openjournals/openjournals-draft-action@master
+        with:
+          journal: joss
+          paper-path: paper/paper.md
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper
+          # Output path where Pandoc will write the compiled PDF.
+          # Note, this should be the same directory as the input
+          # paper.md
+          path: paper/paper.pdf
+
+      - name: Commit updated PDF
+        uses: stefanzweifel/git-auto-commit-action@v4
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        with:
+          commit_message: Update generated PDF
+          file_pattern: "paper/paper.pdf"

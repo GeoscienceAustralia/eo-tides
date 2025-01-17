@@ -12,8 +12,7 @@
 - 📘 **Documentation**: <https://GeoscienceAustralia.github.io/eo-tides/>
 - 🐍 **PyPI**: <https://pypi.org/project/eo-tides/>
 
-> [!CAUTION]
-> This package is a work in progress, and not currently ready for operational use.
+<br>
 
 `eo-tides` provides powerful parallelized tools for integrating satellite Earth observation data with tide modelling. 🛠️🌊🛰️
 

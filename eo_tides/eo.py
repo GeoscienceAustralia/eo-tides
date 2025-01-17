@@ -209,7 +209,7 @@ def tag_tides(
         added to the `xarray.DataArray` outputs. Defaults to "EOT20";
         specify "all" to use all models available in `directory`.
         For a full list of available and supported models, run
-        `eo_tides.model.list_models`.
+        `eo_tides.utils.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -340,7 +340,7 @@ def pixel_tides(
         added to the `xarray.DataArray` outputs. Defaults to "EOT20";
         specify "all" to use all models available in `directory`.
         For a full list of available and supported models, run
-        `eo_tides.model.list_models`.
+        `eo_tides.utils.list_models`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
