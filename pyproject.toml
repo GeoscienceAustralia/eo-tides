@@ -44,7 +44,7 @@ dependencies = [
     "pandas>=2.2.0",
     "psutil>=5.8.0",
     "pyogrio>=0.7.0",
-    "pyproj>=3.6.1",
+    "pyproj>=3.7.0",
     "pyTMD==2.2.0",
     "scikit-learn>=1.4.0",
     "scipy>=1.11.2",
