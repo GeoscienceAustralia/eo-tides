@@ -43,7 +43,7 @@ dependencies = [
     "odc-geo>=0.4.7",
     "pandas>=2.2.0",
     "psutil>=5.8.0",
-    "pyogrio>=0.7.0",
+    "pyogrio>=0.10.0",
     "pyproj>=3.7.0",
     "pyTMD==2.2.0",
     "scikit-learn>=1.4.0",
