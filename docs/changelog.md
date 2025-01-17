@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.5.0
+
+### New features
+
+- Added draft version of a Journal of Open Source Software paper
+- Added benchmarking notebook that compares performance with parallelisation on and off
+
+### Bug fixes
+
+- Fix documentation to point to correct location of `list_models` function (e.g. `eo_tides.utils.list_models`)
+
+### Breaking changes
+
+- Removed Python 3.9 support
+- Added Python 3.13 support
+
 ## v0.4.0
 
 ### New features
