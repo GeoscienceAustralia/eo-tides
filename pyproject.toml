@@ -47,7 +47,7 @@ dependencies = [
     "pyproj>=3.7.0",
     "pyTMD==2.2.0",
     "scikit-learn>=1.4.0",
-    "scipy>=1.11.2",
+    "scipy>=1.14.1",
     "shapely>=2.0.6",
     "tqdm>=4.55.0",
     "xarray>=2022.3.0",
