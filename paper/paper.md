@@ -74,7 +74,7 @@ The [`eo_tides.model`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_ti
 
 To support integration with satellite EO data, the `model_tides` function from `eo_tides.model` wraps `pyTMD` functionality to return predicted tides in a standardised `pandas.DataFrame` format containing information about the tide model, location and time period of each modelled tide. This allows large analyses to be broken into smaller discrete chunks that can be processed in parallel before being combined as a final step. Parallelisation in `eo-tides` is automatically optimised based on the number of available workers and the number of requested tide models and tide modelling locations. This built-in parallelisation can significantly improve tide modelling performance, especially when run on a large multi-core machine (\autoref{tab:benchmark}).
 
-Table: A benchmark comparison of tide modelling performance with parallelisation on vs. off. This comparison was performed on an 8-core and 32-core Linux machine, for a typical large-scale analysis involving a month of hourly tides modelled at 10,000 modelling locations using three tide models (FES2022, TPXO10, GOT5.6). \label{tab:benchmark}
+Table: A [benchmark comparison](https://github.com/GeoscienceAustralia/eo-tides/blob/main/paper/benchmarking.ipynb) of tide modelling performance with parallelisation on vs. off. This comparison was performed on an 8-core and 32-core Linux machine, for a typical large-scale analysis involving a month of hourly tides modelled at 10,000 modelling locations using three tide models (FES2022, TPXO10, GOT5.6). \label{tab:benchmark}
 
 | Cores | Parallelisation   | No parallelisation | Speedup |
 | ----- | ----------------- | ------------------ | ------- |
