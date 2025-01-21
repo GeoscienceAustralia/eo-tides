@@ -81,12 +81,12 @@ The [`eo_tides.eo`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides
 
 Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tide_stats}
 
-| `tag_tides`                                                                    | `pixel_tides`                                                                                   |
-| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| - Assigns a single tide height to each satellite image timestep                | - Assigns a tide height to every individual pixel through time to capture spatial tide dynamics |
-| - Ideal for local or site-scale analysis                                       | - Ideal for regional to global-scale coastal product generation                                 |
-| - Fast, low memory use                                                         | - Slower, higher memory use                                                                     |
-| - Single tide height per image can produce tidal artefacts and discontinuities | - Produce spatially seamless results across large extents                                       |
+| `tag_tides`                                                              | `pixel_tides`                                                                                   |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| - Assigns a single tide height to each satellite image timestep          | - Assigns a tide height to every individual pixel through time to capture spatial tide dynamics |
+| - Ideal for local or site-scale analysis                                 | - Ideal for regional to global-scale coastal product generation                                 |
+| - Fast, low memory use                                                   | - Slower, higher memory use                                                                     |
+| - Single tide height per image can produce artefacts and discontinuities | - Produce spatially seamless results across large extents                                       |
 
 ![An example tide height output produced by the `pixel_tides` function, showing spatial variability in tides across Australasia for a single timestep.\label{fig:pixel}](figures/joss_fig_pixel.png)
 
