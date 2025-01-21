@@ -42,7 +42,7 @@ The `eo-tides` package provides powerful parallelized tools for integrating sate
 
 Tools from `eo-tides` are designed to be applied directly to petabytes of freely available satellite data loaded from the cloud using Open Data Cube's `odc-stac` or `datacube` packages (e.g. using [Digital Earth Australia](https://knowledge.dea.ga.gov.au/guides/setup/gis/stac/) or [Microsoft Planetary Computer's](https://planetarycomputer.microsoft.com/) SpatioTemporal Asset Catalogues). Additional functionality enables evaluating potential satellite-tide biases, and validating modelled tides using external tide gauge data — both important considerations for assessing the reliability and accuracy of coastal EO workflows. In combination, these open source tools support the efficient, scalable and robust analysis of coastal EO data for any time period or location globally.
 
-![An example of a typical `eo-tides` coastal EO workflow, with tide heights being modelled into every pixel in a spatio-temporal stack of satellite data (for example, from ESA's Sentinel-2 or NASA/USGS Landsat), then combined to derive insights into dynamic coastal environments.\label{fig:abstract}](figures/joss_abstract.png)
+![A typical `eo-tides` coastal EO workflow, with tide heights modelled into every pixel in a spatio-temporal stack of satellite data (for example, from ESA's Sentinel-2 or NASA/USGS Landsat), then combined to derive insights into dynamic coastal environments.\label{fig:abstract}](figures/joss_abstract.png)
 
 # Statement of need
 
@@ -58,9 +58,7 @@ This concept has been used to map tidally-corrected annual coastlines from Lands
 
 ## Setting up tide models
 
-The [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.utils) module simplifies the setup of global ocean tide models, addressing a common barrier in coastal EO workflows. Tools like `list_models` provide feedback on available and supported models (\autoref{fig:list}), while `clip_models` can be used to improve performance by clipping large model files to smaller regions of interest, significantly reducing processing times for high-resolution models like FES2022.
-
-Comprehensive documentation is available to [guide users in setting up commonly used tide models](https://geoscienceaustralia.github.io/eo-tides/setup/), including downloading, uncompressing, and organizing data files.
+The [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.utils) module simplifies the setup of global ocean tide models, addressing a common barrier in coastal EO workflows. Tools like `list_models` provide feedback on available and supported models (\autoref{fig:list}), while `clip_models` can be used to improve performance by clipping large model files to smaller regions of interest, significantly reducing processing times for high-resolution models like FES2022. Comprehensive documentation is available to [guide users in setting up commonly used tide models](https://geoscienceaustralia.github.io/eo-tides/setup/), including downloading, uncompressing, and organizing data files.
 
 ![An example output from `list_tides`, providing a useful summary table which clearly identifies available and supported tide models.\label{fig:list}](figures/joss_fig_list.png)
 
