@@ -50,9 +50,7 @@ Satellite remote sensing offers an unparalleled method to examine dynamic coasta
 
 Conversely, information about ocean tides can also provide unique environmental insights that can greatly enhance the utility of coastal EO data. Conventionally, satellite data dimensions consider the geographical "where" and the temporal "when" of data acquisition. The addition of tide height as a new analysis dimension allows data to be filtered, sorted and analysed with respect to tidal processes, delivering a powerful re-imagining of traditional multi-temporal EO data analysis [@sagar2017item]. For example, satellite data can be analysed to focus on specific ecologically-significant tidal stages (e.g. high, low tide, spring or neap tides) or on particular tidal processes (e.g. ebb or flow tides; @sent2025time).
 
-This concept has been used to map tidally-corrected annual coastlines from Landsat satellite data at continental scale [@bishop2021mapping], generate maps of the extent and elevation of the intertidal zone [@murray2012continental; @sagar2017item; @bishop2019NIDEM], and create tidally-constrained imagery composites of the coastline [@sagar2018composites]. However, these approaches have been historically based on bespoke, closed-source or difficult to install tide modelling tools, limiting the reproducibility and portability of these techniques to new coastal EO applications. To support the next generation of coastal EO workflows, there is a pressing need for new open-source tools for combining satellite data with tide modelling.
-
-`eo-tides` aims to address these challenges by providing a set of performant open-source Python tools for attributing satellite EO data with modelled ocean tides. This functionality is provided in five main analysis modules (`utils`, `model`, `eo`, `stats`, `validation`) described briefly below.
+This concept has been used to map tidally-corrected annual coastlines from Landsat satellite data at continental scale [@bishop2021mapping], generate maps of the extent and elevation of the intertidal zone [@murray2012continental; @sagar2017item; @bishop2019NIDEM], and create tidally-constrained imagery composites of the coastline [@sagar2018composites]. However, these approaches have been historically based on bespoke, closed-source or difficult to install tide modelling tools, limiting the reproducibility and portability of these techniques to new coastal EO applications. To support the next generation of coastal EO workflows, there is a pressing need for new open-source tools for combining satellite data with tide modelling. `eo-tides` aims to address these challenges by providing a set of performant open-source Python tools for attributing satellite EO data with modelled ocean tides. This functionality is provided in five main analysis modules (`utils`, `model`, `eo`, `stats`, `validation`) described briefly below.
 
 # Features
 
@@ -98,20 +96,20 @@ Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tid
 
 The [`eo_tides.stats`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.stats) module identifies biases caused by complex tide alaising interactions interactions between tidal dynamics and satellite observations. These interactions can prevent satellites from observing the entire tide cycle [@eleveld2014estuarine; @sent2025time], and cause coastal EO studies to produce biased or misleading results [@bishop2019NIDEM]. The module produces a range of useful statistics that summarise how well a satellite time series captures real-world tidal conditions, include spread (coverage of tide range) and high/low-tide offsets (missed tidal extremes). Automated reports and plots provide insights further insights into potential biases affecting the analysis.
 
-![An example of tidally-biased satellite coverage, where the sensor only observes ~68% of the modelled astronomical tide range and never observes the lowest 24% of tides. Satellite bias plots show satellite observed tides as black dots, overlaid over the full range of modelled tides (blue lines).\label{fig:stats}](figures/joss_fig_stats.png)
+![An example of tidally-biased satellite coverage, where the sensor only observes ~68% of the modelled astronomical tide range and never observes the lowest 24% of tides.\label{fig:stats}](figures/joss_fig_stats.png)
 
 ## Validating modelled tides
 
 The [`eo_tides.validation`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.validation) module validates modelled tide heights using high-quality sea-level measurements from the GESLA Global Extreme Sea Level Analysis [@GESLAv3] archive, providing error metrics like RMSE and MAE (\autoref{fig:gesla}). It enables comparison of multiple tide models against observed data, allowing users to choose optimal tide models for their specific study area or application (\autoref{fig:gesla}).
 
-![An example comparison of modelled tides from multiple global ocean tide models (EOT20, GOT5.5, HAMTIDE11) against observed sea level data from the Broome 62650 GESLA tide gauge, Western Australia.\label{fig:gesla}](figures/joss_fig_gesla.png)
+![An example comparison of modelled tides from multiple global ocean tide models (EOT20, GOT5.5, HAMTIDE11) against observed sea level data from the Broome 62650 GESLA tide gauge.\label{fig:gesla}](figures/joss_fig_gesla.png)
 
 # Research projects
 
-Early versions of `eo-tides` functions have been used for continental-scale intertidal zone elevation and exposure mapping [@deaintertidal], multi-decadal shoreline mapping across Australia [@bishop2021mapping] and [Africa](https://www.digitalearthafrica.org/platform-resources/services/coastlines), and to support tide correction for satellite-derived shorelines as part of the `CoastSeg` Python package [@Fitzpatrick2024].
+Early versions of `eo-tides` functions have been used for continental-scale intertidal zone mapping [@deaintertidal], multi-decadal shoreline mapping across Australia [@bishop2021mapping] and [Africa](https://www.digitalearthafrica.org/platform-resources/services/coastlines), and to support tide correction for satellite-derived shorelines as part of the `CoastSeg` Python package [@Fitzpatrick2024].
 
 # Acknowledgements
 
-Functions from `eo-tides` were originally developed in the Digital Earth Australia Notebooks and Tools repository [@krause2021dea]. We thank all DEA Notebooks contributers and maintainers for their invaluable assistance with code review, feature suggestions and code edits. This paper is published with the permission of the Chief Executive Officer, Geoscience Australia. Copyright Geoscience Australia (2025).
+Functions from `eo-tides` were originally developed in the Digital Earth Australia Notebooks and Tools repository [@krause2021dea]. We thank all DEA Notebooks contributers for their invaluable assistance with code review, feature suggestions and code edits. This paper is published with the permission of the Chief Executive Officer, Geoscience Australia. Copyright Geoscience Australia (2025).
 
 # References
