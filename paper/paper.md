@@ -84,9 +84,9 @@ Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tid
 | - Assigns a single tide height to each satellite image timestep          | - Assigns a tide height to every individual pixel through time to capture spatial tide dynamics |
 | - Ideal for local or site-scale analysis                                 | - Ideal for large-scale coastal product generation                                              |
 | - Fast, low memory use                                                   | - Slower, higher memory use                                                                     |
-| - Single tide height per image can produce artefacts and discontinuities | - Produce spatially seamless results across large extents                                       |
+| - Single tide height per image can produce artefacts and discontinuities | - Produce spatially seamless results across large regions                                       |
 
-![An example tide height output produced by the `pixel_tides` function, showing spatial variability in tides across Australasia for a single timestep.\label{fig:pixel}](figures/joss_fig_pixel.png)
+![An example spatial tide height output produced by the `pixel_tides` function.\label{fig:pixel}](figures/joss_fig_pixel.png)
 
 ## Calculating tide statistics and satellite biases
 
@@ -98,7 +98,7 @@ The [`eo_tides.stats`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_ti
 
 The [`eo_tides.validation`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.validation) module validates modelled tide heights using high-quality sea-level measurements from the GESLA Global Extreme Sea Level Analysis [@GESLAv3] archive, providing error metrics like RMSE and MAE (\autoref{fig:gesla}). It enables comparison of multiple tide models against observed data, allowing users to choose optimal tide models for their specific study area or application (\autoref{fig:gesla}).
 
-![An example comparison of modelled tides from multiple global ocean tide models (EOT20, GOT5.5, HAMTIDE11) against observed sea level data from the Broome 62650 GESLA tide gauge.\label{fig:gesla}](figures/joss_fig_gesla.png)
+![A comparison of modelled tides from multiple tide models (EOT20, GOT5.5, HAMTIDE11) against observed sea level data from the Broome 62650 GESLA tide gauge.\label{fig:gesla}](figures/joss_fig_gesla.png)
 
 # Research projects
 
