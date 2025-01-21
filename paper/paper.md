@@ -58,11 +58,9 @@ The `eo-tides` package aims to address these challenges by providing a set of pe
 
 ## Setting up tide models
 
-A key barrier to utilising tide modelling in EO workflows is the complexity and difficulty of initially setting up global ocean tide models for analysis. To address this, the [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.utils) module contains useful tools for preparing tide model data files for use in `eo-tides`. This includes the `list_models` function that provides visual feedback on the tide models a user has available in their system, while highlighting the naming conventions and directory structures required by the underlying `pyTMD` tide prediction software (\autoref{fig:list}).
+The [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.utils) module simplifies the setup of global ocean tide models, addressing a common barrier in coastal EO workflows. Tools like `list_models` provide feedback on available and supported models (\autoref{fig:list})., while `clip_models` can be used to improve performance by clipping large model files to smaller regions of interest, significantly reducing processing times for high-resolution models like FES2022.
 
-Running tide modelling using the default tide modelling data provided by external providers can be slow due to the large size of these files — especially for recent high-resolution models like FES2022 [@carrere2022new]. To improve tide modelling performance, it can be extremely useful to clip tide model files to a smaller region of interest (e.g. the extent of a country or coastal region). The `clip_models` function can be used to automatically clip all suitable NetCDF-format model data files to a user-supplied bounding box, potentially improving tide modelling performance by over an order of magnitude.
-
-These tools are accompanied by comprehensive documentation explaining [how to set up several of the most commonly used global ocean tide models](https://geoscienceaustralia.github.io/eo-tides/setup/), including details on how to download or request access to model files, and how to uncompress and arrange the data on disk.
+Comprehensive documentation is available to [guide users in setting up commonly used tide models](https://geoscienceaustralia.github.io/eo-tides/setup/), including downloading, uncompressing, and organizing data files.
 
 ![An example output from `list_tides`, providing a useful summary table which clearly identifies available and supported tide models.\label{fig:list}](figures/joss_fig_list.png)
 
