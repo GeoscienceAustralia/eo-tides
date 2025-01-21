@@ -58,7 +58,7 @@ This concept has been used to map tidally-corrected annual coastlines from Lands
 
 ## Setting up tide models
 
-The [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.utils) module simplifies the setup of global ocean tide models, addressing a common barrier to coastal EO workflows. Tools like `list_models` provide feedback on available and supported models (\autoref{fig:list}), while `clip_models` can improve performance by clipping large model files to smaller regions of interest, significantly reducing processing times for high-resolution models like FES2022. Comprehensive documentation is available to [assist setting up commonly used tide models](https://geoscienceaustralia.github.io/eo-tides/setup/), including downloading, uncompressing, and organizing data files.
+The [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.utils) module simplifies the setup of ocean tide models, addressing a common barrier to coastal EO workflows. Tools like `list_models` provide feedback on available and supported models (\autoref{fig:list}), while `clip_models` can improve performance by clipping large model files to smaller regions, significantly reducing processing times for high-resolution models like FES2022. Comprehensive documentation is available to [assist setting up commonly used tide models](https://geoscienceaustralia.github.io/eo-tides/setup/), including downloading, uncompressing, and organizing model files.
 
 ![An example output from `list_tides`, providing a useful summary table which clearly identifies available and supported tide models.\label{fig:list}](figures/joss_fig_list.png)
 
@@ -79,7 +79,7 @@ Table: A [benchmark comparison](https://github.com/GeoscienceAustralia/eo-tides/
 
 ## Combining tides with satellite data
 
-The [`eo_tides.eo`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.eo) module integrates modelled tides with `xarray`-format satellite data. For tide attribution, `eo-tides` offers two approaches that differ in complexity and performance: `tag_tides` assigns a single tide height per timestep for small-scale studies, while `pixel_tides` models tides spatially and temporally for larger-scale analyses, producing a unique tide height for each pixel in a dataset {tab:tide_stats}.
+The [`eo_tides.eo`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.eo) module integrates modelled tides with `xarray`-format satellite data. For tide attribution, `eo-tides` offers two approaches that differ in complexity and performance: `tag_tides` assigns a single tide height per timestep for small-scale studies, while `pixel_tides` models tides spatially and temporally for larger-scale analyses, producing a unique tide height for each pixel in a dataset (\autoref{tab:tide_stats}).
 
 These functions can be applied to free and open satellite data for any coastal or ocean location on the planet, for example using data loaded from the cloud using the [Open Data Cube](https://www.opendatacube.org/) and SpatioTemporal Asset Catalogue [@stac2024].
 
