@@ -84,9 +84,9 @@ Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tid
 | `tag_tides`                                                              | `pixel_tides`                                                                                   |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
 | - Assigns a single tide height to each satellite image timestep          | - Assigns a tide height to every individual pixel through time to capture spatial tide dynamics |
-| - Ideal for local or site-scale analysis                                 | - Ideal for large-scale coastal product generation                                              |
-| - Fast, low memory use                                                   | - Slower, higher memory use                                                                     |
 | - Single tide height per image can produce artefacts and discontinuities | - Produce spatially seamless results across large regions                                       |
+| - Fast, low memory use                                                   | - Slower, higher memory use                                                                     |
+| - Ideal for local or site-scale analysis                                 | - Ideal for large-scale coastal product generation                                              |
 
 ![An example spatial tide height output produced by the `pixel_tides` function.\label{fig:pixel}](figures/joss_fig_pixel.png)
 
