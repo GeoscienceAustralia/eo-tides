@@ -77,7 +77,7 @@ Table: A [benchmark comparison](https://github.com/GeoscienceAustralia/eo-tides/
 
 ## Combining tides with satellite data
 
-The [`eo_tides.eo`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.eo) module integrates modelled tides with `xarray`-format satellite data. `eo-tides` offers two tide attribution approaches that differ in complexity and performance: `tag_tides` assigns a single tide height per timestep for small-scale studies, while `pixel_tides` models tides spatially and temporally for larger-scale analyses, returning a unique tide height for each pixel in a dataset (\autoref{tab:tide_stats}, (\autoref{fig:pixel})). These functions can be applied to satellite data for any coastal location on the planet, for example using free and open data loaded from the cloud using [ODC](https://www.opendatacube.org/) and STAC [@stac2024].
+The [`eo_tides.eo`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.eo) module integrates modelled tides with `xarray`-format satellite data. `eo-tides` offers two tide attribution approaches that differ in complexity and performance: `tag_tides` assigns a single tide height per timestep for small-scale studies, while `pixel_tides` models tides spatially and temporally for larger-scale analyses, returning a unique tide height for each pixel in a dataset (\autoref{tab:tide_stats}, \autoref{fig:pixel}). These functions can be applied to satellite data for any coastal location on the planet, for example using free and open data loaded from the cloud using [ODC](https://www.opendatacube.org/) and STAC [@stac2024].
 
 Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tide_stats}
 
