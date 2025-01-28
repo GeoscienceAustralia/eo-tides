@@ -36,11 +36,11 @@ bibliography: paper.bib
 
 # Summary
 
-The `eo-tides` package provides powerful parallelised tools for integrating satellite Earth observation (EO) data with ocean tide modelling. The package provides a flexible Python-based toolkit for attributing modelled tide heights to a time-series of satellite images based on the spatial extent and acquisition time of each satellite observation (\autoref{fig:abstract}).
+The `eo-tides` package provides powerful parallelised tools for integrating satellite Earth observation (EO) data with ocean tide modelling. The package provides a flexible Python toolkit for attributing modelled tide heights to a time-series of satellite images based on the spatial extent and acquisition time of each satellite observation (\autoref{fig:abstract}).
 
-`eo-tides` leverages advanced tide modelling functionality from the `pyTMD` tide prediction software [@pytmd], combining this capability with EO spatial analysis tools from `odc-geo` [@odcgeo]. This allows tides to be modelled in parallel using over 50 supported tide models, and returned in standardised `pandas` [@reback2020pandas; @mckinney-proc-scipy-2010] and `xarray` [@Hoyer_xarray_N-D_labeled_2017] data formats for EO analysis.
+`eo-tides` leverages advanced tide modelling functionality from the `pyTMD` tide prediction software [@pytmd], combining this capability with EO spatial analysis tools from the [Open Data Cube](https://www.opendatacube.org/) (ODC)'s `odc-geo` [@odcgeo]. This allows tides to be modelled in parallel using over 50 supported models, and returned in standardised `pandas` [@reback2020pandas; @mckinney-proc-scipy-2010] and `xarray` [@Hoyer_xarray_N-D_labeled_2017] data formats for EO analysis.
 
-`eo-tides` tools can be applied to petabytes of freely available satellite data loaded from the cloud using Open Data Cube (ODC)'s `odc-stac` or `datacube` packages (e.g. using [Digital Earth Australia](https://knowledge.dea.ga.gov.au/guides/setup/gis/stac/) or [Microsoft Planetary Computer's](https://planetarycomputer.microsoft.com/) STAC SpatioTemporal Asset Catalogues). Additional functionality allows users to assess potential satellite-tide biases and validate modelled tides with external tide gauge data — critical considerations for ensuring the reliability and accuracy of coastal EO workflows. These open-source tools support the efficient, scalable and robust analysis of coastal EO data for any time period or location globally.
+`eo-tides` tools can be applied to petabytes of freely available satellite data loaded from the cloud using ODC's `odc-stac` or `datacube` packages (e.g. using [Digital Earth Australia](https://knowledge.dea.ga.gov.au/guides/setup/gis/stac/) or [Microsoft Planetary Computer's](https://planetarycomputer.microsoft.com/) STAC SpatioTemporal Asset Catalogues). Additional functionality allows users to assess potential satellite-tide biases and validate modelled tides with external tide gauge data — critical considerations for ensuring the reliability and accuracy of coastal EO workflows. These open-source tools support the efficient, scalable and robust analysis of coastal EO data for any time period or location globally.
 
 ![A typical `eo-tides` coastal EO workflow, with tide heights modelled into every pixel in a spatio-temporal stack of satellite data (for example, from Sentinel-2 or Landsat), then combined to derive insights into dynamic coastal environments.\label{fig:abstract}](figures/joss_abstract.png)
 
@@ -58,7 +58,7 @@ This concept has been used to map coastal change at continental-scale [@bishop20
 
 The [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.utils) module simplifies the setup of ocean tide models, addressing a common barrier to coastal EO workflows. Tools like `list_models` provide feedback on available and supported models (\autoref{fig:list}), while `clip_models` can significantly improve performance by clipping large high-resolution model files (e.g. FES2022) to smaller study area extents.
 
-![An `list_tides` output providing a useful summary of available and supported tide models.\label{fig:list}](figures/joss_fig_list.png)
+![A `list_tides` output providing a useful summary of available and supported tide models.\label{fig:list}](figures/joss_fig_list.png)
 
 ## Modelling tides
 
