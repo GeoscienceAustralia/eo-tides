@@ -62,9 +62,10 @@ The [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_ti
 
 ## Modelling tides
 
-The [`eo_tides.model`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.model) module is powered by tide modelling functionality from the `pyTMD` Python package [@pytmd]. `pyTMD` is an open-source tidal prediction software that simplifies the calculation of ocean and earth tides. 
-
-The `model_tides` function from `eo_tides.model` wraps `pyTMD` functionality to return tide predictions in a standardised `pandas.DataFrame` format, enabling integration with EO data and parallelisation for improved performance (\autoref{tab:benchmark}). The `model_phases` function can additionally classify tides into high/low/flow/ebb phases, critical for correctly interpreting satellite-observed coastal processes like turbidity [@sent2025time].
+The [`eo_tides.model`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.model) module is powered by tide modelling functionality from the `pyTMD` Python package [@pytmd].
+`pyTMD` is an open-source tidal prediction software that simplifies the calculation of ocean and earth tides. 
+The `model_tides` function from `eo_tides.model` wraps `pyTMD` functionality to return tide predictions in a standardised `pandas.DataFrame` format, enabling integration with EO data and parallelisation for improved performance (\autoref{tab:benchmark}).
+The `model_phases` function can additionally classify tides into high/low/flow/ebb phases, critical for correctly interpreting satellite-observed coastal processes like turbidity [@sent2025time].
 
 Table: A [benchmark comparison](https://github.com/GeoscienceAustralia/eo-tides/blob/main/paper/benchmarking.ipynb) of tide modelling parallelisation, for a typical large-scale analysis involving a month of hourly tides modelled at 10,000 points using three models (FES2022, TPXO10, GOT5.6). \label{tab:benchmark}
 
@@ -79,12 +80,12 @@ The [`eo_tides.eo`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides
 
 Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tide_stats}
 
-| `tag_tides`                                                              | `pixel_tides`                                                  |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| - Assigns a single tide height to each satellite image time-step         | - Assigns a tide height to every individual pixel through time |
-| - Single tide height per image can produce artefacts and discontinuities | - Produce spatially seamless results across large regions      |
-| - Fast, low memory use                                                   | - Slower, higher memory use                                    |
-| - Ideal for local, site-scale analysis                                   | - Ideal for large-scale analysis                               |
+| `tag_tides`                                                              | `pixel_tides`                                                   |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| - Assigns a single tide height to each satellite image time-step         | - Assigns a tide height to every individual pixel through time  |
+| - Single tide height per image can produce artefacts and discontinuities | - Produce spatially seamless results across large regions       |
+| - Fast, low memory use                                                   | - Slower, higher memory use                                     |
+| - Ideal for small-scale analysis in non-complex tidal environments       | - Ideal for large-scale analysis and coastal product generation |
 
 ![An example spatial tide height output produced by the `pixel_tides` function.\label{fig:pixel}](figures/joss_fig_pixel.png)
 
