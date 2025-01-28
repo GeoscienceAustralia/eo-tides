@@ -76,7 +76,7 @@ Table: A [benchmark comparison](https://github.com/GeoscienceAustralia/eo-tides/
 
 ## Combining tides with satellite data
 
-The [`eo_tides.eo`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.eo) module integrates modelled tides with `xarray`-format satellite data. These functions (\autoref{tab:tide_stats}) can be applied to attribute tides to satellite data for any coastal location on the planet, for example using open data loaded from the cloud using [ODC](https://www.opendatacube.org/) and STAC [@stac2024].
+The [`eo_tides.eo`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.eo) module integrates modelled tides with `xarray`-format satellite data. These functions (\autoref{tab:tide_stats}, \autoref{fig:pixel}) can be applied to attribute tides to satellite data for any coastal location on the planet, for example using open data loaded from the cloud using [ODC](https://www.opendatacube.org/) and STAC [@stac2024].
 
 Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tide_stats}
 
@@ -86,6 +86,8 @@ Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tid
 | - Single tide height per image can produce artefacts and discontinuities | - Produce spatially seamless results across large regions      |
 | - Fast, low memory use                                                   | - Slower, higher memory use                                    |
 | - Ideal for local, site-scale analysis                                   | - Ideal for large-scale coastal product generation             |
+
+![An example spatial tide height output produced by the `pixel_tides` function.\label{fig:pixel}](figures/joss_fig_pixel.png)
 
 ## Calculating tide statistics and satellite biases
 
