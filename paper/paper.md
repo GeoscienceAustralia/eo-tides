@@ -62,10 +62,9 @@ The [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_ti
 
 ## Modelling tides
 
-The [`eo_tides.model`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.model) module is powered by tide modelling functionality from the `pyTMD` Python package [@pytmd].
-`pyTMD` is an open-source tidal prediction software that simplifies the calculation of ocean and earth tides. 
-The `model_tides` function from `eo_tides.model` wraps `pyTMD` functionality to return tide predictions in a standardised `pandas.DataFrame` format, enabling integration with EO data and parallelisation for improved performance (\autoref{tab:benchmark}).
-The `model_phases` function can additionally classify tides into high/low/flow/ebb phases, critical for correctly interpreting satellite-observed coastal processes like turbidity [@sent2025time].
+The [`eo_tides.model`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.model) module is powered by tide modelling functionality from the `pyTMD` Python package [@pytmd]. `pyTMD` is an open-source tidal prediction software that simplifies the calculation of ocean and earth tides. 
+
+The `model_tides` function from `eo_tides.model` wraps `pyTMD` functionality to return tide predictions in a standardised `pandas.DataFrame` format, enabling integration with EO data and parallelisation for improved performance (\autoref{tab:benchmark}). The `model_phases` function can additionally classify tides into high/low/flow/ebb phases, critical for correctly interpreting satellite-observed coastal processes like turbidity [@sent2025time].
 
 Table: A [benchmark comparison](https://github.com/GeoscienceAustralia/eo-tides/blob/main/paper/benchmarking.ipynb) of tide modelling parallelisation, for a typical large-scale analysis involving a month of hourly tides modelled at 10,000 points using three models (FES2022, TPXO10, GOT5.6). \label{tab:benchmark}
 
