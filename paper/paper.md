@@ -58,7 +58,7 @@ This concept has been used to map coastal change at continental-scale [@bishop20
 
 The [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.utils) module simplifies the setup of ocean tide models, addressing a common barrier to coastal EO workflows. Tools like `list_models` provide feedback on available and supported models (\autoref{fig:list}), while `clip_models` can significantly improve performance by clipping large high-resolution model files (e.g. FES2022) to smaller study area extents.
 
-![An example `list_tides` output, providing a useful summary table that identifies available and supported tide models.\label{fig:list}](figures/joss_fig_list.png)
+![An `list_tides` output, providing a useful summary identifying available and supported models.\label{fig:list}](figures/joss_fig_list.png)
 
 ## Modelling tides
 
