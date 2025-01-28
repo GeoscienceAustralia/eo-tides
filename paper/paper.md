@@ -58,14 +58,14 @@ This concept has been used to map coastal change at continental-scale [@bishop20
 
 The [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.utils) module simplifies the setup of ocean tide models, addressing a common barrier to coastal EO workflows. Tools like `list_models` provide feedback on available and supported models (\autoref{fig:list}), while `clip_models` can significantly improve performance by clipping large high-resolution model files (e.g. FES2022) to smaller study area extents.
 
-![An `list_tides` output, providing a useful summary identifying available and supported models.\label{fig:list}](figures/joss_fig_list.png)
+![An `list_tides` output providing a useful summary identifying available and supported models.\label{fig:list}](figures/joss_fig_list.png)
 
 ## Modelling tides
 
 The [`eo_tides.model`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.model) module is powered by tide modelling functionality from the `pyTMD` Python package [@pytmd].
 `pyTMD` is an open-source tidal prediction software that simplifies the calculation of ocean and earth tides. Tides are frequently decomposed into harmonic constants (or constituents) associated with the relative positions of the sun, moon and Earth. `pyTMD.io` contains routines for reading and spatially interpolating major constituent values from commonly available ocean tide models.
 
-The `model_tides` function from `eo_tides.model` wraps `pyTMD` functionality to return tide predictions in a standardised `pandas.DataFrame` format, enabling integration with EO data and parallelised processing for improved performance (\autoref{tab:benchmark}). The `model_phases` function can additionally classify tides into high/low/flow/ebb phases, critical for interpreting satellite-observed coastal processes like turbidity [@sent2025time].
+The `model_tides` function from `eo_tides.model` wraps `pyTMD` functionality to return tide predictions in a standardised `pandas.DataFrame` format, enabling integration with EO data and parallelisation for improved performance (\autoref{tab:benchmark}). The `model_phases` function can additionally classify tides into high/low/flow/ebb phases, critical for correctly interpreting satellite-observed coastal processes like turbidity [@sent2025time].
 
 Table: A [benchmark comparison](https://github.com/GeoscienceAustralia/eo-tides/blob/main/paper/benchmarking.ipynb) of tide modelling parallelisation, for a typical large-scale analysis involving a month of hourly tides modelled at 10,000 points using three models (FES2022, TPXO10, GOT5.6). \label{tab:benchmark}
 
@@ -76,7 +76,7 @@ Table: A [benchmark comparison](https://github.com/GeoscienceAustralia/eo-tides/
 
 ## Combining tides with satellite data
 
-The [`eo_tides.eo`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.eo) module integrates modelled tides with `xarray`-format satellite data. The `tag_tides` and `pixel_tides` functions (\autoref{tab:tide_stats}, \autoref{fig:pixel}) can be applied to attribute tides to satellite data for any coastal location on the planet, for example using open data loaded from the cloud using [ODC](https://www.opendatacube.org/) and STAC [@stac2024].
+The [`eo_tides.eo`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.eo) module integrates modelled tides with `xarray`-format satellite data [@Hoyer_xarray_N-D_labeled_2017]. The `tag_tides` and `pixel_tides` functions (\autoref{tab:tide_stats}, \autoref{fig:pixel}) can be applied to attribute tides to satellite data for any coastal location on the planet, for example using open data loaded from the cloud using [ODC](https://www.opendatacube.org/) and STAC [@stac2024].
 
 Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tide_stats}
 
@@ -99,7 +99,7 @@ The [`eo_tides.stats`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_ti
 
 The [`eo_tides.validation`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.validation) module validates modelled tides against observed sea-level measurements, assisting users to evaluate and select optimal models for their application (\autoref{fig:gesla}).
 
-![A comparison of multiple tide models (EOT20, GOT5.5, HAMTIDE11) against observed sea level data from the Broome 62650 GESLA tide gauge.\label{fig:gesla}](figures/joss_fig_gesla.png)
+![A comparison of multiple tide models (EOT20, GOT5.5, HAMTIDE11) against observed sea level data from the Broome 62650 GESLA tide gauge [@GESLAv3].\label{fig:gesla}](figures/joss_fig_gesla.png)
 
 # Research projects
 
