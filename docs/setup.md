@@ -231,9 +231,9 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
     3. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called `DTU23_OceanTide` to store the DTU23 model files.
     4. Extract your zipped model files (e.g. `DTU23_OceanTide.zip`) into this new directory.
-    5. Uncompress each compressed `*.d.gz` format file inside the `DTU23` folder (e.g. `gunzip -dk *.gz` from a terminal).
+    5. Uncompress all compressed `*.d.gz` format files inside the `DTU23` folder (e.g. `gunzip -dk *.gz` from a terminal).
 
-    You should end up with the following directory structure:
+    You should end up with the following directory structure containing uncompressed `.d`-format files:
 
         ```
         tide_models/DTU23_OceanTide/DTU23/
