@@ -72,21 +72,23 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
         ![image](assets/fes_ftp.jpg)
 
-    7. Navigate to `/auxiliary/tide_model/`, and download the contents of one or more of the following directories:
+    7. Navigate to `/auxiliary/tide_model/`, and download the contents of one of the following FTP directory:
 
-        - `fes2022b/ocean_tide/`
-        - `fes2022b/ocean_tide_extrapolated/`
+    - `fes2022b/ocean_tide_20241025/` (if using standard model data)
+    - `fes2022b/ocean_tide_extrapolated/` (if using extrapolated model data)
 
-        !!! tip
+    !!! tip
 
-            The "extrapolated" version of FES models have been extended inland using a simple "nearest" extrapolation method to ensure data coverage across the entire coastal zone. This can be useful for ensuring you always return a modelled tide, but can also introduce uncertainty into your modelling (particularly in complex regions such as narrow peninsulas or inlets/embayments).
+        The "extrapolated" version of FES models have been extended inland using a simple "nearest" extrapolation method to ensure data coverage across the entire coastal zone. This can be useful for ensuring you always return a modelled tide, but can also introduce uncertainty into your modelling (particularly in complex regions such as narrow peninsulas or inlets/embayments).
 
-    8. Create new nested directories inside your [tide model directory](#setting-up-a-tide-model-directory) called `fes2022b/ocean_tide/` (if using standard model data) or `fes2022b/ocean_tide_extrapolated/` (if using extrapolated model data) to store the FES2022 model files.
+    8. Create a new nested folder inside your [tide model directory](#setting-up-a-tide-model-directory) called either `fes2022b/ocean_tide_20241025/` (if using standard model data) or `fes2022b/ocean_tide_extrapolated/` (if using extrapolated model data) to store your dowloaded files.
 
-    9. Extract your `...nc.xz` files into this directory (e.g. `tar -xf m2_fes2022.nc.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
+    9. Copy your downloaded files into your new tide model directory folder, then uncompress each compressed `*.nc.xz` file (e.g. `xz -dk *.nc.xz`).
+
+    You should end up with the following directory structure containing uncompressed `.nc`-format NetCDF files:
 
         ```
-        tide_models/fes2022b/ocean_tide/
+        tide_models/fes2022b/ocean_tide_20241025/
            |- 2n2_fes2022.nc
            |- ...
            |- t2_fes2022.nc
@@ -216,6 +218,28 @@ Follow the guides below for some of the most commonly used global ocean tide mod
            |- grid_tpxo9_atlas_30_v5.nc
            |- ...
            |- u_s2_tpxo9_atlas_30_v5.nc
+        ```
+
+??? note "DTU Technical University of Denmark tide models"
+
+    ### DTU Technical University of Denmark tide models
+
+    1. Visit [DTU23 Global Ocean Tide model (DTU23_OceanTide)](https://data.dtu.dk/articles/dataset/DTU23_Global_Ocean_Tide_model_DTU23_OceanTide_/23828874)
+    2. Download `DTU23_OceanTide.zip`
+
+    ![image](assets/dtu23_download.jpg)
+
+    3. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called `DTU23_OceanTide` to store the DTU23 model files.
+    4. Extract your zipped model files (e.g. `DTU23_OceanTide.zip`) into this new directory.
+    5. Uncompress each compressed `*.d.gz` format file inside the `DTU23` folder (e.g. `gunzip -dk *.gz` from a terminal).
+
+    You should end up with the following directory structure:
+
+        ```
+        tide_models/DTU23_OceanTide/DTU23/
+           |- K1_DTU23.d
+           |- ...
+           |- S2_DTU23.d
         ```
 
 !!! tip

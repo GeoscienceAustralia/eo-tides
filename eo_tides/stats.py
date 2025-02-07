@@ -243,10 +243,11 @@ def tide_stats(
     model : str or list of str, optional
         The tide model (or list of models) to use to model tides.
         If a list is provided, the resulting statistics will be
-        returned as a `pandas.Dataframe`; otherwise a `pandas.Series`.
-        Defaults to "EOT20"; specify "all" to use all models available
-        in `directory`. For a full list of available and supported
-        models, run `eo_tides.utils.list_models`.
+        returned as a `pandas.Dataframe`; otherwise a `pandas.Series`
+        will be returned. Defaults to "EOT20"; specify "all" to use
+        all models available in `directory`. For a full list of
+        available and supported models, run
+        `from eo_tides.utils import list_models; list_models()`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -453,7 +454,7 @@ def pixel_stats(
         added to the `xarray.Dataset` output. Defaults to "EOT20";
         specify "all" to use all models available in `directory`.
         For a full list of available and supported models, run
-        `eo_tides.utils.list_models`.
+        `from eo_tides.utils import list_models; list_models()`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable

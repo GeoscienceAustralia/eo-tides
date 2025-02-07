@@ -188,6 +188,7 @@ def tag_tides(
     - TOPEX/POSEIDON global tide models (TPXO10, TPXO9, TPXO8)
     - Global Ocean Tide models (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
     - Hamburg direct data Assimilation Methods for Tides models (HAMTIDE11)
+    - Technical University of Denmark tide models (DTU23)
 
     Parameters
     ----------
@@ -209,7 +210,7 @@ def tag_tides(
         added to the `xarray.DataArray` outputs. Defaults to "EOT20";
         specify "all" to use all models available in `directory`.
         For a full list of available and supported models, run
-        `eo_tides.utils.list_models`.
+        `from eo_tides.utils import list_models; list_models()`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -313,6 +314,7 @@ def pixel_tides(
     - TOPEX/POSEIDON global tide models (TPXO10, TPXO9, TPXO8)
     - Global Ocean Tide models (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
     - Hamburg direct data Assimilation Methods for Tides models (HAMTIDE11)
+    - Technical University of Denmark tide models (DTU23)
 
     This function requires access to tide model data files.
     These should be placed in a folder with subfolders matching
@@ -340,7 +342,7 @@ def pixel_tides(
         added to the `xarray.DataArray` outputs. Defaults to "EOT20";
         specify "all" to use all models available in `directory`.
         For a full list of available and supported models, run
-        `eo_tides.utils.list_models`.
+        `from eo_tides.utils import list_models; list_models()`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
