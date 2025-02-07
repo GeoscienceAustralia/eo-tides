@@ -69,7 +69,7 @@ jobs:
 
       - name: Run Jupyter Notebook integration tests
         timeout-minutes: 10
-        run: uv run python -m pytest --nbval-lax docs/notebooks/
+        run: uv run python -m pytest --nbval docs/notebooks/
 
       - name: Check typing
         run: uv run mypy
