@@ -15,7 +15,7 @@ from odc.geo.geobox import GeoBox
 if TYPE_CHECKING:
     from odc.geo import Shape2d
 
-from .model import model_tides
+from .model import model_phases, model_tides
 from .utils import DatetimeLike, _standardise_time
 
 
@@ -168,20 +168,21 @@ def tag_tides(
     directory: str | os.PathLike | None = None,
     tidepost_lat: float | None = None,
     tidepost_lon: float | None = None,
+    return_phases: bool = False,
     **model_tides_kwargs,
-) -> xr.DataArray:
+) -> xr.DataArray | xr.Dataset:
     """
-    Model tide heights for every timestep in a multi-dimensional
-    dataset, and return a new `tide_height` array that can
-    be used to "tag" each observation with tide heights.
+    Model tide heights and tide phases for every timestep in a
+    multi-dimensional dataset, and return a new array that can
+    be used to "tag" each observation with tide information.
 
     The function models tides at the centroid of the dataset
-    by default, but a custom tidal modelling location can
-    be specified using `tidepost_lat` and `tidepost_lon`.
+    by default, but a custom tidal modelling location can be
+    specified using `tidepost_lat` and `tidepost_lon`.
 
-    This function uses the parallelised `model_tides` function
-    under the hood. It supports all tidal models supported by
-    `pyTMD`, including:
+    This function uses the parallelised `model_tides` and
+    `model_phases` functions under the hood. It supports all tidal
+    models supported by `pyTMD`, including:
 
     - Empirical Ocean Tide model (EOT20)
     - Finite Element Solution tide models (FES2022, FES2014, FES2012)
@@ -222,6 +223,10 @@ def tag_tides(
         Optional coordinates used to model tides. The default is None,
         which uses the centroid of the dataset as the tide modelling
         location.
+    return_phases : bool, optional
+        Whether to model and return tide phases in addition to tide heights.
+        If True, outputs will be returned as an xr.Dataset containing both
+        "tide_height" and "tide_phase" variables.
     **model_tides_kwargs :
         Optional parameters passed to the `eo_tides.model.model_tides`
         function. Important parameters include `cutoff` (used to
@@ -231,10 +236,12 @@ def tag_tides(
 
     Returns
     -------
-    tides_da : xr.DataArray
-        A one-dimensional tide height array. This will contain either
-        tide heights for every timestep in `data`, or for every time in
-        `times` if provided.
+    tides_da : xr.DataArray or xr.Dataset
+        If `return_phases=False`: a one-dimensional "tide_height" xr.DataArray.
+        If `return_phases=True`: a one-dimensional xr.Dataset containing
+        "tide_height" and "tide_phase" variables.
+        Outputs will contain values for every timestep in `data`, or for
+        every time in `times` if provided.
     """
     # Standardise data inputs, time and models
     gbox, time_coords = _standardise_inputs(data, time)
@@ -248,16 +255,31 @@ def tag_tides(
         lon, lat = tidepost_lon, tidepost_lat
         print(f"Using tide modelling location: {lon:.2f}, {lat:.2f}")
 
-    # Model tide heights for each observation:
-    tide_df = model_tides(
-        x=lon,  # type: ignore
-        y=lat,  # type: ignore
-        time=time_coords,
-        model=model,
-        directory=directory,
-        crs="EPSG:4326",
-        **model_tides_kwargs,
-    )
+    # Either model both tides and phases, or model only tides
+    if return_phases:
+        # Model tide phases and heights for each observation
+        tide_df = model_phases(
+            x=lon,  # type: ignore
+            y=lat,  # type: ignore
+            time=time_coords,
+            model=model,
+            directory=directory,
+            crs="EPSG:4326",
+            return_tides=True,
+            **model_tides_kwargs,
+        )
+
+    else:
+        # Model tide heights for each observation
+        tide_df = model_tides(
+            x=lon,  # type: ignore
+            y=lat,  # type: ignore
+            time=time_coords,
+            model=model,
+            directory=directory,
+            crs="EPSG:4326",
+            **model_tides_kwargs,
+        )
 
     # If tides cannot be successfully modeled (e.g. if the centre of the
     # xarray dataset is located is over land), raise an exception
@@ -270,8 +292,9 @@ def tag_tides(
             f"`tidepost_lat` and `tidepost_lon` parameters."
         )
 
-    # Convert to xarray format
-    tides_da = tide_df.reset_index().set_index(["time", "tide_model"]).drop(["x", "y"], axis=1).tide_height.to_xarray()
+    # Convert to xarray format, squeezing to return an xr.DataArray if
+    # dataframe contains only one "tide_height" column
+    tides_da = tide_df.reset_index().set_index(["time", "tide_model"]).drop(["x", "y"], axis=1).squeeze().to_xarray()
 
     # If only one tidal model exists, squeeze out "tide_model" dim
     if len(tides_da.tide_model) == 1:
