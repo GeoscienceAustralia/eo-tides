@@ -1,9 +1,10 @@
 # Changelog
 
-## v0.5.1 (upcoming)
+## v0.6.0 (upcoming)
 
 ### New features
 
+- Added `return_phases` parameter to `eo_tides.eo.tag_tides`, which will return a dataframe containing tide phase information for each satellite observation
 - Added support for [Technical University of Denmark tide models](https://doi.org/10.11583/DTU.23828874) (DTU23)
 - Minor docs improvements, updates for new FES2022 data format
 
