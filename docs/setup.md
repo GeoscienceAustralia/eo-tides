@@ -41,14 +41,16 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
     3. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called `EOT20/` to store the EOT20 model files.
 
-    4. Extract the `85762.zip` and then `ocean_tides.zip` into this new directory. You should end up with the following directory structure containing the extracted NetCDF files:
+    4. Extract the `85762.zip` and then `ocean_tides.zip` into this new directory.
 
-        ```
-        tide_models/EOT20/ocean_tides/
-           |- 2N2_ocean_eot20.nc
-           |- ...
-           |- T2_ocean_eot20.nc
-        ```
+    You should end up with the following directory structure containing the extracted NetCDF files:
+
+    ```
+    tide_models/EOT20/ocean_tides/
+        |- 2N2_ocean_eot20.nc
+        |- ...
+        |- T2_ocean_eot20.nc
+    ```
 
 ??? note "FES2022 Finite Element Solution tide models"
 
@@ -74,12 +76,12 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
     7. Navigate to `/auxiliary/tide_model/`, and download the contents of one of the following FTP directory:
 
-    - `fes2022b/ocean_tide_20241025/` (if using standard model data)
-    - `fes2022b/ocean_tide_extrapolated/` (if using extrapolated model data)
+        - `fes2022b/ocean_tide_20241025/` (if using standard model data)
+        - `fes2022b/ocean_tide_extrapolated/` (if using extrapolated model data)
 
-    !!! tip
+        !!! tip
 
-        The "extrapolated" version of FES models have been extended inland using a simple "nearest" extrapolation method to ensure data coverage across the entire coastal zone. This can be useful for ensuring you always return a modelled tide, but can also introduce uncertainty into your modelling (particularly in complex regions such as narrow peninsulas or inlets/embayments).
+            The "extrapolated" version of FES models have been extended inland using a simple "nearest" extrapolation method to ensure data coverage across the entire coastal zone. This can be useful for ensuring you always return a modelled tide, but can also introduce uncertainty into your modelling (particularly in complex regions such as narrow peninsulas or inlets/embayments).
 
     8. Create a new nested folder inside your [tide model directory](#setting-up-a-tide-model-directory) called either `fes2022b/ocean_tide_20241025/` (if using standard model data) or `fes2022b/ocean_tide_extrapolated/` (if using extrapolated model data) to store your dowloaded files.
 
@@ -87,19 +89,19 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
     You should end up with the following directory structure containing uncompressed `.nc`-format NetCDF files:
 
-        ```
-        tide_models/fes2022b/ocean_tide_20241025/
-           |- 2n2_fes2022.nc
-           |- ...
-           |- t2_fes2022.nc
-        ```
-        Or:
-        ```
-        tide_models/fes2022b/ocean_tide_extrapolated/
-           |- 2n2_fes2022.nc
-           |- ...
-           |- t2_fes2022.nc
-        ```
+    ```
+    tide_models/fes2022b/ocean_tide_20241025/
+        |- 2n2_fes2022.nc
+        |- ...
+        |- t2_fes2022.nc
+    ```
+    Or:
+    ```
+    tide_models/fes2022b/ocean_tide_extrapolated/
+        |- 2n2_fes2022.nc
+        |- ...
+        |- t2_fes2022.nc
+    ```
 
 ??? note "FES2014 Finite Element Solution tide models"
 
@@ -134,21 +136,23 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
     8. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called `fes2014/` to store the FES2014 model files.
 
-    9. Extract `ocean_tide.tar.xz` or `ocean_tide_extrapolated.tar.xz` into this directory (e.g. `tar -xf ocean_tide.tar.xz`). You should end up with the following directory structure containing the extracted NetCDF files:
+    9. Extract `ocean_tide.tar.xz` or `ocean_tide_extrapolated.tar.xz` into this directory (e.g. `tar -xf ocean_tide.tar.xz`).
 
-        ```
-        tide_models/fes2014/ocean_tide/
-           |- 2n2.nc
-           |- ...
-           |- t2.nc
-        ```
-        Or:
-        ```
-        tide_models/fes2014/ocean_tide_extrapolated/
-           |- 2n2.nc
-           |- ...
-           |- t2.nc
-        ```
+    You should end up with the following directory structure containing the extracted NetCDF files:
+
+    ```
+    tide_models/fes2014/ocean_tide/
+       |- 2n2.nc
+       |- ...
+       |- t2.nc
+    ```
+    Or:
+    ```
+    tide_models/fes2014/ocean_tide_extrapolated/
+       |- 2n2.nc
+       |- ...
+       |- t2.nc
+    ```
 
 ??? note "GOT Global Ocean Tide models"
 
@@ -161,36 +165,38 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
     3. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called either `GOT4.7/`, `got4.8/`, `GOT4.10c/`, `GOT5.5/` or `GOT5.6/` to store the GOT model files.
 
-    4. Extract your downloaded `.tar.gz` file into this new directory. You should end up with the following directory structure containing the extracted NetCDF files:
+    4. Extract your downloaded `.tar.gz` file into this new directory.
 
-        ```
-        tide_models/GOT5.6/ocean_tides/
-           |- ...
-        ```
-        Or:
-        ```
-        tide_models/GOT5.5/ocean_tides/
-           |- ...
-        ```
-        !!! important
+    You should end up with the following directory structure containing the extracted NetCDF files:
 
-            Note that GOT5.6 requires that both GOT5.6 and GOT5.5 model files are downloaded and extracted.
+    ```
+    tide_models/GOT5.6/ocean_tides/
+        |- ...
+    ```
+    Or:
+    ```
+    tide_models/GOT5.5/ocean_tides/
+        |- ...
+    ```
+    !!! important
 
-        Or:
-        ```
-        tide_models/GOT4.10c/grids_oceantide/
-           |- ...
-        ```
-        Or:
-        ```
-        tide_models/got4.8/grids_oceantide/
-           |- ...
-        ```
-        Or:
-        ```
-        tide_models/GOT4.7/grids_oceantide/
-           |- ...
-        ```
+        Note that GOT5.6 requires that both GOT5.6 and GOT5.5 model files are downloaded and extracted.
+
+    Or:
+    ```
+    tide_models/GOT4.10c/grids_oceantide/
+        |- ...
+    ```
+    Or:
+    ```
+    tide_models/got4.8/grids_oceantide/
+        |- ...
+    ```
+    Or:
+    ```
+    tide_models/GOT4.7/grids_oceantide/
+        |- ...
+    ```
 
 ??? note "TPXO Global Tidal Models"
 
@@ -204,21 +210,23 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
     4. Create a new directory inside your [tide model directory](#setting-up-a-tide-model-directory) called either `TPXO10_atlas_v2/` or `TPXO9_atlas_v5/` to store the TPXO model files.
 
-    5. Extract your zipped model files (e.g. `TPXO10_atlas_v2_nc.zip` or `TPXO9_atlas_v5_nc.zip`) into this new directory. You should end up with the following directory structure containing the extracted NetCDF files depending on the model you downloaded:
+    5. Extract your zipped model files (e.g. `TPXO10_atlas_v2_nc.zip` or `TPXO9_atlas_v5_nc.zip`) into this new directory.
 
-        ```
-        tide_models/TPXO10_atlas_v2/
-           |- grid_tpxo10atlas_v2.nc
-           |- ...
-           |- u_s2_tpxo10_atlas_30_v2.nc
-        ```
-        Or:
-        ```
-        tide_models/TPXO9_atlas_v5/
-           |- grid_tpxo9_atlas_30_v5.nc
-           |- ...
-           |- u_s2_tpxo9_atlas_30_v5.nc
-        ```
+    You should end up with the following directory structure containing the extracted NetCDF files, depending on the model you downloaded:
+
+    ```
+    tide_models/TPXO10_atlas_v2/
+        |- grid_tpxo10atlas_v2.nc
+        |- ...
+        |- u_s2_tpxo10_atlas_30_v2.nc
+    ```
+    Or:
+    ```
+    tide_models/TPXO9_atlas_v5/
+        |- grid_tpxo9_atlas_30_v5.nc
+        |- ...
+        |- u_s2_tpxo9_atlas_30_v5.nc
+    ```
 
 ??? note "DTU Technical University of Denmark tide models"
 
@@ -235,12 +243,12 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
     You should end up with the following directory structure containing uncompressed `.d`-format files:
 
-        ```
-        tide_models/DTU23_OceanTide/DTU23/
-           |- K1_DTU23.d
-           |- ...
-           |- S2_DTU23.d
-        ```
+    ```
+    tide_models/DTU23_OceanTide/DTU23/
+        |- K1_DTU23.d
+        |- ...
+        |- S2_DTU23.d
+    ```
 
 !!! tip
 
