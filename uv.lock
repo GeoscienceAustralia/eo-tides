@@ -717,7 +717,7 @@ requires-dist = [
     { name = "pyogrio", specifier = ">=0.10.0" },
     { name = "pyproj", specifier = ">=3.7.0" },
     { name = "pystac-client", marker = "extra == 'notebooks'", specifier = ">=0.8.3" },
-    { name = "pytmd", specifier = "==2.2.0" },
+    { name = "pytmd", specifier = "==2.2.1" },
     { name = "scikit-learn", specifier = ">=1.4.0" },
     { name = "scipy", specifier = ">=1.14.1" },
     { name = "shapely", specifier = ">=2.0.6" },
@@ -2526,7 +2526,7 @@ wheels = [
 
 [[package]]
 name = "pytmd"
-version = "2.2.0"
+version = "2.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lxml" },
@@ -2538,9 +2538,9 @@ dependencies = [
     { name = "setuptools-scm" },
     { name = "timescale" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/89/4d/a9984a6e590961c631289be0b05a7336ec0aafb390493b0b378143ad04ef/pytmd-2.2.0.tar.gz", hash = "sha256:b18aba6d2d78e69a17b3cf1937acc5524e8795af250e29585c920a5443c4af7d", size = 6354754 }
+sdist = { url = "https://files.pythonhosted.org/packages/50/07/27117e4b2effd4c01f371f87996c9c561c06cab6d692e17db0f767ef7c8f/pytmd-2.2.1.tar.gz", hash = "sha256:3d1ffd86b3028f3bbf33f640d533aa8cbe0c418080c92021ea5e3936b72aafda", size = 6355828 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/03/8f/48d5b64a0c6555becc89e76f3be5985e645dde754432d99848d9899f878c/pyTMD-2.2.0-py3-none-any.whl", hash = "sha256:7f727a138a9b7028ca12e033e99f406688ab9f013e6e9f7a78bff48d4393c184", size = 6456124 },
+    { url = "https://files.pythonhosted.org/packages/84/5e/1384d375e5f5624087b91d6659a1abb5a7cfc52f1198eb20d66c74e28614/pyTMD-2.2.1-py3-none-any.whl", hash = "sha256:a6e507b5e9c613dbe43f974ca71547f624b57c44ea124ac93280343d5b929959", size = 6457214 },
 ]
 
 [[package]]
