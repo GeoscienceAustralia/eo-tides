@@ -35,6 +35,7 @@ These tools can be applied to petabytes of freely available satellite data (e.g.
 - [TOPEX/POSEIDON global tide models](https://www.tpxo.net/global) (TPXO10, TPXO9, TPXO8)
 - [Global Ocean Tide models](https://doi.org/10.1002/2016RG000546) (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
 - [Hamburg direct data Assimilation Methods for Tides models](https://doi.org/10.1002/2013JC009766) (HAMTIDE11)
+- [Technical University of Denmark tide models](https://doi.org/10.11583/DTU.23828874) (DTU23)
 
 For instructions on how to set up these models for use in `eo-tides`, refer to [Setting up tide models](setup.md).
 

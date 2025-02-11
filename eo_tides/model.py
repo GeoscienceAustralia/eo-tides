@@ -416,6 +416,7 @@ def model_tides(
     - TOPEX/POSEIDON global tide models (TPXO10, TPXO9, TPXO8)
     - Global Ocean Tide models (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
     - Hamburg direct data Assimilation Methods for Tides models (HAMTIDE11)
+    - Technical University of Denmark tide models (DTU23)
 
     This function requires access to tide model data files.
     These should be placed in a folder with subfolders matching
@@ -444,7 +445,7 @@ def model_tides(
         The tide model (or list of models) to use to model tides.
         Defaults to "EOT20"; specify "all" to use all models available
         in `directory`. For a full list of available and supported models,
-        run `eo_tides.utils.list_models`.
+        run `from eo_tides.utils import list_models; list_models()`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -735,7 +736,7 @@ def model_phases(
         The tide model (or list of models) to use to model tides.
         Defaults to "EOT20"; specify "all" to use all models available
         in `directory`. For a full list of available and supported models,
-        run `eo_tides.utils.list_models`.
+        run `from eo_tides.utils import list_models; list_models()`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
