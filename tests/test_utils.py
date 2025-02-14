@@ -53,13 +53,16 @@ def test_standardise_models(model, ensemble_models, exp_process, exp_request, ex
 
 
 def test_clip_models():
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        clip_models(
-            input_directory="tests/data/tide_models", output_directory=tmpdirname, bbox=(122.27, -18.07, 122.29, -18.05)
-        )
+    out_dir = pathlib.Path("tests/data/tide_models_clipped")
 
-        output_files = set([i.stem for i in pathlib.Path(tmpdirname).iterdir()])
-        assert output_files == set(["GOT5", "EOT20", "hamtide"])
+    clip_models(
+        input_directory="tests/data/tide_models",
+        output_directory=out_dir,
+        bbox=(122.27, -18.07, 122.29, -18.05),
+    )
+
+    output_files = set([i.stem for i in out_dir.iterdir()])
+    assert output_files == set(["GOT5", "EOT20", "hamtide"])
 
 
 @pytest.mark.parametrize(

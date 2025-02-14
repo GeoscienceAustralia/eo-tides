@@ -9,10 +9,6 @@
 [![Commit activity](https://img.shields.io/github/commit-activity/m/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/commit-activity/m/GeoscienceAustralia/eo-tides)
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
 
-!!! warning
-
-    Note: This package is a work in progress, and not currently ready for operational use.
-
 `eo-tides` provides provides powerful parallelized tools for integrating satellite Earth observation data with tide modelling. 🛠️🌊🛰️
 
 `eo-tides` combines advanced tide modelling functionality from the [`pyTMD`](https://pytmd.readthedocs.io/en/latest/) package with [`pandas`](https://pandas.pydata.org/docs/index.html), [`xarray`](https://docs.xarray.dev/en/stable/) and [`odc-geo`](https://odc-geo.readthedocs.io/en/latest/), providing a suite of flexible tools for efficient analysis of coastal and ocean Earth observation data – from regional, continental, to global scale.
@@ -39,6 +35,7 @@ These tools can be applied to petabytes of freely available satellite data (e.g.
 - [TOPEX/POSEIDON global tide models](https://www.tpxo.net/global) (TPXO10, TPXO9, TPXO8)
 - [Global Ocean Tide models](https://doi.org/10.1002/2016RG000546) (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
 - [Hamburg direct data Assimilation Methods for Tides models](https://doi.org/10.1002/2013JC009766) (HAMTIDE11)
+- [Technical University of Denmark tide models](https://doi.org/10.11583/DTU.23828874) (DTU23)
 
 For instructions on how to set up these models for use in `eo-tides`, refer to [Setting up tide models](setup.md).
 

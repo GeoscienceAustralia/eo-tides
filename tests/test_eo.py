@@ -47,6 +47,39 @@ def test_tag_tides(satellite_ds, measured_tides_ds, tidepost_lat, tidepost_lon):
     assert abs(val_stats["Bias"]) < 0.20
 
 
+def test_tag_tides_phases(satellite_ds, measured_tides_ds):
+    # Use tag_tides to model both phases and tide heights
+    tagged_tides_ds = tag_tides(
+        satellite_ds,
+        return_phases=True,
+    )
+
+    # Verify output is an xarray.Dataset
+    assert isinstance(tagged_tides_ds, xr.Dataset)
+
+    # Verify vars are as expected
+    expected_vars = ["tide_height", "tide_phase"]
+    assert set(expected_vars) == set(tagged_tides_ds.data_vars)
+
+    # Verify tide_phase values
+    expected_phases = ["low-flow", "high-flow", "low-ebb", "low-flow", "low-ebb", "low-flow", "high-flow"]
+    assert tagged_tides_ds.tide_phase.values.tolist() == expected_phases
+
+    # Assert tide_model dim has been squeezed out
+    assert "tide_model" not in tagged_tides_ds.dims
+
+    # Model two models at once
+    tagged_tides_ds = tag_tides(
+        satellite_ds,
+        model=["EOT20", "GOT5.5"],
+        return_phases=True,
+    )
+
+    # Assert that output now has a tide_model dimension
+    assert "tide_model" in tagged_tides_ds.dims
+    assert len(tagged_tides_ds["tide_model"]) == 2
+
+
 def test_tag_tides_multiple(satellite_ds):
     # Model multiple models at once
     tagged_tides_da = tag_tides(satellite_ds, model=["EOT20", "HAMTIDE11"], ebb_flow=True)

@@ -15,7 +15,7 @@ from odc.geo.geobox import GeoBox
 if TYPE_CHECKING:
     from odc.geo import Shape2d
 
-from .model import model_tides
+from .model import model_phases, model_tides
 from .utils import DatetimeLike, _standardise_time
 
 
@@ -39,7 +39,7 @@ def _resample_chunks(
         return data.shape
 
     # if data has chunks, then return just spatial chunks
-    if data.chunks is not None:
+    if data.chunks:
         y_dim, x_dim = data.odc.spatial_dims
         return data.chunks[y_dim], data.chunks[x_dim]
 
@@ -101,6 +101,7 @@ def _pixel_tides_resample(
     resample_method="bilinear",
     dask_chunks=None,
     dask_compute=True,
+    name="tide_height",
 ):
     """Resamples low resolution tides modelled by `pixel_tides` into the
     geobox (e.g. spatial resolution and extent) of the original higher
@@ -125,6 +126,8 @@ def _pixel_tides_resample(
         Whether to compute results of the resampling step using Dask.
         If False, this will return `tides_highres` as a lazy loaded
         Dask-enabled array.
+    name : str, optional
+        The name used for the output array. Defaults to "tide_height".
 
     Returns
     -------
@@ -145,7 +148,11 @@ def _pixel_tides_resample(
         how=gbox,
         chunks=dask_chunks,
         resampling=resample_method,
-    ).rename("tide_height")
+    )
+
+    # Set output name
+    if name is not None:
+        tides_highres = tides_highres.rename(name)
 
     # Optionally process and load into memory with Dask
     if dask_compute:
@@ -161,26 +168,28 @@ def tag_tides(
     directory: str | os.PathLike | None = None,
     tidepost_lat: float | None = None,
     tidepost_lon: float | None = None,
+    return_phases: bool = False,
     **model_tides_kwargs,
-) -> xr.DataArray:
+) -> xr.DataArray | xr.Dataset:
     """
-    Model tide heights for every timestep in a multi-dimensional
-    dataset, and return a new `tide_height` array that can
-    be used to "tag" each observation with tide heights.
+    Model tide heights and tide phases for every timestep in a
+    multi-dimensional dataset, and return a new array that can
+    be used to "tag" each observation with tide information.
 
     The function models tides at the centroid of the dataset
-    by default, but a custom tidal modelling location can
-    be specified using `tidepost_lat` and `tidepost_lon`.
+    by default, but a custom tidal modelling location can be
+    specified using `tidepost_lat` and `tidepost_lon`.
 
-    This function uses the parallelised `model_tides` function
-    under the hood. It supports all tidal models supported by
-    `pyTMD`, including:
+    This function uses the parallelised `model_tides` and
+    `model_phases` functions under the hood. It supports all tidal
+    models supported by `pyTMD`, including:
 
     - Empirical Ocean Tide model (EOT20)
     - Finite Element Solution tide models (FES2022, FES2014, FES2012)
     - TOPEX/POSEIDON global tide models (TPXO10, TPXO9, TPXO8)
     - Global Ocean Tide models (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
     - Hamburg direct data Assimilation Methods for Tides models (HAMTIDE11)
+    - Technical University of Denmark tide models (DTU23)
 
     Parameters
     ----------
@@ -197,10 +206,12 @@ def tag_tides(
         that can be converted by `pandas.to_datetime()`. For example:
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
-        The tide model (or models) used to model tides. If a list is
-        provided, a new "tide_model" dimension will be added to the
-        `xarray.DataArray` outputs. Defaults to "EOT20"; for a full
-        list of available/supported models, run `eo_tides.model.list_models`.
+        The tide model (or list of models) to use to model tides.
+        If a list is provided, a new "tide_model" dimension will be
+        added to the `xarray.DataArray` outputs. Defaults to "EOT20";
+        specify "all" to use all models available in `directory`.
+        For a full list of available and supported models, run
+        `from eo_tides.utils import list_models; list_models()`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -212,6 +223,10 @@ def tag_tides(
         Optional coordinates used to model tides. The default is None,
         which uses the centroid of the dataset as the tide modelling
         location.
+    return_phases : bool, optional
+        Whether to model and return tide phases in addition to tide heights.
+        If True, outputs will be returned as an xr.Dataset containing both
+        "tide_height" and "tide_phase" variables.
     **model_tides_kwargs :
         Optional parameters passed to the `eo_tides.model.model_tides`
         function. Important parameters include `cutoff` (used to
@@ -221,10 +236,12 @@ def tag_tides(
 
     Returns
     -------
-    tides_da : xr.DataArray
-        A one-dimensional tide height array. This will contain either
-        tide heights for every timestep in `data`, or for every time in
-        `times` if provided.
+    tides_da : xr.DataArray or xr.Dataset
+        If `return_phases=False`: a one-dimensional "tide_height" xr.DataArray.
+        If `return_phases=True`: a one-dimensional xr.Dataset containing
+        "tide_height" and "tide_phase" variables.
+        Outputs will contain values for every timestep in `data`, or for
+        every time in `times` if provided.
     """
     # Standardise data inputs, time and models
     gbox, time_coords = _standardise_inputs(data, time)
@@ -238,16 +255,31 @@ def tag_tides(
         lon, lat = tidepost_lon, tidepost_lat
         print(f"Using tide modelling location: {lon:.2f}, {lat:.2f}")
 
-    # Model tide heights for each observation:
-    tide_df = model_tides(
-        x=lon,  # type: ignore
-        y=lat,  # type: ignore
-        time=time_coords,
-        model=model,
-        directory=directory,
-        crs="EPSG:4326",
-        **model_tides_kwargs,
-    )
+    # Either model both tides and phases, or model only tides
+    if return_phases:
+        # Model tide phases and heights for each observation
+        tide_df = model_phases(
+            x=lon,  # type: ignore
+            y=lat,  # type: ignore
+            time=time_coords,
+            model=model,
+            directory=directory,
+            crs="EPSG:4326",
+            return_tides=True,
+            **model_tides_kwargs,
+        )
+
+    else:
+        # Model tide heights for each observation
+        tide_df = model_tides(
+            x=lon,  # type: ignore
+            y=lat,  # type: ignore
+            time=time_coords,
+            model=model,
+            directory=directory,
+            crs="EPSG:4326",
+            **model_tides_kwargs,
+        )
 
     # If tides cannot be successfully modeled (e.g. if the centre of the
     # xarray dataset is located is over land), raise an exception
@@ -260,8 +292,9 @@ def tag_tides(
             f"`tidepost_lat` and `tidepost_lon` parameters."
         )
 
-    # Convert to xarray format
-    tides_da = tide_df.reset_index().set_index(["time", "tide_model"]).drop(["x", "y"], axis=1).tide_height.to_xarray()
+    # Convert to xarray format, squeezing to return an xr.DataArray if
+    # dataframe contains only one "tide_height" column
+    tides_da = tide_df.reset_index().set_index(["time", "tide_model"]).drop(["x", "y"], axis=1).squeeze().to_xarray()
 
     # If only one tidal model exists, squeeze out "tide_model" dim
     if len(tides_da.tide_model) == 1:
@@ -304,6 +337,7 @@ def pixel_tides(
     - TOPEX/POSEIDON global tide models (TPXO10, TPXO9, TPXO8)
     - Global Ocean Tide models (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
     - Hamburg direct data Assimilation Methods for Tides models (HAMTIDE11)
+    - Technical University of Denmark tide models (DTU23)
 
     This function requires access to tide model data files.
     These should be placed in a folder with subfolders matching
@@ -326,10 +360,12 @@ def pixel_tides(
         that can be converted by `pandas.to_datetime()`. For example:
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
-        The tide model (or models) used to model tides. If a list is
-        provided, a new "tide_model" dimension will be added to the
-        `xarray.DataArray` outputs. Defaults to "EOT20"; for a full
-        list of available/supported models, run `eo_tides.model.list_models`.
+        The tide model (or list of models) to use to model tides.
+        If a list is provided, a new "tide_model" dimension will be
+        added to the `xarray.DataArray` outputs. Defaults to "EOT20";
+        specify "all" to use all models available in `directory`.
+        For a full list of available and supported models, run
+        `from eo_tides.utils import list_models; list_models()`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -369,7 +405,7 @@ def pixel_tides(
         `data` has a geographic CRS (e.g. degree units).
     resample_method : str, optional
         If resampling is requested (see `resample` above), use this
-        resampling method when converting from low resolution to high
+        resampling method when resampling from low resolution to high
         resolution pixels. Defaults to "bilinear"; valid options include
         "nearest", "cubic", "min", "max", "average" etc.
     dask_chunks : tuple of float, optional
@@ -381,7 +417,7 @@ def pixel_tides(
         `(2048, 2048)`.
     dask_compute : bool, optional
         Whether to compute results of the resampling step using Dask.
-        If False, `tides_highres` will be returned as a Dask array.
+        If False, `tides_highres` will be returned as a Dask-enabled array.
     **model_tides_kwargs :
         Optional parameters passed to the `eo_tides.model.model_tides`
         function. Important parameters include `cutoff` (used to

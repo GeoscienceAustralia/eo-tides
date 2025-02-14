@@ -7,13 +7,13 @@
 [![Python Version from PEP 621 TOML](https://img.shields.io/pypi/pyversions/eo-tides)](https://github.com/GeoscienceAustralia/eo-tides/blob/main/pyproject.toml)
 [![codecov](https://codecov.io/gh/GeoscienceAustralia/eo-tides/branch/main/graph/badge.svg)](https://codecov.io/gh/GeoscienceAustralia/eo-tides)
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
+[![status](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e/status.svg)](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e)
 
 - ⚙️ **Github repository**: <https://github.com/GeoscienceAustralia/eo-tides/>
 - 📘 **Documentation**: <https://GeoscienceAustralia.github.io/eo-tides/>
 - 🐍 **PyPI**: <https://pypi.org/project/eo-tides/>
 
-> [!CAUTION]
-> This package is a work in progress, and not currently ready for operational use.
+<br>
 
 `eo-tides` provides powerful parallelized tools for integrating satellite Earth observation data with tide modelling. 🛠️🌊🛰️
 
@@ -41,6 +41,7 @@ These tools can be applied to petabytes of freely available satellite data (e.g.
 - [TOPEX/POSEIDON global tide models](https://www.tpxo.net/global) (TPXO10, TPXO9, TPXO8)
 - [Global Ocean Tide models](https://doi.org/10.1002/2016RG000546) (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
 - [Hamburg direct data Assimilation Methods for Tides models](https://doi.org/10.1002/2013JC009766) (HAMTIDE11)
+- [Technical University of Denmark tide models](https://doi.org/10.11583/DTU.23828874) (DTU23)
 
 For instructions on how to set up these models for use in `eo-tides`, refer to [Setting up tide models](setup.md).
 
