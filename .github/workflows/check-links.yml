@@ -20,9 +20,7 @@ jobs:
         with:
           fail: false
           output: /tmp/broken-links-report.md
-          args: >
-            # --exclude-path ./docs/data/archive
-            ./**/*.md ./**/*.rst ./**/*.ipynb ./**/*.yaml ./**/*.yml
+          args: "./**/*.md ./**/*.rst ./**/*.ipynb ./**/*.yaml ./**/*.yml"
 
       - name: Create issue
         if: steps.check-links.outputs.exit_code != 0
