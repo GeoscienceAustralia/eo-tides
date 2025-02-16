@@ -22,7 +22,7 @@ jobs:
           output: /tmp/broken-links-report.md
           args: >
             --exclude-path ./tests/testing.ipynb
-            ./**/*.md ./**/*.rst ./**/*.ipynb ./**/*.yaml ./**/*.yml
+            **/*.md **/*.ipynb **/*.yaml **/*.yml
 
       - name: Create issue
         if: steps.check-links.outputs.exit_code != 0
