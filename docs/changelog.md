@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.1
+
+### Bug fixes
+
+- Fixed bug causing tide model clipping with `clip_tides` to fail for bounding boxes completely west of the prime meridian ([#50](https://github.com/GeoscienceAustralia/eo-tides/issues/50))
+
 ## v0.6.0
 
 ### New features

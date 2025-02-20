@@ -181,9 +181,9 @@ def _clip_model_file(
     """
     Clips tide model netCDF datasets to a bounding box.
 
-    If the bounding box crosses 0 degrees longitude (e.g. Greenwich),
-    the function will clip the dataset into two parts and concatenate
-    them along the x-dimension to create a continuous result.
+    If the bounding box crosses 0 degrees longitude (e.g. Greenwich prime
+    meridian), the dataset will be clipped into two parts and concatenated
+    along the x-dimension to create a continuous result.
 
     Parameters
     ----------
@@ -226,20 +226,22 @@ def _clip_model_file(
     xcoords = nc[xcoord].compute()
     ycoords = nc[ycoord].compute()
 
-    # If data falls within 0-360 degree bounds, then clip directly
-    if (bbox.left >= 0) & (bbox.right <= 360):
+    # Convert longitudes to 0-360 convention
+    left = bbox.left % 360
+    right = bbox.right % 360
+
+    # If left coordinate is smaller than right, bbox does not cross
+    # zero longitude and can be clipped directly
+    if left <= right:  # bbox does not cross 0
         nc_clipped = nc.sel({
             ydim: (ycoords >= bbox.bottom) & (ycoords <= bbox.top),
-            xdim: (xcoords >= bbox.left) & (xcoords <= bbox.right),
+            xdim: (xcoords >= left) & (xcoords <= right),
         })
 
-    # If bbox crosses zero longitude, extract left and right
-    # separately and then combine into one concatenated dataset
-    elif (bbox.left < 0) & (bbox.right > 0):
-        # Convert longitudes to 0-360 range
-        left = bbox.left % 360
-        right = bbox.right % 360
-
+    # If left coordinate is larger than right, bbox crosses zero longitude.
+    # If so, extract left and right separately and then combine into one
+    # concatenated dataset
+    elif left > right:  # bbox crosses 0
         # Extract data from left of 0 longitude, and convert lon
         # coords to -180 to 0 range to enable continuous interpolation
         # across 0 boundary
@@ -357,7 +359,7 @@ def clip_models(
         model_files = model_database[m].get("model_file", [])
         grid_file = model_database[m].get("grid_file", [])
 
-        # Convert to list if strings and combine
+        # Convert to list of strings and combine
         model_files = model_files if isinstance(model_files, list) else [model_files]
         grid_file = grid_file if isinstance(grid_file, list) else [grid_file]
         all_files = model_files + grid_file
