@@ -3,11 +3,14 @@ This module contains shared fixtures for eo_tides tests.
 """
 
 from copy import deepcopy
+from pathlib import Path
 
+import numpy as np
 import odc.stac
 import pandas as pd
 import pystac_client
 import pytest
+import xarray as xr
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
@@ -97,3 +100,43 @@ def satellite_ds(satellite_ds_load):
     each test to ensure each test is independent
     """
     return deepcopy(satellite_ds_load)
+
+
+@pytest.fixture(scope="session")
+def create_synthetic_model(base_dir="data/tide_models_synthetic"):
+    """
+    Generates and exports synthetic HAMTIDE11 model data
+    to test clipping functionality.
+    """
+    base_dir = Path(base_dir)  # Ensure base_dir is a Path object
+
+    # Create coordinate arrays
+    lon = np.arange(0, 360.125, 0.125)  # 2881 points
+    lat = np.arange(-90, 90.125, 0.125)  # 1441 points
+
+    # List of hamtide tidal constituents
+    constituents = ["2n", "k1", "k2", "m2", "n2", "o1", "p1", "q1", "s2"]
+
+    # Create hamtide output directory
+    hamtide_dir = base_dir / "hamtide"
+    hamtide_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create and save a NetCDF for each constituent
+    for constituent in constituents:
+        # Create synthetic hamtide dataset with random data
+        shape = (len(lat), len(lon))  # 1441, 2881
+        data = np.random.random(shape).astype(np.float32)
+        ds = xr.Dataset(
+            {
+                "RE": (("LAT", "LON"), data),
+                "IM": (("LAT", "LON"), data),
+                "AMPL": (("LAT", "LON"), data),
+                "PHAS": (("LAT", "LON"), data),
+            },
+            coords={"LON": lon, "LAT": lat},
+            attrs={"title": f"HAMTIDE11a: {constituent} ocean tide"},
+        )
+
+        # Export
+        filename = hamtide_dir / f"{constituent}.hamtide11a.nc"
+        ds.to_netcdf(filename)

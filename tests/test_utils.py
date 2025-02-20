@@ -3,9 +3,11 @@ import tempfile
 from datetime import datetime
 
 import numpy as np
+import odc.geo.geom
 import pandas as pd
 import pytest
 
+from eo_tides.model import model_tides
 from eo_tides.utils import _standardise_models, _standardise_time, clip_models, idw, list_models
 
 
@@ -53,16 +55,95 @@ def test_standardise_models(model, ensemble_models, exp_process, exp_request, ex
 
 
 def test_clip_models():
+    # Set input and output paths
+    in_dir = "tests/data/tide_models"
     out_dir = pathlib.Path("tests/data/tide_models_clipped")
 
+    # Clip models to bbox
     clip_models(
-        input_directory="tests/data/tide_models",
+        input_directory=in_dir,
         output_directory=out_dir,
         bbox=(122.27, -18.07, 122.29, -18.05),
     )
 
+    # Assert that files were exported for all available models
     output_files = set([i.stem for i in out_dir.iterdir()])
     assert output_files == set(["GOT5", "EOT20", "hamtide"])
+
+    # Set modelling location
+    x, y = 122.28, -18.06
+    time = pd.date_range(start="2000-01", end="2001-03", freq="5h")
+
+    # Model using unclipped vs clipped files
+    df_unclipped = model_tides(
+        x=x,
+        y=y,
+        time=time,
+        model="HAMTIDE11",
+        directory=in_dir,
+        crop=False,
+    )
+    df_clipped = model_tides(
+        x=x,
+        y=y,
+        time=time,
+        model="HAMTIDE11",
+        directory=out_dir,
+        crop=False,
+    )
+
+    # Verify both produce the same results
+    assert np.allclose(df_unclipped.tide_height, df_clipped.tide_height)
+
+
+# Test clipping across multiple global locations using synthetic HAMTIDE11 data
+@pytest.mark.parametrize(
+    "bbox, name",
+    [
+        ((-166, 14, -151, 29), "hawaii"),  # entirely W of prime meridian
+        ((-13, 49, 6, 60), "uk"),  # crossing prime meridian
+        ((105.292969, -47.872144, 160.312500, -5.266008), "aus"),  # entirely E of prime meridian
+        ((-256.640625, 7.013668, -119.794922, 63.391522), "pacific"),  # crossing antimeridian
+    ],
+)
+def test_clip_models_bbox(bbox, name):
+    # Set input and output paths
+    in_dir = "tests/data/tide_models_synthetic/"
+    out_dir = f"tests/data/tide_models_synthetic_{name}/"
+
+    # Clip models to input bbox
+    clip_models(
+        input_directory=in_dir,
+        output_directory=out_dir,
+        bbox=bbox,
+        model="HAMTIDE11",
+        overwrite=True,
+    )
+
+    # Set modelling location based on bbox centroid
+    x, y = odc.geo.geom.BoundingBox(*bbox, crs="EPSG:4326").polygon.centroid.xy
+    time = pd.date_range(start="2000-01", end="2001-03", freq="5h")
+
+    # Model using unclipped vs clipped files
+    df_unclipped = model_tides(
+        x=x,
+        y=y,
+        time=time,
+        model="HAMTIDE11",
+        directory=in_dir,
+        crop=False,
+    )
+    df_clipped = model_tides(
+        x=x,
+        y=y,
+        time=time,
+        model="HAMTIDE11",
+        directory=out_dir,
+        crop=False,
+    )
+
+    # Verify both produce the same results
+    assert np.allclose(df_unclipped.tide_height, df_clipped.tide_height)
 
 
 @pytest.mark.parametrize(
