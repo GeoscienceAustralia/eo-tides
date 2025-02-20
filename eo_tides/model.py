@@ -96,7 +96,7 @@ def _model_tides(
     lon, lat = transformer.transform(x.flatten(), y.flatten())
 
     # Convert datetime
-    ts = timescale.time.timescale().from_datetime(time.flatten())
+    ts = timescale.time.Timescale().from_datetime(time.flatten())
 
     try:
         # Read tidal constants and interpolate to grid points
