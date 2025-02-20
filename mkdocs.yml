@@ -52,6 +52,7 @@ plugins:
             separate_signature: true
             line_length: 60
             show_root_heading: true
+            show_private_members: false
             # show_category_heading: true
             # show_root_full_path: true
             # show_root_members_full_path: true
