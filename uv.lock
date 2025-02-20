@@ -673,6 +673,7 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "shapely" },
+    { name = "timescale" },
     { name = "tqdm" },
     { name = "xarray" },
 ]
@@ -721,10 +722,11 @@ requires-dist = [
     { name = "pyogrio", specifier = ">=0.10.0" },
     { name = "pyproj", specifier = ">=3.7.0" },
     { name = "pystac-client", marker = "extra == 'notebooks'", specifier = ">=0.8.3" },
-    { name = "pytmd", specifier = ">=2.2.1" },
+    { name = "pytmd", specifier = ">=2.2.2" },
     { name = "scikit-learn", specifier = ">=1.4.0" },
     { name = "scipy", specifier = ">=1.14.1" },
     { name = "shapely", specifier = ">=2.0.6" },
+    { name = "timescale", specifier = ">=0.0.3" },
     { name = "tqdm", specifier = ">=4.55.0" },
     { name = "xarray", specifier = ">=2022.3.0" },
 ]

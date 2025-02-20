@@ -44,10 +44,11 @@ dependencies = [
     "psutil>=5.8.0",
     "pyogrio>=0.10.0",
     "pyproj>=3.7.0",
-    "pyTMD>=2.2.1",
+    "pyTMD>=2.2.2",
     "scikit-learn>=1.4.0",
     "scipy>=1.14.1",
     "shapely>=2.0.6",
+    "timescale>=0.0.3",
     "tqdm>=4.55.0",
     "xarray>=2022.3.0",
 ]

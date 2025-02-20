@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 import pyproj
 import pyTMD
+import timescale.time
 from tqdm import tqdm
 
 from .utils import DatetimeLike, _set_directory, _standardise_models, _standardise_time, idw
@@ -95,7 +96,7 @@ def _model_tides(
     lon, lat = transformer.transform(x.flatten(), y.flatten())
 
     # Convert datetime
-    timescale = pyTMD.time.timescale().from_datetime(time.flatten())
+    ts = timescale.time.timescale().from_datetime(time.flatten())
 
     try:
         # Read tidal constants and interpolate to grid points
@@ -136,10 +137,10 @@ def _model_tides(
     # Compute delta times based on model
     if pytmd_model.corrections in ("OTIS", "ATLAS", "TMD3", "netcdf"):
         # Use delta time at 2000.0 to match TMD outputs
-        deltat = np.zeros_like(timescale.tt_ut1)
+        deltat = np.zeros_like(ts.tt_ut1)
     else:
         # Use interpolated delta times
-        deltat = timescale.tt_ut1
+        deltat = ts.tt_ut1
 
     # In "one-to-many" mode, extracted tidal constituents and timesteps
     # are repeated/multiplied out to match the number of input points and
@@ -149,7 +150,7 @@ def _model_tides(
     points_repeat = len(x) if mode == "one-to-many" else 1
     time_repeat = len(time) if mode == "one-to-many" else 1
     t, hc, deltat = (
-        np.tile(timescale.tide, points_repeat),
+        np.tile(ts.tide, points_repeat),
         hc.repeat(time_repeat, axis=0),
         np.tile(deltat, points_repeat),
     )
