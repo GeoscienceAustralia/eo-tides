@@ -105,7 +105,7 @@ def satellite_ds(satellite_ds_load):
 # Run once per session to generate symethic HAMTIDE11 files; autouse=True
 # allows this to run without being specifically called in tests
 @pytest.fixture(scope="session", autouse=True)
-def create_synthetic_model(base_dir="data/tide_models_synthetic"):
+def create_synthetic_model(base_dir="tests/data/tide_models_synthetic"):
     """
     Generates and exports synthetic HAMTIDE11 model data
     to test clipping functionality.
