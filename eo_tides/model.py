@@ -431,10 +431,15 @@ def model_tides(
 
     Parameters
     ----------
-    x, y : float or list of float
-        One or more x and y coordinates used to define
-        the location at which to model tides. By default these
-        coordinates should be lat/lon; use "crs" if they
+    x : float or list of float
+        One or more x coordinates used to define the location at
+        which to model tides. By default these coordinates should
+        be in "EPSG:4326" WGS84 degrees longitude; use "crs" if they
+        are in a custom coordinate reference system.
+    y : float or list of float
+        One or more y coordinates used to define the location at
+        which to model tides. By default these coordinates should
+        be in "EPSG:4326" WGS84 degrees latitude; use "crs" if they
         are in a custom coordinate reference system.
     time : DatetimeLike
         Times at which to model tide heights (in UTC). Accepts
@@ -466,7 +471,7 @@ def model_tides(
         multiple spatial points (e.g. for the same set of satellite
         acquisition times at various locations across your study area).
         - "one-to-one": Model tides using a unique timestep for each
-        set of x and y coordinates. In this mode, the number of x and
+        x and y coordinate pair. In this mode, the number of x and
         y points must equal the number of timesteps provided in "time".
     output_format : str, optional
         Whether to return the output dataframe in long format (with
@@ -488,8 +493,12 @@ def model_tides(
         - "spline": scipy bivariate spline interpolation
         - "bilinear": quick bilinear interpolation
     extrapolate : bool, optional
-        Whether to extrapolate tides into x and y coordinates outside of
-        the valid tide modelling domain using nearest-neighbor.
+        Whether to extrapolate tides into x and y coordinates outside
+        of the valid tide modelling domain using nearest-neighbor
+        interpolation. The default of True ensures that modelled tides
+        will be returned even if there is no underlying tide model
+        data for a location (e.g. inside estuaries far from the
+        coastline). However, this can also produce unreliable results.
     cutoff : float, optional
         Extrapolation cutoff in kilometers. The default is None, which
         will extrapolate for all points regardless of distance from the
@@ -501,13 +510,13 @@ def model_tides(
     crop_buffer : int or float, optional
         The buffer distance in degrees used to crop tide model
         constituent files around the modelling area. Defaults to 5,
-        which will crop constituents using a five degree buffer on either
-        side of the analysis extent.
+        which will crop constituents using a five degree buffer on
+        either side of the analysis extent.
     parallel : bool, optional
-        Whether to parallelise tide modelling. If multiple tide models are
-        requested, these will be run in parallel using `concurrent.futures`.
-        If enough workers are available, the analysis will also be split
-        into spatial chunks for additional parallelisation (see "parallel_splits"
+        Whether to parallelise tide modelling. If multiple tide models
+        are requested, these will be run in parallel. If enough workers
+        are available, the analysis will also be split into spatial
+        chunks for additional parallelisation (see "parallel_splits"
         below). Default is True.
     parallel_splits : str or int, optional
         Whether to split the input x and y coordinates into smaller,
@@ -722,11 +731,16 @@ def model_phases(
 
     Parameters
     ----------
-    x, y : float or list of float
-        One or more x and y coordinates used to define
-        the location at which to model tide phases. By default
-        these coordinates should be lat/lon; use "crs" if they
-        are in a custom coordinate reference system.
+    x : float or list of float
+        One or more x coordinates used to define the location at
+        which to model tide phases. By default these coordinates
+        should be in "EPSG:4326" WGS84 degrees longitude; use "crs"
+        if they are in a custom coordinate reference system.
+    y : float or list of float
+        One or more y coordinates used to define the location at
+        which to model tide phases. By default these coordinates
+        should be in "EPSG:4326" WGS84 degrees latitude; use "crs"
+        if they are in a custom coordinate reference system.
     time : DatetimeLike
         Times at which to model tide phases (in UTC). Accepts
         any format that can be converted by `pandas.to_datetime()`;
