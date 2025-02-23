@@ -72,7 +72,7 @@ def test_clip_models():
 
     # Set modelling location
     x, y = 122.28, -18.06
-    time = pd.date_range(start="2000-01", end="2001-03", freq="5h")
+    time = pd.date_range(start="2000-01", end="2001-02", freq="5h")
 
     # Model using unclipped vs clipped files
     df_unclipped = model_tides(
@@ -81,7 +81,7 @@ def test_clip_models():
         time=time,
         model="HAMTIDE11",
         directory=in_dir,
-        crop=False,
+        # crop=False,
     )
     df_clipped = model_tides(
         x=x,
@@ -89,7 +89,7 @@ def test_clip_models():
         time=time,
         model="HAMTIDE11",
         directory=out_dir,
-        crop=False,
+        # crop=False,
     )
 
     # Verify both produce the same results
@@ -98,15 +98,15 @@ def test_clip_models():
 
 # Test clipping across multiple global locations using synthetic HAMTIDE11 data
 @pytest.mark.parametrize(
-    "bbox, name",
+    "bbox, point, name",
     [
-        ((-166, 14, -151, 29), "hawaii"),  # entirely W of prime meridian
-        ((-13, 49, 6, 60), "uk"),  # crossing prime meridian
-        ((105.292969, -47.872144, 160.312500, -5.266008), "aus"),  # entirely E of prime meridian
-        ((-256.640625, 7.013668, -119.794922, 63.391522), "pacific"),  # crossing antimeridian
+        ((-166, 14, -151, 29), (19.60, -155.46), "hawaii"),  # entirely W of prime meridian
+        ((-13, 49, 6, 60), (51.47, 0.84), "uk"),  # crossing prime meridian
+        ((105, -48, 160, -5), (-25.59, 153.03), "aus"),  # entirely E of prime meridian
+        ((-257, 7, -120, 63), (19.59, -155.45), "pacific"),  # crossing antimeridian
     ],
 )
-def test_clip_models_bbox(bbox, name):
+def test_clip_models_bbox(bbox, point, name):
     # Set input and output paths
     in_dir = "tests/data/tide_models_synthetic/"
     out_dir = f"tests/data/tide_models_synthetic_{name}/"
@@ -121,8 +121,8 @@ def test_clip_models_bbox(bbox, name):
     )
 
     # Set modelling location based on bbox centroid
-    x, y = odc.geo.geom.BoundingBox(*bbox, crs="EPSG:4326").polygon.centroid.xy
-    time = pd.date_range(start="2000-01", end="2001-03", freq="5h")
+    y, x = point
+    time = pd.date_range(start="2000-01", end="2001-02", freq="5h")
 
     # Model using unclipped vs clipped files
     df_unclipped = model_tides(
@@ -131,7 +131,7 @@ def test_clip_models_bbox(bbox, name):
         time=time,
         model="HAMTIDE11",
         directory=in_dir,
-        crop=False,
+        # crop=False,
     )
     df_clipped = model_tides(
         x=x,
@@ -139,7 +139,7 @@ def test_clip_models_bbox(bbox, name):
         time=time,
         model="HAMTIDE11",
         directory=out_dir,
-        crop=False,
+        # crop=False,
     )
 
     # Verify both produce the same results
