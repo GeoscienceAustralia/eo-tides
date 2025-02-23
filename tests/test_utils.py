@@ -89,7 +89,6 @@ def test_clip_models():
         time=time,
         model="HAMTIDE11",
         directory=out_dir,
-        # crop=False,
     )
 
     # Verify both produce the same results
@@ -131,7 +130,6 @@ def test_clip_models_bbox(bbox, point, name):
         time=time,
         model="HAMTIDE11",
         directory=in_dir,
-        # crop=False,
     )
     df_clipped = model_tides(
         x=x,
@@ -139,7 +137,6 @@ def test_clip_models_bbox(bbox, point, name):
         time=time,
         model="HAMTIDE11",
         directory=out_dir,
-        # crop=False,
     )
 
     # Verify both produce the same results
