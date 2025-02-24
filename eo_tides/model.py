@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import textwrap
+import warnings
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from functools import partial
@@ -83,6 +84,7 @@ def _model_tides(
     cutoff,
     crop,
     crop_buffer,
+    append_node,
 ):
     """Worker function applied in parallel by `model_tides`. Handles the
     extraction of tide modelling constituents and tide modelling using
@@ -104,12 +106,12 @@ def _model_tides(
             lon,
             lat,
             type=pytmd_model.type,
-            crop=crop,
+            crop=True if crop == "auto" else crop,
             buffer=crop_buffer,
             method=method,
             extrapolate=extrapolate,
             cutoff=cutoff,
-            append_node=False,
+            append_node=append_node,
         )
 
         # TODO: Return constituents
@@ -117,16 +119,45 @@ def _model_tides(
         # print(amp.shape, ph.shape, c)
         # print(pd.DataFrame({"amplitude": amp}))
 
-    # Raise error if constituent files no not cover analysis extent
+    except ValueError:
+        # If on-the-fly cropping is auto, try again with crop turned off
+        if crop == "auto":
+            warnings.warn(
+                "On-the-fly cropping is not compatible with the provided "
+                "clipped model files; running with `crop=False`."
+            )
+
+            # Read tidal constants and interpolate to grid points
+            amp, ph, c = pytmd_model.extract_constants(
+                lon,
+                lat,
+                type=pytmd_model.type,
+                crop=False,
+                buffer=crop_buffer,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                append_node=append_node,
+            )
+
+        # Otherwise, raise error if cropping if set to True
+        else:
+            error_msg = (
+                "On-the-fly cropping (e.g. `crop=True`) is not compatible with your "
+                "provided clipped model files. Please set `crop=False` or `crop='auto'`, "
+                "or run your analysis on unclipped global model files to avoid this error."
+            )
+            raise Exception(error_msg) from None
+
+    # Raise error if constituent files do not cover analysis extent
     except IndexError:
-        error_msg = f"""
-        The {model} tide model constituent files do not cover the analysis extent
-        ({min(lon):.2f}, {max(lon):.2f}, {min(lat):.2f}, {max(lat):.2f}).
-        This can occur if you are using clipped model files to improve run times.
-        Consider using model files that cover your entire analysis area, or set `crop=False`
-        to reduce the extent of tide model constituent files that is loaded.
-        """
-        raise Exception(textwrap.dedent(error_msg).strip()) from None
+        error_msg = (
+            f"The {model} tide model constituent files do not cover the analysis extent "
+            f"({min(lon):.2f}, {max(lon):.2f}, {min(lat):.2f}, {max(lat):.2f}). "
+            "This can occur if you are using clipped model files to improve run times. "
+            "Consider using model files that cover your entire analysis area."
+        )
+        raise Exception(error_msg) from None
 
     # Calculate complex phase in radians for Euler's
     cph = -1j * ph * np.pi / 180.0
@@ -397,8 +428,9 @@ def model_tides(
     method: str = "linear",
     extrapolate: bool = True,
     cutoff: float | None = None,
-    crop: bool = True,
+    crop: bool | str = "auto",
     crop_buffer: float | None = 5,
+    append_node: bool = False,
     parallel: bool = True,
     parallel_splits: int | str = "auto",
     parallel_max: int | None = None,
@@ -503,15 +535,22 @@ def model_tides(
         Extrapolation cutoff in kilometers. The default is None, which
         will extrapolate for all points regardless of distance from the
         valid tide modelling domain.
-    crop : bool, optional
+    crop : bool or str, optional
         Whether to crop tide model constituent files on-the-fly to
-        improve performance. Defaults to True; use `crop_buffer`
-        to customise the buffer distance used to crop the files.
+        improve performance. Defaults to "auto", which will attempt to
+        apply on-the-fly cropping where possible (some clipped model
+        files restricted entirely to the western hemisphere are not
+        suitable for on-the-fly cropping). Set `crop_buffer` to
+        customise the buffer distance used to crop the files.
     crop_buffer : int or float, optional
         The buffer distance in degrees used to crop tide model
         constituent files around the modelling area. Defaults to 5,
         which will crop constituents using a five degree buffer on
         either side of the analysis extent.
+    append_node: bool, optional
+        Apply adjustments to harmonic constituents to allow for periodic
+        modulations over the 18.6-year nodal period (lunar nodal tide).
+        Default is False.
     parallel : bool, optional
         Whether to parallelise tide modelling. If multiple tide models
         are requested, these will be run in parallel. If enough workers
@@ -600,6 +639,7 @@ def model_tides(
         cutoff=np.inf if cutoff is None else cutoff,
         crop=crop,
         crop_buffer=crop_buffer,
+        append_node=append_node,
     )
 
     # If automatic parallel splits, calculate optimal value
