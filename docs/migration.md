@@ -34,7 +34,7 @@ Renamed for consistency with `model_tides` and `pixel_tides`.
 
     Update references to `tidal_tag` to `tag_tides`.
 
-## `ds` param renamed to `data`, now accepts `GeoBox`
+### `ds` param renamed to `data`, now accepts `GeoBox`
 
 The `ds` param in all satellite data functions (`tag_tides`, `pixel_tides`, `tide_stats`, `pixel_tides`) has been updated to accept either `xarray.Dataset`, `xarray.DataArray` or a `odc.geo.geobox.GeoBox`. To account for this change, the `ds` param has been renamed to a more generic name `data`.
 
@@ -49,7 +49,7 @@ The `ds` param in all satellite data functions (`tag_tides`, `pixel_tides`, `tid
     tag_tides(data=your_data)
     ```
 
-## `times` param renamed to `time`, accepts any format supported by `pandas.to_datetime()`
+### `times` param renamed to `time`, accepts any format supported by `pandas.to_datetime()`
 
 The `times` parameter has been renamed to `time`, and updated to more flexibly accept any time format that can be converted by `pandas.to_datetime()`; e.g. `np.ndarray[datetime64]`, `pd.DatetimeIndex`, `pd.Timestamp`, `datetime.datetime` and strings (e.g. `"2020-01-01 23:00"`). For example: `time=pd.date_range(start="2000", end="2001", freq="5h")`.
 
