@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Need full history for tags
+          fetch-depth: 0 # Need full history for tags
 
       - name: Export tag
         id: vars
@@ -27,12 +27,15 @@ jobs:
           RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
         if: ${{ github.event_name == 'release' }}
 
-      # For merges to main, use ".devN" suffix based on commits since tag
+      # For merges to main, incremement patch version by one
+      # and use ".devN" suffix based on commits since tag
       - name: Set dev version
         run: |
           LATEST_TAG=$(git describe --tags --abbrev=0)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_TAG"
+          PATCH=$((PATCH + 1))
           DEV_NUM=$(git rev-list $LATEST_TAG..HEAD --count)
-          DEV_VERSION="$LATEST_TAG.dev$DEV_NUM"
+          DEV_VERSION="$MAJOR.$MINOR.$PATCH.dev$DEV_NUM"
           sed -i "s/^version = \".*\"/version = \"$DEV_VERSION\"/" pyproject.toml
         if: ${{ github.event_name == 'push' }}
 
