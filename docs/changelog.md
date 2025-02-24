@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.2
+
+### New features
+
+- Added `apply_node` parameteter to `model_tides` to apply `pyTMD`'s adjustments to harmonic constituents to allow for periodic modulations over the 18.6-year nodal period (lunar nodal tide). Default is False.
+
+### Bug fixes
+
+- Further fixes for bug causing tide model clipping with `clip_tides` to fail for bounding boxes completely west of the prime meridian ([#50](https://github.com/GeoscienceAustralia/eo-tides/issues/50)); default value for `crop` param is now `"auto"` instead of `True`.
+
 ## v0.6.1
 
 ### Bug fixes
