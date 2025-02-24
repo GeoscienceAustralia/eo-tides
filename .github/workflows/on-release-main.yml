@@ -2,7 +2,8 @@ name: release-main
 
 on:
   release:
-    types: [published, edited]
+    types: [published]
+  push:
     branches: [main]
 
 jobs:
@@ -16,12 +17,22 @@ jobs:
         run: echo tag=${GITHUB_REF#refs/*/} >> $GITHUB_OUTPUT
         if: ${{ github.event_name == 'release' }}
 
-      - name: Update project version
+      # For full releases, use tag for version name
+      - name: Set release version
         run: |
           sed -i "s/^version = \".*\"/version = \"$RELEASE_VERSION\"/" pyproject.toml
         env:
           RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
         if: ${{ github.event_name == 'release' }}
+
+      # For merges to main, use ".devN" suffix based on commits since tag
+      - name: Set dev version
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          DEV_NUM=$(git rev-list $LATEST_TAG..HEAD --count)
+          DEV_VERSION="$LATEST_TAG.dev$DEV_NUM"
+          sed -i "s/^version = \".*\"/version = \"$DEV_VERSION\"/" pyproject.toml
+        if: ${{ github.event_name == 'push' }}
 
       - name: Upload updated pyproject.toml
         uses: actions/upload-artifact@v4
@@ -45,13 +56,12 @@ jobs:
           name: pyproject-toml
 
       - name: Build package
-        run: uvx --from build pyproject-build --installer uv
+        run: uv build
 
       - name: Publish package
-        run: uvx twine upload dist/*
+        run: uv publish
         env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
   deploy-docs:
     needs: publish
