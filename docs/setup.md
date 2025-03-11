@@ -2,20 +2,30 @@
 
 !!! important
 
-    `eo-tides` provides tools for modelling tides using global ocean tide models but does not host or maintain the models themselves. **Users are responsible for accessing, using, and citing ocean tide models in compliance with each model's licensing terms.**
+    `eo-tides` provides tools for modelling tides using global ocean tide models but does not host or maintain the model data itself. **Users are responsible for accessing, using, and citing ocean tide model data in compliance with each model's licensing terms.**
 
-Once you [have installed `eo-tides`](install.md), we need to download and set up the external global ocean tide models required for `eo-tides` to work.
+Once you [have installed `eo-tides`](install.md), we need to download and set up the external global ocean tide model data required for `eo-tides` to work.
 The following documentation provides instructions for getting started with several common global ocean tide models.
 
 !!! tip
 
     Please refer to the [`pyTMD` documentation](https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories) for additional instructions covering all other supported tide models.
 
+## Tide model files and harmonic tidal constituents
+
+Tides are driven by complex gravitational interactions between the Earth, moon, and sun, which create periodic and predictable variations in sea level. These variations can be decomposed into a set of **harmonic tidal constituents** (also known as "tidal constants") with unique amplitudes and phases that correspond to different celestial influences.
+
+**When downloading tide model data, you are retrieving these tidal constituents rather than direct modelled or measured tidal height outputs.** Global ocean tide models use amplitudes and phases from these tidal constituents to precisely reconstruct tidal variations, allowing them to predict tide heights for any location on the planet and any moment in time — even into the future.
+
+!!! tip
+
+    For a deep dive into the science of tide modelling and how harmonic tidal constituents are used by global ocean tide models, refer to [`pyTMD` Ocean and Load Tides documentation.](https://pytmd.readthedocs.io/en/latest/background/Tides.html)
+
 ## Setting up a tide model directory
 
 As a first step, we need to create a directory that will contain our tide model data.
 This directory will be accessed by all `eo-tides` functions.
-For example, we might want to store our tide models in a directory called `tide_models/`:
+For example, we might want to store our tide model data in a directory called `tide_models/`:
 
 ```
 tide_models/
