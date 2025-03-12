@@ -409,6 +409,10 @@ def ensemble_tides(
             .reorder_levels(["time", "x", "y"], axis=0)
         )
 
+        # Set dtype to match input data
+        # TODO: apply this in groupby instead to avoid peak memory issues
+        ensemble_df["tide_height"] = ensemble_df["tide_height"].astype(tide_df.tide_height.dtype)
+
         ensemble_list.append(ensemble_df)
 
     # Combine all ensemble models and return as a single dataframe
