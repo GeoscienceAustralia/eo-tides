@@ -124,7 +124,11 @@ def _model_tides(
         if crop == "auto":
             warnings.warn(
                 "On-the-fly cropping is not compatible with the provided "
-                "clipped model files; running with `crop=False`."
+                "model files; running with `crop=False`. This will not "
+                "affect your results but may lead to a minor slowdown. "
+                "This can occur when analysing clipped model files restricted "
+                "to the western hemisphere. To suppress this warning, manually "
+                "set `crop=False`."
             )
 
             # Read tidal constants and interpolate to grid points

@@ -27,9 +27,17 @@ As a first step, we need to create a directory that will contain our tide model 
 This directory will be accessed by all `eo-tides` functions.
 For example, we might want to store our tide model data in a directory called `tide_models/`:
 
-```
-tide_models/
-```
+=== "Relative path"
+
+    <pre><code>tide_models/</code></pre>
+
+=== "Full path (Windows)"
+
+    <pre><code><span style="color: #bbb;">D:/projects/</span>tide_models/</code></pre>
+
+=== "Full path (Linux)"
+
+    <pre><code><span style="color: #bbb;">/home/user/projects/</span>tide_models/</code></pre>
 
 !!! tip
 
@@ -270,29 +278,71 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
 ### 1. Using the `directory` function parameter
 
-All tide modelling functions from `eo-tides` provide a `directory` parameter that can be used to specify the location of your tide model directory.
+All tide modelling functions from `eo-tides` provide a `directory` parameter that can be used to specify **either the relative or full/absolute path** to your tide model directory.
+
 For example, using the [`eo_tides.model.model_tides`](api.md#eo_tides.model.model_tides) function:
 
-```py hl_lines="8"
-import pandas as pd
-from eo_tides.model import model_tides
+=== "Relative path"
 
-model_tides(
-        x=155,
-        y=-35,
-        time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
-        directory="tide_models/"
-)
-```
+    ```py hl_lines="8"
+    import pandas as pd
+    from eo_tides.model import model_tides
+
+    model_tides(
+            x=155,
+            y=-35,
+            time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
+            directory="tide_models/"  # relative path to `tide_models` directory
+    )
+    ```
+
+=== "Full path (Windows)"
+
+    ```py hl_lines="8"
+    import pandas as pd
+    from eo_tides.model import model_tides
+
+    model_tides(
+            x=155,
+            y=-35,
+            time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
+            directory="D:/projects/tide_models/"  # full path to `tide_models`
+    )
+    ```
+
+=== "Full path (Linux)"
+
+    ```py hl_lines="8"
+    import pandas as pd
+    from eo_tides.model import model_tides
+
+    model_tides(
+            x=155,
+            y=-35,
+            time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
+            directory="/home/user/projects/tide_models/"  # full path to `tide_models`
+    )
+    ```
 
 ### 2. (Advanced) Setting the `EO_TIDES_TIDE_MODELS` environmental variable
 
-For more advanced usage, you can set the path to your [tide model directory](#setting-up-a-tide-model-directory) by setting the `EO_TIDES_TIDE_MODELS` environment variable:
+For more advanced usage, you can set the path to your [tide model directory](#setting-up-a-tide-model-directory) by setting the `EO_TIDES_TIDE_MODELS` environment variable.
 
-```py hl_lines="2"
-import os
-os.environ["EO_TIDES_TIDE_MODELS"] = "tide_models/"
-```
+This should be set to **a full/absolute path** to ensure it can be accessed from anywhere you run `eo-tides` code:
+
+=== "Full path (Windows)"
+
+    ```py hl_lines="2"
+    import os
+    os.environ["EO_TIDES_TIDE_MODELS"] = "D:/projects/tide_models/"
+    ```
+
+=== "Full path (Linux)"
+
+    ```py hl_lines="2"
+    import os
+    os.environ["EO_TIDES_TIDE_MODELS"] = "/home/user/projects/tide_models/"
+    ```
 
 All tide modelling functions from `eo-tides` will check for the presence of the `EO_TIDES_TIDE_MODELS` environment variable, and use it as the default `directory` path if available (the `EO_TIDES_TIDE_MODELS` environment variable will be overuled by the `directory` parameter if provided).
 
@@ -369,7 +419,10 @@ Outputs exported to tide_models_clipped/
 
 You can now pass this new clipped tide model directory to all future `eo_tides` function calls for improved tide modelling performance, e.g.:
 
-```py hl_lines="5"
+```py hl_lines="8"
+import pandas as pd
+from eo_tides.model import model_tides
+
 model_tides(
         x=155,
         y=-35,
