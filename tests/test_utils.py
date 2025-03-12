@@ -95,17 +95,21 @@ def test_clip_models():
     assert np.allclose(df_unclipped.tide_height, df_clipped.tide_height)
 
 
-# Test clipping across multiple global locations using synthetic HAMTIDE11 data
+# Test clipping across multiple global locations using synthetic tide data
 @pytest.mark.parametrize(
-    "bbox, point, name",
+    "model, bbox, point, name",
     [
-        ((-166, 14, -151, 29), (19.60, -155.46), "hawaii"),  # entirely W of prime meridian
-        ((-13, 49, 6, 60), (51.47, 0.84), "uk"),  # crossing prime meridian
-        ((105, -48, 160, -5), (-25.59, 153.03), "aus"),  # entirely E of prime meridian
-        ((-257, 7, -120, 63), (19.59, -155.45), "pacific"),  # crossing antimeridian
+        ("EOT20", (-166, 14, -151, 29), (19.60, -155.46), "hawaii"),  # entirely W of prime meridian
+        ("EOT20", (-13, 49, 6, 60), (51.47, 0.84), "uk"),  # crossing prime meridian
+        ("EOT20", (105, -48, 160, -5), (-25.59, 153.03), "aus"),  # entirely E of prime meridian
+        ("EOT20", (-257, 7, -120, 63), (19.59, -155.45), "pacific"),  # crossing antimeridian
+        ("HAMTIDE11", (-166, 14, -151, 29), (19.60, -155.46), "hawaii"),  # entirely W of prime meridian
+        ("HAMTIDE11", (-13, 49, 6, 60), (51.47, 0.84), "uk"),  # crossing prime meridian
+        ("HAMTIDE11", (105, -48, 160, -5), (-25.59, 153.03), "aus"),  # entirely E of prime meridian
+        ("HAMTIDE11", (-257, 7, -120, 63), (19.59, -155.45), "pacific"),  # crossing antimeridian
     ],
 )
-def test_clip_models_bbox(bbox, point, name):
+def test_clip_models_bbox(model, bbox, point, name):
     # Set input and output paths
     in_dir = "tests/data/tide_models_synthetic/"
     out_dir = f"tests/data/tide_models_synthetic_{name}/"
@@ -115,7 +119,7 @@ def test_clip_models_bbox(bbox, point, name):
         input_directory=in_dir,
         output_directory=out_dir,
         bbox=bbox,
-        model="HAMTIDE11",
+        model=model,
         overwrite=True,
     )
 
@@ -128,14 +132,14 @@ def test_clip_models_bbox(bbox, point, name):
         x=x,
         y=y,
         time=time,
-        model="HAMTIDE11",
+        model=model,
         directory=in_dir,
     )
     df_clipped = model_tides(
         x=x,
         y=y,
         time=time,
-        model="HAMTIDE11",
+        model=model,
         directory=out_dir,
     )
 
