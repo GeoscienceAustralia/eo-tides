@@ -271,6 +271,7 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 ### 1. Using the `directory` function parameter
 
 All tide modelling functions from `eo-tides` provide a `directory` parameter that can be used to specify the location of your tide model directory.
+
 For example, using the [`eo_tides.model.model_tides`](api.md#eo_tides.model.model_tides) function:
 
 ```py hl_lines="8"
@@ -281,7 +282,29 @@ model_tides(
         x=155,
         y=-35,
         time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
-        directory="tide_models/"
+        directory="tide_models/"  # relative path to `tide_models` directory
+)
+```
+
+Both relative and full paths are supported; for example, specifying a full path to `tide_models` on Windows:
+
+```py hl_lines="5"
+model_tides(
+        x=155,
+        y=-35,
+        time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
+        directory="D:/projects/tide_models/"  # full path to `tide_models`
+)
+```
+
+Or on Linux:
+
+```py hl_lines="5"
+model_tides(
+        x=155,
+        y=-35,
+        time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
+        directory="/home/user/projects/tide_models/"
 )
 ```
 
