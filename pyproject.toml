@@ -120,6 +120,7 @@ preview = true
 DEP002 = [
     "folium",
     "pyogrio",
+    "dask",
 ]
 
 [tool.coverage.report]
