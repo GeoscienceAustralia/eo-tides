@@ -36,6 +36,7 @@ classifiers = [
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "colorama>=0.4.3",
+    "dask[complete]>=2023.1.0",
     "geopandas>=0.10.0",
     "matplotlib>=3.8.0",
     "numpy>=1.26.0",
@@ -44,7 +45,7 @@ dependencies = [
     "psutil>=5.8.0",
     "pyogrio>=0.10.0",
     "pyproj>=3.7.0",
-    "pyTMD>=2.2.2",
+    "pyTMD==2.2.2",
     "scikit-learn>=1.4.0",
     "scipy>=1.14.1",
     "shapely>=2.0.6",
@@ -119,6 +120,7 @@ preview = true
 DEP002 = [
     "folium",
     "pyogrio",
+    "dask",
 ]
 
 [tool.coverage.report]
