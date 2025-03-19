@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 from pyTMD.compute import tide_elevations
 
-from eo_tides.model import _parallel_splits, _set_directory, model_phases, model_tides
+from eo_tides.model import _parallel_splits, _set_directory, ensemble_tides, model_phases, model_tides
 from eo_tides.validation import eval_metrics
 
 GAUGE_X = 122.2183
@@ -430,6 +430,30 @@ def test_model_tides_ensemble():
         "ensemble-mean-weighted",
         "ensemble-mean",
     ])
+
+
+# Test ensemble dtype is set correctly
+@pytest.mark.parametrize(
+    "dtype",
+    ["float32", "float64", "int16"],
+)
+def test_model_tides_ensemble_dtype(dtype):
+    # Create dummy modelled tide data with specific dtype
+    modelled_tides_df = pd.DataFrame({
+        "time": pd.date_range(start="2000-01-01", periods=5, freq="5h").repeat(2),
+        "x": 122.2183,
+        "y": -18.0008,
+        "tide_model": ["EOT20", "HAMTIDE11"] * 5,
+        "tide_height": np.random.uniform(-4, 3, 10).astype(dtype),
+    })
+    modelled_tides_df = modelled_tides_df.set_index(["time", "x", "y"])
+
+    # Run ensemble modelling on modelled tides input
+    ensemble_df = ensemble_tides(modelled_tides_df, ensemble_models=ENSEMBLE_MODELS, crs="EPSG:4326")
+
+    # Verify that output tides match are as expected, and match the iput data
+    assert ensemble_df.tide_height.dtype == dtype
+    assert ensemble_df.tide_height.dtype == modelled_tides_df.tide_height.dtype
 
 
 @pytest.mark.parametrize("time_offset", ["15 min", "20 min"])

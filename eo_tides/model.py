@@ -330,6 +330,9 @@ def ensemble_tides(
     x = tide_df.index.get_level_values(level="x")
     y = tide_df.index.get_level_values(level="y")
 
+    # Identify input datatype
+    input_dtype = tide_df.tide_height.dtype
+
     # Load model ranks points and reproject to same CRS as x and y
     model_ranking_cols = [f"rank_{m}" for m in ensemble_models]
     try:
@@ -373,6 +376,7 @@ def ensemble_tides(
         .set_index(["tide_model", "x", "y"])
         .groupby(["x", "y"])
         .rank()
+        .astype("float32")  # use smaller dtype for rankings to save memory
     )
 
     # If no custom ensemble funcs are provided, use a default ensemble
@@ -404,9 +408,12 @@ def ensemble_tides(
 
         # Use weightings to combine multiple models into single ensemble
         ensemble_df = (
-            # Calculate weighted mean and convert back to dataframe
+            # Calculate weighted mean
             grouped.weighted.sum()
             .div(grouped.weights.sum())
+            # Make sure datatype is the same as the input
+            .astype(input_dtype)
+            # Convert to dataframe
             .to_frame("tide_height")
             # Label ensemble model and ensure indexes are in expected order
             .assign(tide_model=ensemble_n)
