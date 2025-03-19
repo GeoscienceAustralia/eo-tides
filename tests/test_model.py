@@ -448,11 +448,12 @@ def test_model_tides_ensemble_dtype(dtype):
     })
     modelled_tides_df = modelled_tides_df.set_index(["time", "x", "y"])
 
-    # Run ensemble modelling on default input
+    # Run ensemble modelling on modelled tides input
     ensemble_df = ensemble_tides(modelled_tides_df, ensemble_models=ENSEMBLE_MODELS, crs="EPSG:4326")
 
-    assert ensemble_df.tide_height.dtype == modelled_tides_df.tide_height.dtype
+    # Verify that output tides match are as expected, and match the iput data
     assert ensemble_df.tide_height.dtype == dtype
+    assert ensemble_df.tide_height.dtype == modelled_tides_df.tide_height.dtype
 
 
 @pytest.mark.parametrize("time_offset", ["15 min", "20 min"])
