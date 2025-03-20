@@ -13,12 +13,10 @@ on:
       - "paper/**"
       - "README.md"
 
+# Ensure only one test workflow runs per branch/PR at a time
 concurrency:
-  # Define group by head_ref of the PR
-  group: ${{ github.head_ref }}
-  # Here we specify that we'll cancel any "in progress" workflow of the same group. Thus if we push, ammend a commit and push
-  # again the previous workflow will be cancelled, thus saving us github action build minutes and avoid any conflicts
-  cancel-in-progress: true
+  group: ${{ github.ref }}  # Group by branch or PR ref
+  cancel-in-progress: true  # Cancel any in-progress runs if a new one starts
 
 env:
   EO_TIDES_TIDE_MODELS: ./tests/data/tide_models
