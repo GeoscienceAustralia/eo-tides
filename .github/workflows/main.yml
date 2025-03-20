@@ -15,8 +15,8 @@ on:
 
 # Ensure only one test workflow runs per branch/PR at a time
 concurrency:
-  group: ${{ github.ref }}  # Group by branch or PR ref
-  cancel-in-progress: true  # Cancel any in-progress runs if a new one starts
+  group: ${{ github.ref }} # Group by branch or PR ref
+  cancel-in-progress: true # Cancel any in-progress runs if a new one starts
 
 env:
   EO_TIDES_TIDE_MODELS: ./tests/data/tide_models
