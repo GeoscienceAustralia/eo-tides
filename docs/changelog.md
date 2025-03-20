@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.3
+
+### New features
+
+- Major updates to installation and setup documentation, to provide additional context about tide modelling data and installing `eo-tides` using both `pip` and `uv`
+
+### Bug fixes
+
+- Fixed bug where ensemble tide modelling used excessive memory, by ensuring dtype of ensemble modelled tides matches dtype of input modelled tides ([#70](https://github.com/GeoscienceAustralia/eo-tides/pull/70))
+- Added missing `dask` dependency to requirements ([#68](https://github.com/GeoscienceAustralia/eo-tides/pull/68))
+
 ## v0.6.2
 
 ### New features
