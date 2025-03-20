@@ -14,11 +14,11 @@ on:
       - "README.md"
 
 concurrency:
-   # Define group by head_ref of the PR
-   group: ${{ github.head_ref }}
-   # Here we specify that we'll cancel any "in progress" workflow of the same group. Thus if we push, ammend a commit and push
-   # again the previous workflow will be cancelled, thus saving us github action build minutes and avoid any conflicts
-   cancel-in-progress: true
+  # Define group by head_ref of the PR
+  group: ${{ github.head_ref }}
+  # Here we specify that we'll cancel any "in progress" workflow of the same group. Thus if we push, ammend a commit and push
+  # again the previous workflow will be cancelled, thus saving us github action build minutes and avoid any conflicts
+  cancel-in-progress: true
 
 env:
   EO_TIDES_TIDE_MODELS: ./tests/data/tide_models
