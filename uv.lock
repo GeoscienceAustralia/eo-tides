@@ -557,7 +557,7 @@ wheels = [
 
 [[package]]
 name = "dask"
-version = "2025.2.0"
+version = "2025.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -569,9 +569,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "toolz" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/55/30/ba2d373923cad0e069b50bf27115745fba4fb0a4f53cee7002582cb5cec7/dask-2025.2.0.tar.gz", hash = "sha256:89c87125d04d28141eaccc4794164ce9098163fd22d8ad943db48f8d4c815460", size = 10781637 }
+sdist = { url = "https://files.pythonhosted.org/packages/c3/f1/b4d8ccb5010ecba58a1799cb3c6b7ef5ed0d7d2add53adc1fc0d0ace56fe/dask-2025.3.0.tar.gz", hash = "sha256:322834f44ebc24abeb564c56ccb817c97d6e7af6be71ad0ad96b78b51f2e0e85", size = 10928728 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/55/4a/738ec3dac7e767c1ba6fbb6ecb908ceda66a1b2f4ee967bc03800fb07630/dask-2025.2.0-py3-none-any.whl", hash = "sha256:f0fdeef6ceb0a06569d456c9e704f220f7f54e80f3a6ea42ab98cea6bc642b6e", size = 1393839 },
+    { url = "https://files.pythonhosted.org/packages/bd/8a/3609033a4bfd7c9b3e8a4e8a5d6e318dfc06ab2e2d3b5cb0e01a60458858/dask-2025.3.0-py3-none-any.whl", hash = "sha256:b5d72bb33788904a218fd7da1850238517592358ecc79c30bb5c188a71df506d", size = 1437133 },
 ]
 
 [package.optional-dependencies]
@@ -675,7 +675,7 @@ wheels = [
 
 [[package]]
 name = "distributed"
-version = "2025.2.0"
+version = "2025.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -694,9 +694,9 @@ dependencies = [
     { name = "urllib3" },
     { name = "zict" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a4/92/7ed81ced4d9301d79696c4f25a874371cf4ecd90aac5137f807870c290f1/distributed-2025.2.0.tar.gz", hash = "sha256:84e8e3a9290db805250cd8f0b46416b8e3e32c8088ffa778d8a21ea1e2c1cac3", size = 1111668 }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/24/161ef76cdf39f38b4092ceae233f02f8eb673b2ef3c3f0d478f479e28c30/distributed-2025.3.0.tar.gz", hash = "sha256:84a68c91db2a106c752ca7845fba8cd92ad4f3545c0fb2d9b6dec0f44b225539", size = 1112159 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/30/a8/fec2e908b32a1b7868bd4c6144ac12ce1eb22460e18d6a2f093da2a8283d/distributed-2025.2.0-py3-none-any.whl", hash = "sha256:368462084be47092d0a835f6c64c9b852da64dc88302b76d5f93bd5131228c67", size = 1018389 },
+    { url = "https://files.pythonhosted.org/packages/e4/f1/196d28df38200133574922a3fa20b58629bb11cdabe185cbd9943d6fd371/distributed-2025.3.0-py3-none-any.whl", hash = "sha256:ebdacd181873b39bc30185857a5a856f051efaaf42ef2a8f507708857acdc6a9", size = 1018811 },
 ]
 
 [[package]]
@@ -754,7 +754,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "colorama", specifier = ">=0.4.3" },
-    { name = "dask", extras = ["complete"], specifier = ">=2023.1.0,!=2025.3.0" },
+    { name = "dask", extras = ["complete"], specifier = ">=2023.1.0" },
     { name = "folium", marker = "extra == 'notebooks'", specifier = ">=0.16.0" },
     { name = "geopandas", specifier = ">=0.10.0" },
     { name = "matplotlib", specifier = ">=3.8.0" },
