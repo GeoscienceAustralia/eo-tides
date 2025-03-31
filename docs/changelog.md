@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.4
+
+### New features
+
+- Updated installation documentation to improve reproducibility
+
+### Bug fixes
+
+- Temporarily pinned Dask to avoid `odc-geo` and `odc-stac` errors
+
 ## v0.6.3
 
 ### New features
