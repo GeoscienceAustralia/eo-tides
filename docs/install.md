@@ -18,40 +18,54 @@ It is compatible with the following Python versions:
 
 === "Installing with `pip`"
 
-    Install `eo-tides` with essential package dependencies only:
-    ```console
-    python3 -m pip install eo-tides
-    ```
-
-    To install [additional package dependencies](https://github.com/GeoscienceAustralia/eo-tides/blob/main/pyproject.toml#L62-L69) required for running the included Jupyter Notebook examples (including `odc-stac` and `pystac-client` for loading freely available satellite data), run:
-
+    Install `eo-tides`:
     ```console
     python3 -m pip install eo-tides[notebooks]
+    ```
+
+    The code above will also install [additional package dependencies](https://github.com/GeoscienceAustralia/eo-tides/blob/main/pyproject.toml#L62-L69) required for running [Jupyter Notebook code examples](notebooks/Model_tides.ipynb) (including `odc-stac` and `pystac-client` for loading satellite data).
+
+    To install `eo-tides` with only essential package dependencies:
+
+    ```console
+    python3 -m pip install eo-tides
     ```
 
 === "Installing with `uv`"
 
     First, [install `uv` using the method of your choice](https://docs.astral.sh/uv/getting-started/installation/). Then:
 
-    Create a new virtual environment:
+    Create a new virtual environment with your chosen version of Python:
     ```console
-    uv venv
+    uv venv --python 3.13
     ```
 
     Activate your virtual environment:
+    === "Linux and macOS"
+        ```console
+        source .venv/bin/activate
+        ```
+    === "Windows"
+        ```console
+        .venv\Scripts\activate
+        ```
+
+    Install `eo-tides` into your virtual environment:
+
     ```console
-    source .venv/bin/activate
+    uv pip install eo-tides[notebooks]
     ```
 
-    Install `eo-tides` into your virtual environment, with essential package dependencies only:
+    The code above will also install [additional package dependencies](https://github.com/GeoscienceAustralia/eo-tides/blob/main/pyproject.toml#L62-L69) required for running [Jupyter Notebook code examples](notebooks/Model_tides.ipynb) (including `odc-stac` and `pystac-client` for loading satellite data).
+
+    To install `eo-tides` with only essential package dependencies:
     ```console
     uv pip install eo-tides
     ```
 
-    To install [additional package dependencies](https://github.com/GeoscienceAustralia/eo-tides/blob/main/pyproject.toml#L62-L69) required for running the included Jupyter Notebook examples (including `odc-stac` and `pystac-client` for loading freely available satellite data), run:
-
+    You are now ready to run code using `eo-tides`! For example, you could launch your virtual environment with JupyterLab to run the [example Jupyter Notebooks](notebooks/Model_tides.ipynb):
     ```console
-    uv pip install eo-tides[notebooks]
+    uv run --with jupyter jupyter lab
     ```
 
 ## Unstable development pre-releases
@@ -62,33 +76,38 @@ Unstable development pre-releases of `eo-tides` are also available:
 
 === "Installing with `pip`"
 
-    Install an example `eo-tides` pre-release (see [full list here](https://pypi.org/project/eo-tides/#history)):
+    Install an example `eo-tides` pre-release (see [full list here](https://pypi.org/project/eo-tides/#history)), including additional `notebooks` dependencies:
     ```console
-    python3 -m pip install eo-tides==0.6.3.dev5
+    python3 -m pip install eo-tides[notebooks]==0.6.3.dev5
     ```
 
 === "Installing with `uv`"
 
     First, [install `uv` using the method of your choice](https://docs.astral.sh/uv/getting-started/installation/). Then:
 
-    Create a new virtual environment:
+    Create a new virtual environment with your chosen version of Python:
     ```console
-    uv venv
+    uv venv --python 3.13
     ```
 
     Activate your virtual environment:
-    ```console
-    source .venv/bin/activate
-    ```
+    === "Linux and macOS"
+        ```console
+        source .venv/bin/activate
+        ```
+    === "Windows"
+        ```console
+        .venv\Scripts\activate
+        ```
 
-    Install an example `eo-tides` pre-release (see [full list here](https://pypi.org/project/eo-tides/#history)):
+    Install an example `eo-tides` pre-release (see [full list here](https://pypi.org/project/eo-tides/#history)), including additional `notebooks` dependencies:
     ```console
-    uv pip install eo-tides==0.6.3.dev5
+    uv pip install eo-tides[notebooks]==0.6.3.dev5
     ```
 
 !!! important
 
-    Unstable development pre-releases may contain bugs and untested new features. Unless you need access to a specific unpublished feature, we recommend installing the latest stable version instead.
+    Unstable development pre-releases may contain bugs and untested new features. Unless you need access to a specific unpublished feature, we recommend installing the latest [stable version](#stable-version) instead.
 
 ### Advanced: Developing locally
 
