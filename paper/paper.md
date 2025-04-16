@@ -40,9 +40,7 @@ The `eo-tides` package provides powerful parallelised tools for integrating sate
 
 `eo-tides` leverages advanced tide modelling functionality from the `pyTMD` tide prediction software [@pytmd], combining this capability with EO spatial analysis tools from the [Open Data Cube](https://www.opendatacube.org/) (ODC)'s `odc-geo` [@odcgeo]. This allows tides to be modelled in parallel using over 50 supported models, and returned in standardised `pandas` [@reback2020pandas; @mckinney-proc-scipy-2010] and `xarray` [@Hoyer_xarray_N-D_labeled_2017] data formats for EO analysis.
 
-`eo-tides` tools can be applied to petabytes of freely available satellite data loaded from the cloud using ODC's `odc-stac` or `datacube` packages (e.g. using [Digital Earth Australia](https://knowledge.dea.ga.gov.au/guides/setup/gis/stac/) or [Microsoft Planetary Computer's](https://planetarycomputer.microsoft.com/) STAC SpatioTemporal Asset Catalogues). Additional functionality allows users to assess potential satellite-tide biases and validate modelled tides with external tide gauge data — critical considerations for ensuring the reliability and accuracy of coastal EO workflows. These open-source tools support the efficient, scalable and robust analysis of coastal EO data for any time period or location globally.
-[//]: # (ANY is broad, more accurately any time period or location where satellite and tide data exist)
-
+`eo-tides` tools can be applied to petabytes of freely available satellite data loaded from the cloud using ODC's `odc-stac` or `datacube` packages (e.g. using [Digital Earth Australia](https://knowledge.dea.ga.gov.au/guides/setup/gis/stac/) or [Microsoft Planetary Computer's](https://planetarycomputer.microsoft.com/) STAC SpatioTemporal Asset Catalogues). Additional functionality allows users to assess potential satellite-tide biases and validate modelled tides with external tide gauge data — critical considerations for ensuring the reliability and accuracy of coastal EO workflows. These open-source tools support the efficient, scalable and robust analysis of coastal EO data for any time period or location globally where ocean tide model data exists.
 
 ![A typical `eo-tides` coastal EO workflow, with tide heights modelled into every pixel in a spatio-temporal stack of satellite data (e.g. Sentinel-2 or Landsat), then combined to derive insights into dynamic coastal environments.\label{fig:abstract}](figures/joss_abstract.png)
 
@@ -61,7 +59,6 @@ This concept has been used to map coastal change at continental-scale [@bishop20
 The [`eo_tides.utils`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.utils) module simplifies the setup of ocean tide models, addressing a common barrier to coastal EO workflows. Tools like `list_models` provide feedback on available and supported models (\autoref{fig:list}), while `clip_models` can significantly improve performance by clipping large high-resolution model files (e.g. FES2022 [@carrere2022new]) to smaller study area extents.
 
 ![A `list_tides` output providing a useful summary of available and supported tide models.\label{fig:list}](figures/joss_fig_list.png)
-[//]: # (you mention FES2022 in text but FES2014 in fig, might be confusing; better to mention both as FES2014/2022, or just use FES2022 in fig)
 
 ## Modelling tides
 
