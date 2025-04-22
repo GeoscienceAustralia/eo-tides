@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 import odc.stac
 import pandas as pd
+import planetary_computer
 import pystac_client
 import pytest
 import xarray as xr
@@ -56,93 +57,88 @@ def measured_tides_ds():
 )
 def satellite_ds_load(request):
     """
-    Load a sample timeseries of Landsat 8 data from
-    Microsoft Planetary Computer using odc-stac.
+    Load a sample timeseries of Landsat 8 data from either
+    Microsoft Planetary Computer or Digital Earth Australia's
+    STAC APIs using odc-stac.
     """
     # Obtain CRS and resolution params
     crs, res = request.param
 
-    import planetary_computer
-
-    # Connect to STAC catalog
-    catalog = pystac_client.Client.open(
-        "https://planetarycomputer.microsoft.com/api/stac/v1",
-        modifier=planetary_computer.sign_inplace,
-    )
-
-    # Set cloud access defaults
-    odc.stac.configure_rio(
-        cloud_defaults=True,
-        aws={"aws_unsigned": True},
-    )
-
-    # Build a query with the parameters above
+    # Bounding box
     bbox = [GAUGE_X - 0.08, GAUGE_Y - 0.08, GAUGE_X + 0.08, GAUGE_Y + 0.08]
-    query = catalog.search(
-        bbox=bbox,
-        collections=["landsat-c2-l2"],
-        datetime="2020-01/2020-02",
-        query={
-            "platform": {"in": ["landsat-8"]},
-        },
-    )
 
-    # Search the STAC catalog for all items matching the query
-    ds = odc.stac.load(
-        list(query.items()),
-        bands=["red"],
-        crs=crs,
-        resolution=res,
-        groupby="solar_day",
-        bbox=bbox,
-        fail_on_error=False,
-        chunks={},
-    )
+    try:
+        # Connect to STAC catalog
+        catalog = pystac_client.Client.open(
+            "https://planetarycomputer.microsoft.com/api/stac/v1",
+            modifier=planetary_computer.sign_inplace,
+        )
 
-    # Rename for compatibility with original DEA tests
-    ds["nbart_red"] = ds.red
+        # Set cloud access defaults
+        odc.stac.configure_rio(
+            cloud_defaults=True,
+            aws={"aws_unsigned": True},
+        )
 
-    return ds
+        # Build a query with the parameters above
+        query = catalog.search(
+            bbox=bbox,
+            collections=["landsat-c2-l2"],
+            datetime="2020-01/2020-02",
+            query={
+                "platform": {"in": ["landsat-8"]},
+            },
+        )
 
+        # Search the STAC catalog for all items matching the query
+        ds = odc.stac.load(
+            list(query.items()),
+            bands=["red"],
+            crs=crs,
+            resolution=res,
+            groupby="solar_day",
+            bbox=bbox,
+            fail_on_error=False,
+            chunks={},
+        )
 
-# def satellite_ds_load(request):
-#     """
-#     Load a sample timeseries of Landsat 8 data from
-#     Digital Earth Australia using odc-stac
-#     """
-#     # Obtain CRS and resolution params
-#     crs, res = request.param
+        # Rename for compatibility with original DEA tests
+        ds["nbart_red"] = ds.red
 
-#     # Connect to stac catalogue
-#     catalog = pystac_client.Client.open("https://explorer.dea.ga.gov.au/stac")
+        return ds
 
-#     # Set cloud defaults
-#     odc.stac.configure_rio(
-#         cloud_defaults=True,
-#         aws={"aws_unsigned": True},
-#     )
+    except Exception as e:
+        print(f"Failed to load data from Microsoft Planetary Computer with error {e}; trying DEA")
 
-#     # Build a query with the parameters above
-#     bbox = [GAUGE_X - 0.08, GAUGE_Y - 0.08, GAUGE_X + 0.08, GAUGE_Y + 0.08]
-#     query = catalog.search(
-#         bbox=bbox,
-#         collections=["ga_ls8c_ard_3"],
-#         datetime="2020-01/2020-02",
-#     )
+        # Connect to stac catalogue
+        catalog = pystac_client.Client.open("https://explorer.dea.ga.gov.au/stac")
 
-#     # Search the STAC catalog for all items matching the query
-#     ds = odc.stac.load(
-#         list(query.items()),
-#         bands=["nbart_red"],
-#         crs=crs,
-#         resolution=res,
-#         groupby="solar_day",
-#         bbox=bbox,
-#         fail_on_error=False,
-#         chunks={},
-#     )
+        # Set cloud defaults
+        odc.stac.configure_rio(
+            cloud_defaults=True,
+            aws={"aws_unsigned": True},
+        )
 
-#     return ds
+        # Build a query with the parameters above
+        query = catalog.search(
+            bbox=bbox,
+            collections=["ga_ls8c_ard_3"],
+            datetime="2020-01/2020-02",
+        )
+
+        # Search the STAC catalog for all items matching the query
+        ds = odc.stac.load(
+            list(query.items()),
+            bands=["nbart_red"],
+            crs=crs,
+            resolution=res,
+            groupby="solar_day",
+            bbox=bbox,
+            fail_on_error=False,
+            chunks={},
+        )
+
+        return ds
 
 
 @pytest.fixture
