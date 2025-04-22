@@ -483,7 +483,7 @@ Outputs exported to tide_models_clipped/
 
 You can now pass this new clipped tide model directory to all future `eo_tides` function calls for improved tide modelling performance, e.g.:
 
-```py hl_lines="8"
+```py hl_lines="9"
 import pandas as pd
 from eo_tides.model import model_tides
 
