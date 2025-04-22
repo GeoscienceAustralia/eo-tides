@@ -1,8 +1,9 @@
-# Ignore project-specific directories
+# Ignore project-specific directories and files
 tests/data/tide_models
 tests/data/tide_models_clipped
 tests/data/tide_models_synthetic
 docs/source
+docs/notebooks/intertidal_map.tif
 
 # From https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore
 
