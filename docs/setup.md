@@ -288,7 +288,7 @@ The `list_models` function (like all main functions from `eo-tides`) requires yo
     )
     ```
 
-    Running `list_models` will print out a useful summary table, with model names listed under "Model", and the expected path to their data within your tide model directory listed under "Expected path".
+    Running `list_models` will print out a useful summary table, with supported tide models listed under **"Model"**, and the expected path to their data within your tide model directory listed under **"Expected path"**.
     Models that are correctly set up and available are marked with a ✅, while unavailable (or incorrectly configured) models are marked with a ❌:
 
     ```
@@ -316,7 +316,7 @@ The `list_models` function (like all main functions from `eo-tides`) requires yo
     )
     ```
 
-    Running `list_models` will print out a useful summary table, with model names listed under "Model", and the expected path to their data within your tide model directory listed under "Expected path".
+    Running `list_models` will print out a useful summary table, with supported tide models listed under **"Model"**, and the expected path to their data within your tide model directory listed under **"Expected path"**.
     Models that are correctly set up and available are marked with a ✅, while unavailable (or incorrectly configured) models are marked with a ❌:
 
     ```
@@ -344,7 +344,7 @@ The `list_models` function (like all main functions from `eo-tides`) requires yo
     )
     ```
 
-    Running `list_models` will print out a useful summary table, with model names listed under "Model", and the expected path to their data within your tide model directory listed under "Expected path".
+    Running `list_models` will print out a useful summary table, with supported tide models listed under **"Model"**, and the expected path to their data within your tide model directory listed under **"Expected path"**.
     Models that are correctly set up and available are marked with a ✅, while unavailable (or incorrectly configured) models are marked with a ❌:
 
     ```
