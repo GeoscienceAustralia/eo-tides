@@ -1,4 +1,5 @@
 # Ignore project-specific directories and files
+
 tests/data/tide_models
 tests/data/tide_models_clipped
 tests/data/tide_models_synthetic
