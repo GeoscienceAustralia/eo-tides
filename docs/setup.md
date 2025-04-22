@@ -272,33 +272,124 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
     To allow you to improve tide modelling performance by clipping your tide model files ([see below](#clipping-model-files-to-improve-performance)), we recommend downloading NetCDF-format versions of tide models wherever possible.
 
-## Configuring `eo-tides` to use tide model directory
+## Verifying available and supported models
 
-`eo-tides` can be pointed to the location of your [tide model directory](#setting-up-a-tide-model-directory) and your downloaded tide model data in two ways:
+You can check what tide models have been correctly set up for use by `eo-tides` using [`eo_tides.utils.list_models`](api.md#eo_tides.utils.list_models).
 
-### 1. Using the `directory` function parameter
-
-All tide modelling functions from `eo-tides` provide a `directory` parameter that can be used to specify **either the relative or full/absolute path** to your tide model directory.
-
-For example, using the [`eo_tides.model.model_tides`](api.md#eo_tides.model.model_tides) function:
+The `list_models` function (like all main functions from `eo-tides`) requires you to specify **either the relative or full/absolute path** to your tide model directory using the `directory` parameter:
 
 === "Relative path"
 
-    ```py hl_lines="8"
+    ```py hl_lines="4"
+    from eo_tides.utils import list_models
+
+    available_models, supported_models = list_models(
+        directory="tide_models/"
+    )
+    ```
+
+    Running `list_models` will print out a useful summary table, with supported tide models listed under **"Model"**, and the expected path to their data within your tide model directory listed under **"Expected path"**.
+    Models that are correctly set up and available are marked with a ✅, while unavailable (or incorrectly configured) models are marked with a ❌:
+
+    ```
+    ──────────────────────────────────────────────────────────
+    󠀠🌊  | Model        | Expected path
+    ──────────────────────────────────────────────────────────
+    ✅  │ EOT20        │ tide_models/EOT20/ocean_tides
+    ❌  │ FES2014      │ tide_models/fes2014/ocean_tide
+    ✅  │ HAMTIDE11    │ tide_models/hamtide
+    ❌  │ TPXO9.1      │ tide_models/TPXO9.1/DATA
+    ...   ...            ...
+    ──────────────────────────────────────────────────────────
+
+    Summary:
+    Available models: 2/50
+    ```
+
+=== "Full path (Windows)"
+
+    ```py hl_lines="4"
+    from eo_tides.utils import list_models
+
+    available_models, supported_models = list_models(
+        directory="D:/projects/tide_models/"
+    )
+    ```
+
+    Running `list_models` will print out a useful summary table, with supported tide models listed under **"Model"**, and the expected path to their data within your tide model directory listed under **"Expected path"**.
+    Models that are correctly set up and available are marked with a ✅, while unavailable (or incorrectly configured) models are marked with a ❌:
+
+    ```
+    ──────────────────────────────────────────────────────────
+    󠀠🌊  | Model        | Expected path
+    ──────────────────────────────────────────────────────────
+    ✅  │ EOT20        │ D:/projects/tide_models/EOT20/ocean_tides
+    ❌  │ FES2014      │ D:/projects/tide_models/fes2014/ocean_tide
+    ✅  │ HAMTIDE11    │ D:/projects/tide_models/hamtide
+    ❌  │ TPXO9.1      │ D:/projects/tide_models/TPXO9.1/DATA
+    ...   ...            ...
+    ──────────────────────────────────────────────────────────
+
+    Summary:
+    Available models: 2/50
+    ```
+
+=== "Full path (Linux)"
+
+    ```py hl_lines="4"
+    from eo_tides.utils import list_models
+
+    available_models, supported_models = list_models(
+        directory="/home/user/projects/tide_models/"
+    )
+    ```
+
+    Running `list_models` will print out a useful summary table, with supported tide models listed under **"Model"**, and the expected path to their data within your tide model directory listed under **"Expected path"**.
+    Models that are correctly set up and available are marked with a ✅, while unavailable (or incorrectly configured) models are marked with a ❌:
+
+    ```
+    ──────────────────────────────────────────────────────────
+    󠀠🌊  | Model        | Expected path
+    ──────────────────────────────────────────────────────────
+    ✅  │ EOT20        │ /home/user/projects/tide_models/EOT20/ocean_tides
+    ❌  │ FES2014      │ /home/user/projects/tide_models/fes2014/ocean_tide
+    ✅  │ HAMTIDE11    │ /home/user/projects/tide_models/hamtide
+    ❌  │ TPXO9.1      │ /home/user/projects/tide_models/TPXO9.1/DATA
+    ...   ...            ...
+    ──────────────────────────────────────────────────────────
+
+    Summary:
+    Available models: 2/50
+    ```
+
+!!! tip
+
+    If your downloaded models are marked as unavailable (❌), check that their data was correctly saved to the location specified in the "Expected path" column of the summary table.
+
+Any tide model marked with a ✅ is now ready for tide modelling.
+For example, we could use the [`eo_tides.model.model_tides`](api.md#eo_tides.model.model_tides) function, once again passing in the relative or absolute path to our tide model directory using the `directory` parameter.
+
+You can also specify a tide model to use with the `model` parameter.
+Model names should match the names given in the "Model" column of the `list_models` table above (by default, "EOT20" is used).
+
+=== "Relative path"
+
+    ```py hl_lines="8 9"
     import pandas as pd
     from eo_tides.model import model_tides
 
     model_tides(
-            x=155,
+            x=155,b
             y=-35,
             time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
+            model="EOT20",  # model name from "Name" column of `list_models`
             directory="tide_models/"  # relative path to `tide_models` directory
     )
     ```
 
 === "Full path (Windows)"
 
-    ```py hl_lines="8"
+    ```py hl_lines="8 9"
     import pandas as pd
     from eo_tides.model import model_tides
 
@@ -306,13 +397,14 @@ For example, using the [`eo_tides.model.model_tides`](api.md#eo_tides.model.mode
             x=155,
             y=-35,
             time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
+            model="EOT20",  # model name from "Name" column of `list_models`
             directory="D:/projects/tide_models/"  # full path to `tide_models`
     )
     ```
 
 === "Full path (Linux)"
 
-    ```py hl_lines="8"
+    ```py hl_lines="8 9"
     import pandas as pd
     from eo_tides.model import model_tides
 
@@ -320,66 +412,38 @@ For example, using the [`eo_tides.model.model_tides`](api.md#eo_tides.model.mode
             x=155,
             y=-35,
             time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
+            model="EOT20",  # model name from "Name" column of `list_models`
             directory="/home/user/projects/tide_models/"  # full path to `tide_models`
     )
     ```
 
-### 2. (Advanced) Setting the `EO_TIDES_TIDE_MODELS` environmental variable
+??? note "Advanced: Setting tide model directory via the EO_TIDES_TIDE_MODELS environmental variable"
 
-For more advanced usage, you can set the path to your [tide model directory](#setting-up-a-tide-model-directory) by setting the `EO_TIDES_TIDE_MODELS` environment variable.
+    ### Advanced: Setting tide model directory via the `EO_TIDES_TIDE_MODELS` environmental variable
 
-This should be set to **a full/absolute path** to ensure it can be accessed from anywhere you run `eo-tides` code:
+    For more advanced usage, you can also set the path to your [tide model directory](#setting-up-a-tide-model-directory) by setting the `EO_TIDES_TIDE_MODELS` environment variable, avoiding the need to manually set the `directory` function parameter.
 
-=== "Full path (Windows)"
+    This should be set to **a full/absolute path** to ensure it can be accessed from anywhere you run `eo-tides` code:
 
-    ```py hl_lines="2"
-    import os
-    os.environ["EO_TIDES_TIDE_MODELS"] = "D:/projects/tide_models/"
-    ```
+    === "Full path (Windows)"
 
-=== "Full path (Linux)"
+        ```py hl_lines="2"
+        import os
+        os.environ["EO_TIDES_TIDE_MODELS"] = "D:/projects/tide_models/"
+        ```
 
-    ```py hl_lines="2"
-    import os
-    os.environ["EO_TIDES_TIDE_MODELS"] = "/home/user/projects/tide_models/"
-    ```
+    === "Full path (Linux)"
 
-All tide modelling functions from `eo-tides` will check for the presence of the `EO_TIDES_TIDE_MODELS` environment variable, and use it as the default `directory` path if available (the `EO_TIDES_TIDE_MODELS` environment variable will be overuled by the `directory` parameter if provided).
+        ```py hl_lines="2"
+        import os
+        os.environ["EO_TIDES_TIDE_MODELS"] = "/home/user/projects/tide_models/"
+        ```
 
-!!! tip
+    All tide modelling functions from `eo-tides` will check for the presence of the `EO_TIDES_TIDE_MODELS` environment variable, and use it as the default `directory` path if available (the `EO_TIDES_TIDE_MODELS` environment variable will be overuled by the `directory` parameter if provided).
 
-    Setting the `EO_TIDES_TIDE_MODELS` environment variable can be useful when the location of your tide model directory might change between different environments, and you want to avoid hard-coding a single location via the `directory` parameter.
+    !!! tip
 
-## Verifying available and supported models
-
-You can check what tide models have been correctly set up for use by `eo-tides` using the [`eo_tides.utils.list_models`](api.md#eo_tides.utils.list_models) function:
-
-```py
-from eo_tides.utils import list_models
-
-available_models, supported_models = list_models(directory="tide_models/")
-```
-
-This will print out a useful summary, with available models marked with a ✅:
-
-```
-──────────────────────────────────────────────────────────
- 󠀠🌊  | Model        | Expected path
-──────────────────────────────────────────────────────────
- ✅  │ EOT20        │ tide_models/EOT20/ocean_tides
- ❌  │ FES2014      │ tide_models/fes2014/ocean_tide
- ✅  │ HAMTIDE11    │ tide_models/hamtide
- ❌  │ TPXO9.1      │ tide_models/TPXO9.1/DATA
- ...   ...            ...
-──────────────────────────────────────────────────────────
-
-Summary:
-Available models: 2/50
-```
-
-!!! tip
-
-    If the models that you saved are not marked as available in this summary, check that they were saved to the expected path as identified in the summary table.
+        Setting the `EO_TIDES_TIDE_MODELS` environment variable can be useful when the location of your tide model directory might change between different environments, and you want to avoid hard-coding a single location via the `directory` parameter.
 
 ## Clipping model files to improve performance
 
@@ -427,6 +491,7 @@ model_tides(
         x=155,
         y=-35,
         time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
+        model="EOT20",
         directory="tide_models_clipped/"
 )
 ```
