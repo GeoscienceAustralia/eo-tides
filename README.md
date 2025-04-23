@@ -67,6 +67,11 @@ In addition, please consider also citing the underlying [`pyTMD` Python package]
 Sutterley, T. C., Alley, K., Brunt, K., Howard, S., Padman, L., Siegfried, M. (2017) pyTMD: Python-based tidal prediction software. 10.5281/zenodo.5555395
 ```
 
+## Contributing
+
+We welcome contributions to `eo-tides`, both through posting issues (e.g. bug reports or feature suggestions), or directly via pull requests (e.g. bug fixes and new features).
+Read the [Contributing guide](https://github.com/GeoscienceAustralia/eo-tides/blob/main/CONTRIBUTING.md) for details about how you can get involved.
+
 ## Acknowledgements
 
 For a full list of acknowledgements, refer to [Citations and Credits](https://geoscienceaustralia.github.io/eo-tides/credits/).
