@@ -379,7 +379,7 @@ Model names should match the names given in the "Model" column of the `list_mode
     from eo_tides.model import model_tides
 
     model_tides(
-            x=155,b
+            x=155,
             y=-35,
             time=pd.date_range("2022-01-01", "2022-01-04", freq="1D"),
             model="EOT20",  # model name from "Name" column of `list_models`
