@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.5
+
+### New features
+
+- Support for `pyTMD` versions 2.2.3 and 2.2.4
+
 ## v0.6.4
 
 ### New features
