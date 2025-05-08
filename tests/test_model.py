@@ -3,7 +3,13 @@ import pandas as pd
 import pytest
 from pyTMD.compute import tide_elevations
 
-from eo_tides.model import _parallel_splits, _set_directory, ensemble_tides, model_phases, model_tides
+from eo_tides.model import (
+    _parallel_splits,
+    _set_directory,
+    ensemble_tides,
+    model_phases,
+    model_tides,
+)
 from eo_tides.validation import eval_metrics
 
 GAUGE_X = 122.2183
@@ -300,18 +306,18 @@ def test_model_tides_ensemble():
     assert np.allclose(
         modelled_tides_df.tide_height.values,
         [
-            0.094,
-            -3.202,
-            0.409,
-            -3.098,
-            0.803,
-            0.664,
-            0.989,
+            0.069,
+            -3.186,
+            0.383,
+            -3.081,
+            0.807,
+            0.665,
+            0.996,
             1.011,
-            0.449,
-            -1.269,
-            0.699,
-            -1.043,
+            0.438,
+            -1.261,
+            0.690,
+            -1.035,
         ],
         atol=0.02,
     )

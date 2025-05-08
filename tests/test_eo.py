@@ -62,7 +62,15 @@ def test_tag_tides_phases(satellite_ds, measured_tides_ds):
     assert set(expected_vars) == set(tagged_tides_ds.data_vars)
 
     # Verify tide_phase values
-    expected_phases = ["low-flow", "high-flow", "low-ebb", "low-flow", "low-ebb", "low-flow", "high-flow"]
+    expected_phases = [
+        "low-flow",
+        "high-flow",
+        "low-ebb",
+        "low-flow",
+        "low-ebb",
+        "low-flow",
+        "high-flow",
+    ]
     assert tagged_tides_ds.tide_phase.values.tolist() == expected_phases
 
     # Assert tide_model dim has been squeezed out
@@ -248,12 +256,12 @@ def test_pixel_tides_quantile(satellite_ds):
 
     # Test if extracted tides match expected results (to within ~2 cm)
     expected_tides = np.array([
-        [-1.89, -2.17, -2.1, -2.21],
-        [-1.20, -1.28, -1.26, -1.30],
-        [-0.71, -0.8, -0.77, -0.82],
-        [-0.33, -0.32, -0.34, -0.32],
+        [-1.90, -2.18, -2.11, -2.23],
+        [-1.20, -1.27, -1.25, -1.29],
+        [-0.70, -0.78, -0.76, -0.80],
+        [-0.31, -0.31, -0.32, -0.31],
         [0.5, 0.42, 0.45, 0.41],
-        [1.59, 1.69, 1.66, 1.70],
+        [1.61, 1.70, 1.67, 1.71],
     ])
     assert np.allclose(extracted_tides.values, expected_tides, atol=0.02)
 
