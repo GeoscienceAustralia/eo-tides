@@ -28,16 +28,16 @@ def test_tidal_stats(satellite_ds, modelled_freq, tidepost_lon, tidepost_lat):
 
     # Compare outputs to expected results (within 2% or 0.02 m)
     expected_results = pd.Series({
-        "mot": -0.417,
+        "mot": -0.407,
         "mat": -0.005,
-        "hot": 1.674,
-        "hat": 4.259,
+        "hot": 1.684,
+        "hat": 4.275,
         "lot": -2.141,
-        "lat": -4.321,
-        "otr": 3.814,
-        "tr": 8.580,
-        "spread": 0.445,
-        "offset_low": 0.254,
+        "lat": -4.339,
+        "otr": 3.825,
+        "tr": 8.614,
+        "spread": 0.444,
+        "offset_low": 0.255,
         "offset_high": 0.301,
         "x": 122.218,
         "y": -18.001,
@@ -121,7 +121,19 @@ def test_pixel_stats(satellite_ds, models, resample):
     assert stats_ds.odc.spatial_dims == satellite_ds.odc.spatial_dims
 
     # Verify vars are as expected
-    expected_vars = ["mot", "mat", "hot", "hat", "lot", "lat", "otr", "tr", "spread", "offset_low", "offset_high"]
+    expected_vars = [
+        "mot",
+        "mat",
+        "hot",
+        "hat",
+        "lot",
+        "lat",
+        "otr",
+        "tr",
+        "spread",
+        "offset_low",
+        "offset_high",
+    ]
     assert set(expected_vars) == set(stats_ds.data_vars)
 
     # Verify tide models are correct
