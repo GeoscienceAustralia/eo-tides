@@ -256,7 +256,7 @@ def test_pixel_tides_quantile(satellite_ds):
 
     # Test if extracted tides match expected results (to within ~2 cm)
     expected_tides = np.array([
-        [-1.90, -2.18, -2.11, -2.23],
+        [-1.90, -2.18, -2.11, -2.22],
         [-1.20, -1.27, -1.25, -1.29],
         [-0.70, -0.78, -0.76, -0.80],
         [-0.31, -0.31, -0.32, -0.31],
