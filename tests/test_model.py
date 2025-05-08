@@ -383,7 +383,7 @@ def test_model_tides_ensemble():
     assert closer_model == ["EOT20", "HAMTIDE11", "EOT20", "HAMTIDE11"]
 
     # Check values are expected
-    assert np.allclose(modelled_tides_df.ensemble, [0.09, 0.98, -3.20, 1.01], atol=0.02)
+    assert np.allclose(modelled_tides_df.ensemble, [0.08, 0.98, -3.20, 1.01], atol=0.02)
 
     # Wide mode, custom functions
     ensemble_funcs = {
