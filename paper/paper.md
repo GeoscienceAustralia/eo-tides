@@ -20,6 +20,7 @@ authors:
     orcid: 0000-0001-9568-9661
   - name: Vanessa Newey
     affiliation: 1
+    orcid: 0000-0003-3705-5665
   - name: Tyler Sutterley
     affiliation: 2
     orcid: 0000-0002-6964-1194
