@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.0
+
+### New features
+
+- This version corresponds to the code archived as part of [Journal of Open Source Software publication](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e).
+  No new features introduced.
+
 ## v0.6.5
 
 ### New features
