@@ -38,6 +38,7 @@ jobs:
         with:
           commit_message: "Bump version to ${{ env.NEW_VERSION }} [skip ci]"
           file_pattern: "pyproject.toml uv.lock"
+          token: ${{ secrets.PAT }}
 
       - name: Create Release
         if: success()
