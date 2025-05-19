@@ -38,7 +38,6 @@ jobs:
         with:
           commit_message: "Bump version to ${{ env.NEW_VERSION }} [skip ci]"
           file_pattern: "pyproject.toml uv.lock"
-          token: ${{ secrets.PAT }}
 
       - name: Create Release
         if: success()
@@ -47,4 +46,4 @@ jobs:
           name: ${{ env.NEW_VERSION }}
           tag_name: ${{ env.NEW_VERSION }}
           generate_release_notes: true
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.PAT }} # token allows other Github actions to be triggered by release
