@@ -2,6 +2,7 @@ import datetime
 import warnings
 from math import sqrt
 from numbers import Number
+from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
@@ -192,8 +193,8 @@ def load_gauge_gesla(
     correct_mean=False,
     filter_use_flag=True,
     site_metadata=True,
-    data_path="/gdata1/data/sea_level/gesla/",
-    metadata_path="/gdata1/data/sea_level/GESLA3_ALL 2.csv",
+    data_path="GESLA3.0_ALL",
+    metadata_path="",
 ):
     """
     Load Global Extreme Sea Level Analysis (GESLA) tide gauge data.
@@ -241,11 +242,13 @@ def load_gauge_gesla(
         Whether to add tide gauge station metadata as additional columns
         in the output DataFrame. Defaults to True.
     data_path : str, optional
-        Path to the raw GESLA data files. Default is
-        `/gdata1/data/sea_level/gesla/`.
+        Path to the raw GESLA data files ("GESLA-3 DATA", accessible via:
+        https://gesla787883612.wordpress.com/downloads/). Defaults to
+        "GESLA3.0_ALL".
     metadata_path : str, optional
-        Path to the GESLA station metadata file.
-        Default is `/gdata1/data/sea_level/GESLA3_ALL 2.csv`.
+        Path to the GESLA station metadata file ("GESLA-3 CSV META-DATA FILE",
+        accessible via: https://gesla787883612.wordpress.com/downloads/).
+        Defaults to "GESLA3_ALL 2.csv".
 
     Returns
     -------
@@ -259,6 +262,24 @@ def load_gauge_gesla(
 
         ...and additional columns from station metadata.
     """
+    # Expand and validate data and metadata paths
+    data_path = Path(data_path).expanduser()
+    metadata_path = Path(metadata_path).expanduser()
+
+    if not data_path.exists():
+        raise FileNotFoundError(
+            f"GESLA raw data directory not found at: {data_path}\n"
+            "Download 'GESLA-3 DATA' from: "
+            "https://gesla787883612.wordpress.com/downloads/"
+        )
+
+    if not metadata_path.exists():
+        raise FileNotFoundError(
+            f"GESLA station metadata file not found at: {metadata_path}\n"
+            "Download the 'GESLA-3 CSV META-DATA FILE' from: "
+            "https://gesla787883612.wordpress.com/downloads/"
+        )
+
     # Load tide gauge metadata
     metadata_df, metadata_gdf = _load_gauge_metadata(metadata_path)
 
@@ -301,7 +322,7 @@ def load_gauge_gesla(
     end_time = _round_date_strings(time[-1], round_type="end")
 
     # Identify paths to load and nodata values for each site
-    metadata_df["file_name"] = data_path + metadata_df["file_name"]
+    metadata_df["file_name"] = data_path / metadata_df["file_name"]
     paths_na = metadata_df.loc[site_code, ["file_name", "null_value"]]
 
     # Load and combine into a single dataframe
