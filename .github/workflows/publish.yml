@@ -1,4 +1,4 @@
-name: release-main
+name: Build docs and publish main
 
 on:
   release:
@@ -7,29 +7,32 @@ on:
     branches: [main]
 
 jobs:
+
+  # Create a relevant package version for releases and dev changes
   set-version:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Need full history for tags
 
       - name: Export tag
+        if: ${{ github.event_name == 'release' }}
         id: vars
         run: echo tag=${GITHUB_REF#refs/*/} >> $GITHUB_OUTPUT
-        if: ${{ github.event_name == 'release' }}
 
       # For full releases, use tag for version name
       - name: Set release version
+        if: ${{ github.event_name == 'release' }}
         run: |
           sed -i "s/^version = \".*\"/version = \"$RELEASE_VERSION\"/" pyproject.toml
         env:
           RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
-        if: ${{ github.event_name == 'release' }}
 
       # For merges to main, incremement patch version by one
       # and use ".devN" suffix based on commits since tag
       - name: Set dev version
+        if: ${{ github.event_name == 'push' }}
         run: |
           LATEST_TAG=$(git describe --tags --abbrev=0)
           IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_TAG"
@@ -37,7 +40,6 @@ jobs:
           DEV_NUM=$(git rev-list $LATEST_TAG..HEAD --count)
           DEV_VERSION="$MAJOR.$MINOR.$PATCH.dev$DEV_NUM"
           sed -i "s/^version = \".*\"/version = \"$DEV_VERSION\"/" pyproject.toml
-        if: ${{ github.event_name == 'push' }}
 
       - name: Upload updated pyproject.toml
         uses: actions/upload-artifact@v4
@@ -45,6 +47,7 @@ jobs:
           name: pyproject-toml
           path: pyproject.toml
 
+  # Publish package to PyPI
   publish:
     runs-on: ubuntu-latest
     needs: [set-version]
@@ -68,6 +71,7 @@ jobs:
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
+  # Deploy documentation to public-facing site
   deploy-docs:
     needs: publish
     runs-on: ubuntu-latest

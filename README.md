@@ -3,7 +3,7 @@
 <img align="right" width="200" src="https://github.com/GeoscienceAustralia/eo-tides/blob/main/docs/assets/eo-tides-logo.gif?raw=true" alt="eo-tides logo" style="margin-right: 40px;">
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
-[![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/main.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/main.yml?query=branch%3Amain)
+[![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/tests.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/tests.yml?query=branch%3Amain)
 [![Python Version from PEP 621 TOML](https://img.shields.io/pypi/pyversions/eo-tides)](https://github.com/GeoscienceAustralia/eo-tides/blob/main/pyproject.toml)
 [![codecov](https://codecov.io/gh/GeoscienceAustralia/eo-tides/branch/main/graph/badge.svg)](https://codecov.io/gh/GeoscienceAustralia/eo-tides)
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)

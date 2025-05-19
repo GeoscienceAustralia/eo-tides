@@ -1,4 +1,4 @@
-name: Main
+name: Run tests and checks
 
 on:
   push:
@@ -96,18 +96,3 @@ jobs:
 
       - name: Check if documentation can be built
         run: uv run mkdocs build -s
-
-  # Only deploy docs if on push and if all tests pass
-  deploy-docs:
-    if: github.event_name == 'push'
-    needs: [quality, check-docs, run-tests]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out
-        uses: actions/checkout@v4
-
-      - name: Set up the environment
-        uses: ./.github/actions/setup-python-env
-
-      - name: Deploy documentation
-        run: uv run mkdocs gh-deploy --force
