@@ -25,10 +25,3 @@ repos:
     rev: "v3.0.3"
     hooks:
       - id: prettier
-
-repos:
-  - repo: https://github.com/astral-sh/uv-pre-commit
-    # uv version.
-    rev: 0.7.5
-    hooks:
-      - id: uv-lock
