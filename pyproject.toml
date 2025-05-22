@@ -1,6 +1,6 @@
 [project]
 name = "eo-tides"
-version = "0.7.2"
+dynamic = ["version"]
 description = "Tide modelling tools for large-scale satellite earth observation analysis"
 authors = [
     { name = "Robbi Bishop-Taylor" },
@@ -88,11 +88,11 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
-[tool.setuptools]
-packages = ["eo_tides"]
+[tool.hatch.version]
+source = "vcs"
 
 [tool.mypy]
 files = ["eo_tides"]

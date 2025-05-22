@@ -1,19 +1,30 @@
 # Changelog
 
-## v0.7.0
+## 0.7.2 - 2025-05-19
+
+### New features
+
+- Minor updates to improve documentation around accessing GESLA 3.0 tide gauge data,
+- Made validation functions more re-usable by removing hard-coded paths and adding helpful error messages.
+
+## 0.7.1 - 2025-05-19
+
+Minor update to package dependencies
+
+## 0.7.0 - 2025-05-14
 
 ### New features
 
 - This version corresponds to the code archived as part of [Journal of Open Source Software publication](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e).
   No new features introduced.
 
-## v0.6.5
+## 0.6.5 - 2025-05-08
 
 ### New features
 
 - Support for `pyTMD` versions 2.2.3 and 2.2.4
 
-## v0.6.4
+## 0.6.4 - 2025-02-31
 
 ### New features
 
@@ -23,7 +34,7 @@
 
 - Temporarily pinned Dask to avoid `odc-geo` and `odc-stac` errors
 
-## v0.6.3
+## 0.6.3 - 2025-03-20
 
 ### New features
 
@@ -34,7 +45,7 @@
 - Fixed bug where ensemble tide modelling used excessive memory, by ensuring dtype of ensemble modelled tides matches dtype of input modelled tides ([#70](https://github.com/GeoscienceAustralia/eo-tides/pull/70))
 - Added missing `dask` dependency to requirements ([#68](https://github.com/GeoscienceAustralia/eo-tides/pull/68))
 
-## v0.6.2
+## 0.6.2 - 2025-02-25
 
 ### New features
 
@@ -44,13 +55,13 @@
 
 - Further fixes for bug causing tide model clipping with `clip_tides` to fail for bounding boxes completely west of the prime meridian ([#50](https://github.com/GeoscienceAustralia/eo-tides/issues/50)); default value for `crop` param is now `"auto"` instead of `True`.
 
-## v0.6.1
+## 0.6.1 - 2025-02-20
 
 ### Bug fixes
 
 - Fixed bug causing tide model clipping with `clip_tides` to fail for bounding boxes completely west of the prime meridian ([#50](https://github.com/GeoscienceAustralia/eo-tides/issues/50))
 
-## v0.6.0
+## 0.6.0 - 2025-02-11
 
 ### New features
 
@@ -58,7 +69,7 @@
 - Added support for [Technical University of Denmark tide models](https://doi.org/10.11583/DTU.23828874) (DTU23)
 - Minor docs improvements, updates for new FES2022 data format
 
-## v0.5.0
+## 0.5.0 - 2025-01-17
 
 ### New features
 
@@ -74,7 +85,7 @@
 - Removed Python 3.9 support
 - Added Python 3.13 support
 
-## v0.4.0
+## 0.4.0 - 2025-12-21
 
 ### New features
 
@@ -100,7 +111,7 @@
 
 - The `plot_col` parameter from `tide_stats` has been renamed to `plot_var`
 
-## v0.3.1 (2024-11-15)
+## 0.3.1 - 2024-11-15
 
 ### New features
 
@@ -110,7 +121,7 @@
 
 - Fix bug where GOT5.6 was not detected as a valid model because it contains files in multiple directories (e.g. both "GOT5.6" and "GOT5.5"). This also affected clipping GOT5.6 data using the `eo_tides.utils.clip_models` function.
 
-## v0.3.0 (2024-11-11)
+## 0.3.0 - 2024-11-11
 
 ### New features
 
@@ -128,7 +139,7 @@
 
 - The `list_models` function has been relocated to `eo_tides.utils` (from `eo_tides.model`)
 
-## v0.2.0 (2024-10-30)
+## 0.2.0 - 2024-10-30
 
 ### New features
 
@@ -142,7 +153,7 @@
 
 - The `ds` param in all satellite data functions (`tag_tides`, `pixel_tides`, `tide_stats`, `pixel_tides`) has been renamed to a more generic name `data` (to account for now accepting either `xarray.Dataset`, `xarray.DataArray` or a `odc.geo.geobox.GeoBox` inputs).
 
-## v0.1.0 (2024-10-18)
+## 0.1.0 - 2024-10-18
 
 ### New features
 
