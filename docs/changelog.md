@@ -4,8 +4,8 @@
 
 ### Changes
 
-* Use dynamic version handling via `hatch-vcs`, add automatic changelog update action by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/95
-* Bump the python-deps group with 2 updates by @dependabot in https://github.com/GeoscienceAustralia/eo-tides/pull/94
+- Use dynamic version handling via `hatch-vcs`, add automatic changelog update action by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/95
+- Bump the python-deps group with 2 updates by @dependabot in https://github.com/GeoscienceAustralia/eo-tides/pull/94
 
 **Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.7.2...0.7.3
 
@@ -99,20 +99,19 @@ Minor update to package dependencies
 ### New features
 
 - Publishes ensemble tide modelling code for combining multiple global ocean tide models into a single locally optimised ensemble tide model using external model ranking data (e.g. satellite altimetry or NDWI-tide correlations along the coastline).
-  
+
   - Update ensemble code to latest version that includes FES2022, GOT5.6 and TPXO10 tide models
   - Make ensemble model calculation function a top level function (i.e. rename from `_ensemble_model` to `ensemble_tides`)
   - Load tide model ranking points from external `flatgeobuf` format file for faster cloud access
-  
+
 - Major refactor to statistics functions to standardise code across both `pixel_stats` and `tide_stats` and add support for multiple models
-  
+
   - `tide_stats` will now return a `pandas.Series` if one model is requested, and a `pandas.DataFrame` if multiple are requested
   - Added a new `point_col` parameter to `tide_stats` to control the colour of plotted points. If `plot_var` is also provided, points will now be coloured differently by default.
-  
+
 - Added a new `crop_buffer` parameter to configure buffer distance when cropping model files with `crop=True` (defaults to 5 degrees)
-  
+
 - Reorder `model_tides` parameters to provide more logical flow and move more common params like `mode`, `output_format` and `output_units` higher
-  
 
 ### Bug fixes
 
@@ -173,5 +172,3 @@ Minor update to package dependencies
 ### Breaking changes
 
 See [Migrating from DEA Tools](migration.md) for a guide to updating your code from the original [`Digital Earth Australia Notebooks and Tools` repository](https://github.com/GeoscienceAustralia/dea-notebooks/).
-
-<!-- ### Bug fixes -->
