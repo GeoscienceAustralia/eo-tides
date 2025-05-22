@@ -4,7 +4,8 @@
 
 ### New features
 
-- Minor updates to improve documentation around accessing GESLA 3.0 tide gauge data, as well as making functions more re-usable by removing hard-coded paths and adding helpful error messages.
+- Minor updates to improve documentation around accessing GESLA 3.0 tide gauge data,
+- Made validation functions more re-usable by removing hard-coded paths and adding helpful error messages.
 
 ## 0.7.1 - 2025-05-19
 
