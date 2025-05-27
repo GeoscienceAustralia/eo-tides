@@ -26,6 +26,8 @@ utils : Utility functions and helper tools
 validation : Load observed tide gauge data to validate modelled tides
 """
 
+from importlib.metadata import version
+
 # Import commonly used functions for convenience
 from .eo import pixel_tides, tag_tides
 from .model import ensemble_tides, model_phases, model_tides
@@ -35,7 +37,6 @@ from .validation import eval_metrics, load_gauge_gesla
 
 # Define what should be imported with "from eo_tides import *"
 __all__ = [
-    "list_models",
     "model_tides",
     "model_phases",
     "ensemble_tides",
@@ -46,5 +47,9 @@ __all__ = [
     "eval_metrics",
     "load_gauge_gesla",
     "clip_models",
+    "list_models",
     "idw",
 ]
+
+# Add version metadata to package
+__version__ = version("eo-tides")
