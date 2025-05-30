@@ -44,7 +44,7 @@ def _tide_statistics(obs_tides, all_tides, min_max_q=(0.0, 1.0), dim="time"):
     offset_high = offset_high_m / tr
 
     # Combine into a single dataset
-    stats_ds = xr.merge(
+    return xr.merge(
         [
             mot.rename("mot"),
             mat.rename("mat"),
@@ -60,8 +60,6 @@ def _tide_statistics(obs_tides, all_tides, min_max_q=(0.0, 1.0), dim="time"):
         ],
         compat="override",
     )
-
-    return stats_ds
 
 
 def _stats_plain_english(mot, mat, hot, hat, lot, lat, otr, tr, spread, offset_low, offset_high):
@@ -568,7 +566,7 @@ def pixel_stats(
     # Reproject statistics into original high resolution grid
     if resample:
         print("Reprojecting statistics into original resolution")
-        stats_highres = _pixel_tides_resample(
+        return _pixel_tides_resample(
             stats_lowres,
             gbox,
             resample_method,
@@ -576,7 +574,6 @@ def pixel_stats(
             dask_compute,
             None,
         )
-        return stats_highres
 
     print("Returning low resolution statistics array")
     return stats_lowres

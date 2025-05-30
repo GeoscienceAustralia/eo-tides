@@ -1,9 +1,7 @@
 import pathlib
-import tempfile
 from datetime import datetime
 
 import numpy as np
-import odc.geo.geom
 import pandas as pd
 import pytest
 
@@ -67,8 +65,8 @@ def test_clip_models():
     )
 
     # Assert that files were exported for all available models
-    output_files = set([i.stem for i in out_dir.iterdir()])
-    assert output_files == set(["GOT5", "EOT20", "hamtide"])
+    output_files = {i.stem for i in out_dir.iterdir()}
+    assert output_files == set("GOT5", "EOT20", "hamtide")
 
     # Set modelling location
     x, y = 122.28, -18.06

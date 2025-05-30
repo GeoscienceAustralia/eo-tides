@@ -369,8 +369,8 @@ def test_model_tides_ensemble():
     # least one of the other models
     assert set(modelled_tides_df.columns) == set(models)
     assert all(
-        (modelled_tides_df.EOT20 == modelled_tides_df.ensemble)
-        | (modelled_tides_df.HAMTIDE11 == modelled_tides_df.ensemble)
+        (modelled_tides_df.ensemble == modelled_tides_df.EOT20)
+        | (modelled_tides_df.ensemble == modelled_tides_df.HAMTIDE11)
     )
 
     # Check that correct model is the closest at each row
@@ -404,7 +404,7 @@ def test_model_tides_ensemble():
     )
 
     # Check that expected models exist, and that valid data is produced
-    assert set(modelled_tides_df.columns) == set([
+    assert set(modelled_tides_df.columns) == set(
         "EOT20",
         "HAMTIDE11",
         "ensemble-best",
@@ -412,7 +412,7 @@ def test_model_tides_ensemble():
         "ensemble-mean-top2",
         "ensemble-mean-weighted",
         "ensemble-mean",
-    ])
+    )
     assert all(modelled_tides_df.notnull())
 
     # Long mode, custom functions
@@ -427,7 +427,7 @@ def test_model_tides_ensemble():
     )
 
     # Check that expected models exist in "tide_model" column
-    assert set(modelled_tides_df.tide_model) == set([
+    assert set(modelled_tides_df.tide_model) == set(
         "EOT20",
         "HAMTIDE11",
         "ensemble-best",
@@ -435,7 +435,7 @@ def test_model_tides_ensemble():
         "ensemble-mean-top2",
         "ensemble-mean-weighted",
         "ensemble-mean",
-    ])
+    )
 
 
 # Test ensemble dtype is set correctly

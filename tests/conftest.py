@@ -127,7 +127,7 @@ def satellite_ds_load(request):
         )
 
         # Search the STAC catalog for all items matching the query
-        ds = odc.stac.load(
+        return odc.stac.load(
             list(query.items()),
             bands=["nbart_red"],
             crs=crs,
@@ -137,8 +137,6 @@ def satellite_ds_load(request):
             fail_on_error=False,
             chunks={},
         )
-
-        return ds
 
 
 @pytest.fixture
@@ -250,7 +248,7 @@ def create_synthetic_eot20(base_dir="tests/data/tide_models_synthetic"):
                 "real": (("lat", "lon"), data),
             },
             coords={"lat": lat, "lon": lon},
-            attrs={"title": f"DGFI-TUM global empirical ocean tide model"},
+            attrs={"title": "DGFI-TUM global empirical ocean tide model"},
         )
 
         # Export

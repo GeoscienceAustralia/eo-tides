@@ -7,7 +7,7 @@ import pathlib
 import textwrap
 import warnings
 from collections import Counter
-from typing import List, Union
+from typing import TypeAlias
 
 import numpy as np
 import odc.geo
@@ -21,7 +21,7 @@ from scipy.spatial import cKDTree as KDTree
 from tqdm import tqdm
 
 # Type alias for all possible inputs to "time" params
-DatetimeLike = Union[np.ndarray, pd.DatetimeIndex, pd.Timestamp, datetime.datetime, str, List[str]]
+DatetimeLike: TypeAlias = np.ndarray | pd.DatetimeIndex | pd.Timestamp | datetime.datetime | str | list[str]
 
 
 def _get_duplicates(array):
@@ -54,8 +54,7 @@ def _set_directory(
     directory = pathlib.Path(directory).expanduser()
     if not directory.exists():
         raise FileNotFoundError(f"No valid tide model directory found at path `{directory}`")
-    else:
-        return directory
+    return directory
 
 
 def _standardise_time(
@@ -161,7 +160,7 @@ def _standardise_models(
             raise ValueError(error_text)
 
         # Return set of all ensemble plus any other requested models
-        models_to_process = sorted(list(set(ensemble_models + [m for m in models_requested if m != "ensemble"])))
+        models_to_process = sorted(set(ensemble_models + [m for m in models_requested if m != "ensemble"]))
 
     # Otherwise, models to process are the same as those requested
     else:
@@ -271,7 +270,7 @@ def _clip_model_file(
         for i in ["lat_z", "lat_v", "lat_u", "con"]:
             try:
                 nc_clipped[i] = nc_clipped[i].isel(nx=0)
-            except:
+            except KeyError:
                 pass
 
     return nc_clipped
@@ -558,8 +557,7 @@ def list_models(
 
         if raise_error:
             raise Exception(warning_msg)
-        else:
-            warnings.warn(warning_msg, UserWarning)
+        warnings.warn(warning_msg, UserWarning)
 
     # Return list of available and supported models
     return available_models, supported_models
