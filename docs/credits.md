@@ -1,6 +1,6 @@
 ## Citing `eo-tides`
 
-To cite `eo-tides` in your work, please use the following Journal of Open Source Software citation:
+To cite `eo-tides` in your work, please use the following [Journal of Open Source Software](https://doi.org/10.21105/joss.07786) citation:
 
 === "Plain text"
 
