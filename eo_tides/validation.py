@@ -164,7 +164,7 @@ def _load_gesla_dataset(site, path, na_value):
     )
 
     # Combine two date fields
-    gesla_df = (
+    return (
         gesla_df.assign(
             time=pd.to_datetime(gesla_df["date"] + " " + gesla_df["time"]),
             site_code=site,
@@ -172,8 +172,6 @@ def _load_gesla_dataset(site, path, na_value):
         .drop(columns=["date"])
         .set_index("time")
     )
-
-    return gesla_df
 
 
 def _nearest_row(gdf, x, y, max_distance=None):
@@ -288,7 +286,7 @@ def load_gauge_gesla(
         site_code = [site_code] if not isinstance(site_code, list) else site_code
 
     # If x and y are tuples, use xy bounds to identify sites
-    elif isinstance(x, (tuple, list)) & isinstance(y, (tuple, list)):
+    elif isinstance(x, tuple | list) & isinstance(y, tuple | list):
         bbox = BoundingBox.from_xy(x, y)
         site_code = metadata_gdf.cx[bbox.left : bbox.right, bbox.top : bbox.bottom].index
 
@@ -317,7 +315,7 @@ def load_gauge_gesla(
     # Prepare times
     if time is None:
         time = ["1800", str(datetime.datetime.now().year)]
-    time = [time] if not isinstance(time, (list, tuple)) else time
+    time = [time] if not isinstance(time, list | tuple) else time
     start_time = _round_date_strings(time[0], round_type="start")
     end_time = _round_date_strings(time[-1], round_type="end")
 

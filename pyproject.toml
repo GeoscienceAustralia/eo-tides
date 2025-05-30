@@ -107,17 +107,41 @@ allow_redefinition = true
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py310"
-line-length = 120
-fix = true
-
-[tool.ruff.format]
-preview = true
+target-version = "py310"     # Target Python 3.10 syntax
+line-length = 120            # Set max line length
+fix = true                   # Allow auto-fix when used without pre-commit
+lint.select = [
+  "I",        # Import sorting
+  "W",        # PyCodeStyle warnings
+  "F",        # Pyflakes (unused vars, imports, etc.)
+  "E",        # pycodestyle (spacing, etc.)
+  "UP",       # Modern Python idioms
+  "B006",     # Mutable default args
+  "B007",     # Reusing loop variables
+  "C4",       # Catch incorrect use of comprehensions, dict, list, etc
+  "FA",       # Enforce from __future__ import annotations
+  "ISC",      # Correct use of string concatenation
+  "ICN",      # Common import conventions
+  "RET",      # Good return practices
+  "SIM",      # Common simplification rules
+  "TID",      # Some good import practices
+  "PTH",      # Use pathlib instead of os.path
+  "NPY",      # Some numpy-specific things
+]
+lint.ignore = [
+  "E501",     # Don't enforce line length
+  "SIM105",   # contextlib.suppress
+]
+exclude = ["tests/testing.ipynb"]  # Don't modify testing notebook
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
-    "S101"   # Assert
+  "S101",     # Allow `assert` in test files
+  "NPY002"    # Allow legacy numpy random generation
 ]
+
+[tool.ruff.format]
+preview = true    # Enable experimental formatting improvements
 
 [tool.deptry.per_rule_ignores]
 DEP002 = [

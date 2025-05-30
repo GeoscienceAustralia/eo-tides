@@ -58,7 +58,7 @@ def _standardise_inputs(
     """
 
     # If `data` is an xarray object, extract its GeoBox and time
-    if isinstance(data, (xr.DataArray, xr.Dataset)):
+    if isinstance(data, xr.DataArray | xr.Dataset):
         # Try to extract GeoBox
         try:
             gbox: GeoBox = data.odc.geobox
@@ -544,14 +544,13 @@ def pixel_tides(
     # Reproject into original high resolution grid
     if resample:
         print("Reprojecting tides into original resolution")
-        tides_highres = _pixel_tides_resample(
+        return _pixel_tides_resample(
             tides_lowres,
             gbox,
             resample_method,
             dask_chunks,
             dask_compute,
         )
-        return tides_highres
 
     print("Returning low resolution tide array")
     return tides_lowres

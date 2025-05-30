@@ -10,16 +10,10 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
     rev: v0.6.4
     hooks:
-      # Run the linter.
-      - id: ruff
-        types_or: [python, pyi]
-        args: [--fix, --select=I] # --select=ALL, I
-      # Run the formatter.
-      - id: ruff-format
-        types_or: [python, pyi]
+      - id: ruff # Run linter using pyproject.toml config
+      - id: ruff-format # Run formatter using pyproject.toml config
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: "v3.0.3"

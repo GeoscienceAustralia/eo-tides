@@ -1,19 +1,5 @@
 name: Draft paper PDF
-on:
-  push:
-    branches:
-      - main
-      - JOSS_paper
-    paths:
-      - paper/**
-      - .github/workflows/paper.yml
-  pull_request:
-    branches:
-      - main
-      - JOSS_paper
-    paths:
-      - paper/**
-      - .github/workflows/paper.yml
+on: workflow_dispatch
 
 jobs:
   paper:

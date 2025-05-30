@@ -55,10 +55,7 @@ def _parallel_splits(
         raw_value = os.environ.get("CPU_GUARANTEE") or psutil.cpu_count(logical=False) or os.cpu_count() or 1
 
         # Convert to integer
-        if isinstance(raw_value, str):
-            parallel_max = int(float(raw_value))
-        else:
-            parallel_max = int(raw_value)
+        parallel_max = int(float(raw_value)) if isinstance(raw_value, str) else int(raw_value)
 
     # Calculate optimal number of splits based on constraints
     splits_by_size = total_points / min_points_per_split
@@ -66,8 +63,7 @@ def _parallel_splits(
     optimal_splits = min(splits_by_size, splits_by_cpu)
 
     # Convert to integer and ensure at least 1 split
-    final_split_count = int(max(1, optimal_splits))
-    return final_split_count
+    return int(max(1, optimal_splits))
 
 
 def _model_tides(
@@ -170,12 +166,7 @@ def _model_tides(
     hc = amp * np.exp(cph)
 
     # Compute delta times based on model
-    if pytmd_model.corrections in ("OTIS", "ATLAS", "TMD3", "netcdf"):
-        # Use delta time at 2000.0 to match TMD outputs
-        deltat = np.zeros_like(ts.tt_ut1)
-    else:
-        # Use interpolated delta times
-        deltat = ts.tt_ut1
+    deltat = np.zeros_like(ts.tt_ut1) if pytmd_model.corrections in ("OTIS", "ATLAS", "TMD3", "netcdf") else ts.tt_ut1
 
     # In "one-to-many" mode, extracted tidal constituents and timesteps
     # are repeated/multiplied out to match the number of input points and
