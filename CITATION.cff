@@ -1,30 +1,56 @@
-# YAML 1.2
----
-abstract: ""
+cff-version: "1.2.0"
 authors:
-  - affiliation: "Geoscience Australia"
-    family-names: "Bishop-Taylor"
+  - family-names: Bishop-Taylor
     given-names: Robbi
     orcid: "https://orcid.org/0000-0002-1533-2599"
-  - affiliation: "Geoscience Australia"
-    family-names: Sagar
-    given-names: Stephen
-  - affiliation: "Geoscience Australia"
-    family-names: Phillips
+  - family-names: Phillips
     given-names: Claire
-  - affiliation: "Geoscience Australia"
-    family-names: Newey
+    orcid: "https://orcid.org/0009-0003-9882-9131"
+  - family-names: Sagar
+    given-names: Stephen
+    orcid: "https://orcid.org/0000-0001-9568-9661"
+  - family-names: Newey
     given-names: Vanessa
     orcid: "https://orcid.org/0000-0003-3705-5665"
-cff-version: "1.1.0"
-date-released: 2024-10-30
-doi: ""
-keywords:
-  - "Tide modelling"
-  - "Earth Observation"
-  - "Remote sensing"
-license: "Apache-2.0"
-message: "Please cite `eo-tides` using the citation below:"
-repository-code: "https://github.com/GeoscienceAustralia/eo-tides"
-title: "eo-tides: Tide modelling tools for large-scale satellite earth observation analysis"
-# version: "1.0.0"
+  - family-names: Sutterley
+    given-names: Tyler
+    orcid: "https://orcid.org/0000-0002-6964-1194"
+contact:
+  - family-names: Bishop-Taylor
+    given-names: Robbi
+    orcid: "https://orcid.org/0000-0002-1533-2599"
+doi: 10.26186/150065
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+    - family-names: Bishop-Taylor
+      given-names: Robbi
+      orcid: "https://orcid.org/0000-0002-1533-2599"
+    - family-names: Phillips
+      given-names: Claire
+      orcid: "https://orcid.org/0009-0003-9882-9131"
+    - family-names: Sagar
+      given-names: Stephen
+      orcid: "https://orcid.org/0000-0001-9568-9661"
+    - family-names: Newey
+      given-names: Vanessa
+      orcid: "https://orcid.org/0000-0003-3705-5665"
+    - family-names: Sutterley
+      given-names: Tyler
+      orcid: "https://orcid.org/0000-0002-6964-1194"
+  date-published: 2025-05-29
+  doi: 10.21105/joss.07786
+  issn: 2475-9066
+  issue: 109
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 7786
+  title: "eo-tides: Tide modelling tools for large-scale satellite Earth
+    observation analysis"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.07786"
+  volume: 10
+title: "eo-tides: Tide modelling tools for large-scale satellite Earth
+  observation analysis"

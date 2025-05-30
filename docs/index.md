@@ -41,11 +41,30 @@ For instructions on how to set up these models for use in `eo-tides`, refer to [
 
 ## Citing `eo-tides`
 
-To cite `eo-tides` in your work, please use the following citation:
+To cite `eo-tides` in your work, please use the following Journal of Open Source Software citation:
 
-```
-Bishop-Taylor, R., Sagar, S., Phillips, C., & Newey, V. (2024). eo-tides: Tide modelling tools for large-scale satellite earth observation analysis. https://github.com/GeoscienceAustralia/eo-tides
-```
+=== "Plain text"
+
+    ```
+    Bishop-Taylor, R., Phillips, C., Sagar, S., Newey, V., & Sutterley, T., (2025). eo-tides: Tide modelling tools for large-scale satellite Earth observation analysis. Journal of Open Source Software, 10(109), 7786, https://doi.org/10.21105/joss.07786
+    ```
+
+=== "BibTeX"
+
+    ```
+    @article{Bishop-Taylor2025,
+    doi       = {10.21105/joss.07786},
+    url       = {https://doi.org/10.21105/joss.07786},
+    year      = {2025},
+    publisher = {The Open Journal},
+    volume    = {10},
+    number    = {109},
+    pages     = {7786},
+    author    = {Robbi Bishop-Taylor and Claire Phillips and Stephen Sagar and Vanessa Newey and Tyler Sutterley},
+    title     = {eo-tides: Tide modelling tools for large-scale satellite Earth observation analysis},
+    journal   = {Journal of Open Source Software}
+    }
+    ```
 
 In addition, please consider also citing the underlying [`pyTMD` Python package](https://pytmd.readthedocs.io/en/latest/) which powers the tide modelling functionality behind `eo-tides`:
 
