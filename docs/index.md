@@ -6,8 +6,8 @@
 [![Github](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/GeoscienceAustralia/eo-tides)
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
 [![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/tests.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/tests.yml?query=branch%3Amain)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/commit-activity/m/GeoscienceAustralia/eo-tides)
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
+[![JOSS paper](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e/status.svg)](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e)
 
 `eo-tides` provides provides powerful parallelized tools for integrating satellite Earth observation data with tide modelling. 🛠️🌊🛰️
 

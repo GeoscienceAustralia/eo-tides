@@ -7,11 +7,12 @@
 [![Python Version from PEP 621 TOML](https://img.shields.io/pypi/pyversions/eo-tides)](https://github.com/GeoscienceAustralia/eo-tides/blob/main/pyproject.toml)
 [![codecov](https://codecov.io/gh/GeoscienceAustralia/eo-tides/branch/main/graph/badge.svg)](https://codecov.io/gh/GeoscienceAustralia/eo-tides)
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
-[![status](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e/status.svg)](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e)
+[![JOSS paper](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e/status.svg)](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e)
 
 - ⚙️ **Github repository**: <https://github.com/GeoscienceAustralia/eo-tides/>
-- 📘 **Documentation**: <https://GeoscienceAustralia.github.io/eo-tides/>
 - 🐍 **PyPI**: <https://pypi.org/project/eo-tides/>
+- ℹ️ **Documentation**: <https://GeoscienceAustralia.github.io/eo-tides/>
+- 📰 **Paper**: <https://doi.org/10.21105/joss.07786>
 
 <br>
 
