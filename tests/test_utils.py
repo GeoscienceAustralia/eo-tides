@@ -66,7 +66,7 @@ def test_clip_models():
 
     # Assert that files were exported for all available models
     output_files = {i.stem for i in out_dir.iterdir()}
-    assert output_files == set("GOT5", "EOT20", "hamtide")
+    assert output_files == {"GOT5", "EOT20", "hamtide"}
 
     # Set modelling location
     x, y = 122.28, -18.06
