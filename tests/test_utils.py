@@ -244,6 +244,16 @@ def test_list_models():
     assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
 
 
+def test_list_models_custom():
+    # Verify that custom models are added to lists of
+    # available and supported models
+    available_models, supported_models = list_models(
+        custom_models=["./tests/data/model_EOT20custom.json"],
+    )
+    assert "EOT20_custom" in available_models
+    assert "EOT20_custom" in supported_models
+
+
 # Test Inverse Distance Weighted function
 def test_idw():
     # Basic psuedo-1D example

@@ -548,8 +548,14 @@ def list_models(
         else:
             model_file = model_file[0] if isinstance(model_file, list) else model_file
 
-        # Add path to dict
-        expected_paths[m] = str(directory / pathlib.Path(model_file).expanduser().parent)
+        # Add expected path to dict, adding directory prefix if necessary
+        # (required because custom tide model paths are loaded as absolute paths,
+        # but standard pyTMD database models are loaded as relative paths)
+        model_dir = pathlib.Path(model_file).expanduser().parent
+        if pathlib.Path(model_file).is_relative_to(directory):
+            expected_paths[m] = str(model_dir)
+        else:
+            expected_paths[m] = str(directory / model_dir)
 
     # Define column widths
     status_width = 4  # Width for emoji
