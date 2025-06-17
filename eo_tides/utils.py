@@ -35,6 +35,10 @@ def _custom_model_definitions(
     https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#definition-files
     """
 
+    # Raise error if a string is provided instead of a list
+    if isinstance(custom_models, str):
+        raise Exception("Please provide `custom_models` as a list, not a string.")
+
     # Return empty dictionary if no definition files are provided
     if custom_models is None:
         return {}
