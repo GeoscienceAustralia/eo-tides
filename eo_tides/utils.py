@@ -12,16 +12,39 @@ from typing import TypeAlias
 import numpy as np
 import odc.geo
 import pandas as pd
+import pyTMD
 import xarray as xr
 from colorama import Style, init
 from odc.geo.geom import BoundingBox
 from pyTMD.io.model import load_database
-from pyTMD.io.model import model as pytmd_model
 from scipy.spatial import cKDTree as KDTree
 from tqdm import tqdm
 
 # Type alias for all possible inputs to "time" params
 DatetimeLike: TypeAlias = np.ndarray | pd.DatetimeIndex | pd.Timestamp | datetime.datetime | str | list[str]
+
+
+def _custom_model_definitions(
+    custom_models: list[str | os.PathLike] | None,
+    directory: str | os.PathLike | None = None,
+) -> dict:
+    """
+    Read a list of custom tide model configs and return as dictionary.
+
+    For information about custom JSON-format `pyTMD` tide model definitions:
+    https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#definition-files
+    """
+
+    # Return empty dictionary if no definition files are provided
+    if custom_models is None:
+        return {}
+
+    # Set tide modelling files directory. If no custom path is
+    # provided, try global environment variable.
+    directory = _set_directory(directory)
+
+    # Return a dictionary containing model names and pyTMD config
+    return {(m := pyTMD.io.model(directory).from_file(path)).name: m.to_dict() for path in custom_models}
 
 
 def _get_duplicates(array):
@@ -80,6 +103,7 @@ def _standardise_models(
     model: str | list[str],
     directory: str | os.PathLike,
     ensemble_models: list[str] | None = None,
+    custom_models: list[str | os.PathLike] | None = None,
 ) -> tuple[list[str], list[str], list[str] | None]:
     """
     Take an input model name or list of names, and return a list
@@ -102,7 +126,11 @@ def _standardise_models(
 
     # Get full list of supported models from pyTMD database
     available_models, valid_models = list_models(
-        directory, show_available=False, show_supported=False, raise_error=True
+        directory,
+        show_available=False,
+        show_supported=False,
+        raise_error=True,
+        custom_models=custom_models,
     )
     custom_options = ["ensemble", "all"]
 
@@ -433,7 +461,7 @@ def clip_models(
             nc_clipped.to_netcdf(output_directory / file, mode="w")
 
         # Verify that models are ready
-        pytmd_model(directory=output_directory).elevation(m=m).verify
+        pyTMD.io.model(directory=output_directory).elevation(m=m).verify
         print(" ✅ Clipped model exported and verified")
 
     print(f"\nOutputs exported to {output_directory}")
@@ -445,6 +473,7 @@ def list_models(
     show_available: bool = True,
     show_supported: bool = True,
     raise_error: bool = False,
+    custom_models: list[str | os.PathLike] | None = None,
 ) -> tuple[list[str], list[str]]:
     """
     List all tide models available for tide modelling.
@@ -474,6 +503,12 @@ def list_models(
     raise_error : bool, optional
         If True, raise an error if no available models are found.
         If False, raise a warning.
+    custom_models : list, optional
+        An optional list of paths to custom JSON-format `pyTMD`
+        tide model definition files. This can be used to support
+        tide moelling using custom tide models that are not supported
+        by `pyTMD`. For more information on custom model definitions:
+        https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#definition-files
 
     Returns
     -------
@@ -488,8 +523,14 @@ def list_models(
     # provided, try global environment variable.
     directory = _set_directory(directory)
 
-    # Get full list of supported models from pyTMD database
+    # Load supported models from pyTMD database
     model_database = load_database()["elevation"]
+
+    # Insert any custom model definitions into database
+    custom_models_dict = _custom_model_definitions(custom_models, directory)
+    model_database.update(custom_models_dict)
+
+    # Get full list of supported default and custom models
     supported_models = list(model_database.keys())
 
     # Extract expected model paths
@@ -522,13 +563,22 @@ def list_models(
     available_models = []
     for m in supported_models:
         try:
-            model_file = pytmd_model(directory=directory).elevation(m=m)
+            # Test loading custom models by using dictionary config
+            if m in custom_models_dict:
+                model_file = pyTMD.io.model(directory).from_dict(custom_models_dict[m])
+
+            # Otherwise, test loading standard model using pyTMD database
+            else:
+                model_file = pyTMD.io.model(directory=directory).elevation(m=m)
+
+            # Append model to list of available model
             available_models.append(m)
 
             if show_available:
                 # Mark available models with a green tick
                 status = "✅"
                 print(f"{status:^{status_width}}│ {m:<{name_width}} │ {expected_paths[m]:<{path_width}}")
+
         except FileNotFoundError:
             if show_supported:
                 # Mark unavailable models with a red cross
