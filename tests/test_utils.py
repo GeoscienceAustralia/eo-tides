@@ -4,9 +4,39 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import pytest
+import pyTMD
 
 from eo_tides.model import model_tides
-from eo_tides.utils import _standardise_models, _standardise_time, clip_models, idw, list_models
+from eo_tides.utils import (
+    _custom_model_definitions,
+    _standardise_models,
+    _standardise_time,
+    clip_models,
+    idw,
+    list_models,
+)
+
+
+def test_custom_model_definitions():
+    directory = "./tests/data/tide_models"
+
+    # Load custom models
+    custom_models_dict = _custom_model_definitions(
+        custom_models=["./tests/data/model_EOT20custom.json"],
+        directory=directory,
+    )
+
+    # Verify that output dict contains expected model name
+    assert "EOT20_custom" in custom_models_dict
+
+    # Verify resulting model
+    model = pyTMD.io.model(directory=directory).from_dict(custom_models_dict["EOT20_custom"])
+    assert model.verify
+
+    # Verify that default settings work with env var, and
+    # empty dict is returned if custom_models is None
+    custom_models_dict = _custom_model_definitions(custom_models=None)
+    assert custom_models_dict == {}
 
 
 @pytest.mark.parametrize(
