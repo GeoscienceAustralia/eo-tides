@@ -38,6 +38,12 @@ def test_custom_model_definitions():
     custom_models_dict = _custom_model_definitions(custom_models=None)
     assert custom_models_dict == {}
 
+    # Verify that error is raised if models are passed as a string
+    with pytest.raises(Exception, match="Please provide `custom_models` as a list, not a string."):
+        _custom_model_definitions(
+            custom_models="./tests/data/model_EOT20custom.json",
+        )
+
 
 @pytest.mark.parametrize(
     "model, ensemble_models, exp_process, exp_request, exp_ensemble",
