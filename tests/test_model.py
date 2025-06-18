@@ -462,6 +462,23 @@ def test_model_tides_ensemble_dtype(dtype):
     assert ensemble_df.tide_height.dtype == modelled_tides_df.tide_height.dtype
 
 
+# Test running a custom tide model definition
+def test_model_tides_custom(measured_tides_ds):
+    # Run modelling for custom tide model
+    modelled_tides_df = model_tides(
+        x=[GAUGE_X],
+        y=[GAUGE_Y],
+        time=measured_tides_ds.time,
+        model="EOT20_custom",
+        custom_models=["./tests/data/model_EOT20custom.json"],
+        output_format="wide",
+    )
+
+    # Verify custom column exists and contains data
+    assert "EOT20_custom" in modelled_tides_df
+    assert modelled_tides_df["EOT20_custom"].notna().any()
+
+
 @pytest.mark.parametrize("time_offset", ["15 min", "20 min"])
 def test_model_phases(time_offset):
     phase_df = model_phases(
