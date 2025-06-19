@@ -77,6 +77,7 @@ def test_custom_model_definitions(custom_models):
         )
 
         # Verify that output dict contains expected model name
+        assert isinstance(custom_models_dict, dict)
         assert "EOT20_custom" in custom_models_dict
 
         # Verify resulting model
