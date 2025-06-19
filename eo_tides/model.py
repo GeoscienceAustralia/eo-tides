@@ -444,7 +444,7 @@ def model_tides(
     parallel_splits: int | str = "auto",
     parallel_max: int | None = None,
     ensemble_models: list[str] | None = None,
-    custom_models: list[str | os.PathLike] | None = None,
+    custom_models: list[str | os.PathLike | dict] | None = None,
     **ensemble_kwargs,
 ) -> pd.DataFrame:
     """
@@ -584,11 +584,11 @@ def model_tides(
         "GOT4.10", "GOT5.5_extrapolated", "GOT5.6_extrapolated",
         "TPXO10-atlas-v2-nc", "TPXO8-atlas-nc", "TPXO9-atlas-v5-nc"]`.
     custom_models : list, optional
-        An optional list of paths to custom JSON-format `pyTMD`
-        tide model definition files. This can be used to support
-        tide moelling using custom tide models that are not supported
-        by `pyTMD`. For more information on custom model definitions:
-        https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#definition-files
+        A list of custom `pyTMD` tide model definitions, either as
+        dictionaries or file paths to JSON definition files.
+        Use this to enable support for custom tide models not
+        included with `pyTMD`. For more information:
+        See: https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#definition-files
     **ensemble_kwargs :
         Keyword arguments used to customise the generation of optional
         ensemble tide models if "ensemble" modelling are requested.

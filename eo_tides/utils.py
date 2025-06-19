@@ -25,7 +25,7 @@ DatetimeLike: TypeAlias = np.ndarray | pd.DatetimeIndex | pd.Timestamp | datetim
 
 
 def _custom_model_definitions(
-    custom_models: list[str | os.PathLike] | None,
+    custom_models: list[str | os.PathLike | dict] | None,
     directory: str | os.PathLike | None = None,
 ) -> dict:
     """
@@ -48,7 +48,15 @@ def _custom_model_definitions(
     directory = _set_directory(directory)
 
     # Return a dictionary containing model names and pyTMD config
-    return {(m := pyTMD.io.model(directory).from_file(path)).name: m.to_dict() for path in custom_models}
+    custom_models_dict = {}
+    for model in custom_models:
+        if isinstance(model, str | os.PathLike):
+            m = pyTMD.io.model(directory).from_file(model)
+        elif isinstance(model, dict):
+            m = pyTMD.io.model(directory).from_dict(model)
+        custom_models_dict[m.name] = m.to_dict()
+
+    return custom_models_dict
 
 
 def _get_duplicates(array):
@@ -107,7 +115,7 @@ def _standardise_models(
     model: str | list[str],
     directory: str | os.PathLike,
     ensemble_models: list[str] | None = None,
-    custom_models: list[str | os.PathLike] | None = None,
+    custom_models: list[str | os.PathLike | dict] | None = None,
 ) -> tuple[list[str], list[str], list[str] | None]:
     """
     Take an input model name or list of names, and return a list
@@ -477,7 +485,7 @@ def list_models(
     show_available: bool = True,
     show_supported: bool = True,
     raise_error: bool = False,
-    custom_models: list[str | os.PathLike] | None = None,
+    custom_models: list[str | os.PathLike | dict] | None = None,
 ) -> tuple[list[str], list[str]]:
     """
     List all tide models available for tide modelling.
@@ -508,11 +516,11 @@ def list_models(
         If True, raise an error if no available models are found.
         If False, raise a warning.
     custom_models : list, optional
-        An optional list of paths to custom JSON-format `pyTMD`
-        tide model definition files. This can be used to support
-        tide moelling using custom tide models that are not supported
-        by `pyTMD`. For more information on custom model definitions:
-        https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#definition-files
+        A list of custom `pyTMD` tide model definitions, either as
+        dictionaries or file paths to JSON definition files.
+        Use this to enable support for custom tide models not
+        included with `pyTMD`. For more information:
+        See: https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#definition-files
 
     Returns
     -------
