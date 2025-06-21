@@ -4,92 +4,15 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import pytest
-import pyTMD
 
 from eo_tides.model import model_tides
 from eo_tides.utils import (
-    _custom_model_definitions,
     _standardise_models,
     _standardise_time,
     clip_models,
     idw,
     list_models,
 )
-
-
-@pytest.mark.parametrize(
-    "custom_models",
-    [
-        # Custom model as definition file
-        ["./tests/data/model_EOT20custom.json"],
-        # Custom model as dictionary
-        [
-            {
-                "format": "FES-netcdf",
-                "model_file": [
-                    "EOT20/ocean_tides/2N2_ocean_eot20.nc",
-                    "EOT20/ocean_tides/J1_ocean_eot20.nc",
-                    "EOT20/ocean_tides/K1_ocean_eot20.nc",
-                    "EOT20/ocean_tides/K2_ocean_eot20.nc",
-                    "EOT20/ocean_tides/M2_ocean_eot20.nc",
-                    "EOT20/ocean_tides/M4_ocean_eot20.nc",
-                    "EOT20/ocean_tides/MF_ocean_eot20.nc",
-                    "EOT20/ocean_tides/MM_ocean_eot20.nc",
-                    "EOT20/ocean_tides/N2_ocean_eot20.nc",
-                    "EOT20/ocean_tides/O1_ocean_eot20.nc",
-                    "EOT20/ocean_tides/P1_ocean_eot20.nc",
-                    "EOT20/ocean_tides/Q1_ocean_eot20.nc",
-                    "EOT20/ocean_tides/S1_ocean_eot20.nc",
-                    "EOT20/ocean_tides/S2_ocean_eot20.nc",
-                    "EOT20/ocean_tides/SA_ocean_eot20.nc",
-                    "EOT20/ocean_tides/SSA_ocean_eot20.nc",
-                    "EOT20/ocean_tides/T2_ocean_eot20.nc",
-                ],
-                "name": "EOT20_custom",
-                "reference": "https://doi.org/10.17882/79489",
-                "scale": 0.01,
-                "type": "z",
-                "variable": "tide_ocean",
-                "version": "EOT20",
-            }
-        ],
-        # Custom model as string
-        "./tests/data/model_EOT20custom.json",
-    ],
-    ids=["file", "dict", "str"],
-)
-def test_custom_model_definitions(custom_models):
-    directory = "./tests/data/tide_models"
-
-    if isinstance(custom_models, str):
-        # Verify that error is raised if models are passed as a string
-        with pytest.raises(Exception, match="Please provide `custom_models` as a list, not a string."):
-            _custom_model_definitions(
-                custom_models=custom_models,
-                directory=directory,
-            )
-
-    else:
-        # Load custom models
-        custom_models_dict = _custom_model_definitions(
-            custom_models=custom_models,
-            directory=directory,
-        )
-
-        # Verify that output dict contains expected model name
-        assert isinstance(custom_models_dict, dict)
-        assert "EOT20_custom" in custom_models_dict
-
-        # Verify resulting model
-        model = pyTMD.io.model(directory=directory).from_dict(custom_models_dict["EOT20_custom"])
-        assert model.verify
-
-
-def test_custom_model_definitions_none():
-    # Verify that default settings work with env var, and
-    # empty dict is returned if custom_models is None
-    custom_models_dict = _custom_model_definitions(custom_models=None)
-    assert custom_models_dict == {}
 
 
 @pytest.mark.parametrize(
@@ -363,11 +286,55 @@ def test_list_models():
     assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
 
 
-def test_list_models_custom():
+# Test running extra_databases models from dict and file
+@pytest.mark.parametrize(
+    "extra_databases",
+    [
+        # Extra database as a JSON file
+        ["./tests/data/extra_database.json"],
+        # Extra database as a dictionary
+        [
+            {
+                "elevation": {
+                    "EOT20_custom": {
+                        "format": "FES-netcdf",
+                        "model_file": [
+                            "EOT20/ocean_tides/2N2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/J1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/K1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/K2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/M2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/M4_ocean_eot20.nc",
+                            "EOT20/ocean_tides/MF_ocean_eot20.nc",
+                            "EOT20/ocean_tides/MM_ocean_eot20.nc",
+                            "EOT20/ocean_tides/N2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/O1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/P1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/Q1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/S1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/S2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/SA_ocean_eot20.nc",
+                            "EOT20/ocean_tides/SSA_ocean_eot20.nc",
+                            "EOT20/ocean_tides/T2_ocean_eot20.nc",
+                        ],
+                        "name": "EOT20_custom",
+                        "reference": "https://doi.org/10.17882/79489",
+                        "scale": 0.01,
+                        "type": "z",
+                        "variable": "tide_ocean",
+                        "version": "EOT20",
+                    }
+                }
+            }
+        ],
+    ],
+    ids=["file", "dict"],
+)
+def test_list_models_extra_databases(extra_databases):
     # Verify that custom models are added to lists of
     # available and supported models
     available_models, supported_models = list_models(
-        custom_models=["./tests/data/model_EOT20custom.json"],
+        extra_databases=extra_databases,
     )
     assert "EOT20_custom" in available_models
     assert "EOT20_custom" in supported_models
