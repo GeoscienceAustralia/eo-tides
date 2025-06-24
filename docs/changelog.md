@@ -1,5 +1,76 @@
 # Changelog
 
+## 0.8.0 - 2025-06-24
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+This release provides new functionality to customise tide modelling:
+
+1. A new `extra_databases` parameter to model tides using models that are not natively supported by `pyTMD`, accepting custom tide model databases in either Python dictionary or JSON file format
+2. A new `constituents` parameter to restrict tide modelling to a custom subset of harmonic constituents
+
+For example, to model tides using a custom `EOT20_custom` tide model:
+
+```
+import pandas as pd
+from eo_tides.model import model_tides
+
+custom_db_dict = {
+  "elevation": {
+    "EOT20_custom": {
+      "format": "FES-netcdf",
+      "model_file": [
+        "EOT20/ocean_tides/2N2_ocean_eot20.nc",
+        "EOT20/ocean_tides/J1_ocean_eot20.nc",
+        "EOT20/ocean_tides/K1_ocean_eot20.nc",
+        "EOT20/ocean_tides/K2_ocean_eot20.nc",
+        "EOT20/ocean_tides/M2_ocean_eot20.nc",
+        "EOT20/ocean_tides/M4_ocean_eot20.nc",
+        "EOT20/ocean_tides/MF_ocean_eot20.nc",
+        "EOT20/ocean_tides/MM_ocean_eot20.nc",
+        "EOT20/ocean_tides/N2_ocean_eot20.nc",
+        "EOT20/ocean_tides/O1_ocean_eot20.nc",
+        "EOT20/ocean_tides/P1_ocean_eot20.nc",
+        "EOT20/ocean_tides/Q1_ocean_eot20.nc",
+        "EOT20/ocean_tides/S1_ocean_eot20.nc",
+        "EOT20/ocean_tides/S2_ocean_eot20.nc",
+        "EOT20/ocean_tides/SA_ocean_eot20.nc",
+        "EOT20/ocean_tides/SSA_ocean_eot20.nc",
+        "EOT20/ocean_tides/T2_ocean_eot20.nc"
+      ],
+      "name": "EOT20_custom",
+      "reference": "https://doi.org/10.17882/79489",
+      "scale": 0.01,
+      "type": "z",
+      "variable": "tide_ocean",
+      "version": "EOT20"
+    }
+  }
+}
+
+model_tides(
+    x=148,
+    y=-16,
+    time=pd.date_range("2022-01-01", "2023-12-31", freq="1h"),
+    model=["EOT20_custom", "EOT20"],
+    directory="/var/share/tide_models/",
+    extra_databases=custom_db_dict,
+    output_format="wide",
+)
+
+```
+#### New features
+
+* Support custom tide models by passing in extra tide model databases by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/105
+* Support customising constituents during tide modelling by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/108
+
+#### Other changes
+
+* Major Ruff refactor by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/108
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.7.5...0.8.0
+
 ## 0.7.5 - 2025-06-23
 
 ### What's Changed
