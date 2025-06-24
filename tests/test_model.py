@@ -553,7 +553,6 @@ def test_model_tides_errors(bad_args, expected_exception):
         "x": GAUGE_X,
         "y": GAUGE_Y,
         "time": np.array(["2025-01-01", "2025-01-02", "2025-01-03"], dtype="datetime64[ns]"),
-        "directory": "/var/share/tide_models/",
     }
 
     # Update with bad kwargs

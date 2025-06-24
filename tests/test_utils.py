@@ -83,6 +83,29 @@ def test_standardise_models(model, ensemble_models, exp_process, exp_request, ex
     assert (sorted(ensemble_models) if ensemble_models else None) == (sorted(exp_ensemble) if exp_ensemble else None)
 
 
+# Test expected failures during model standardisation
+@pytest.mark.parametrize(
+    "model, ensemble_models, err_msg",
+    [
+        # Case 1: Duplicate models
+        (["EOT20", "EOT20"], None, "duplicate values"),
+        # Case 2: Invalid model
+        (["bad_model"], None, "not valid"),
+        # Case 3: Valid but unavailable model
+        (["FES2012"], None, "not available"),
+        # Case 4: Unavailable ensemble model
+        (["ensemble"], ["EOT20", "FES2012"], "ensemble models are not available"),
+    ],
+    ids=["duplicate_model", "invalid_model", "unavailable_model", "unavailable_ensemble"],
+)
+def test_standardise_models_errors(model, ensemble_models, err_msg):
+    with pytest.raises(ValueError, match=err_msg):
+        _standardise_models(
+            model=model,
+            ensemble_models=ensemble_models,
+        )
+
+
 # Use monkeypatch to test setting and unsetting environment var
 @pytest.mark.parametrize(
     "directory,env_var,expected_exception",
