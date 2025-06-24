@@ -521,6 +521,49 @@ def test_model_tides_extra_databases(extra_databases):
     assert np.allclose(modelled_tides_df["EOT20_custom"], modelled_tides_df["EOT20"])
 
 
+@pytest.mark.parametrize(
+    "bad_args, expected_exception",
+    [
+        ({"time": None}, ValueError),
+        ({"method": "cubic"}, ValueError),
+        ({"output_units": "feet"}, ValueError),
+        ({"output_format": "stacked"}, ValueError),
+        ({"x": np.array(["a", "b", "c"])}, TypeError),
+        ({"y": np.array(["a", "b", "c"])}, TypeError),
+        ({"x": np.array([1, 2])}, ValueError),
+        (
+            {"mode": "one-to-one", "time": np.array(["2025-01-01", "2025-01-02"])},
+            ValueError,
+        ),
+    ],
+    ids=[
+        "missing_time",
+        "invalid_method",
+        "invalid_units",
+        "invalid_format",
+        "non_numeric_x",
+        "non_numeric_y",
+        "x_y_length_mismatch",
+        "time_length_mismatch",
+    ],
+)
+def test_model_tides_fails(bad_args, expected_exception):
+    # Dummy valid inputs
+    args = {
+        "x": GAUGE_X,
+        "y": GAUGE_Y,
+        "time": np.array(["2025-01-01", "2025-01-02", "2025-01-03"], dtype="datetime64[ns]"),
+        "directory": "/var/share/tide_models/",
+    }
+
+    # Update with bad kwargs
+    args.update(bad_args)
+
+    # Verify error is raised
+    with pytest.raises(expected_exception):
+        model_tides(**args)
+
+
 @pytest.mark.parametrize("time_offset", ["15 min", "20 min"])
 def test_model_phases(time_offset):
     phase_df = model_phases(
