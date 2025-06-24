@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.5 - 2025-06-23
+
+### What's Changed
+
+Minor update to remove Dask pin now that Dask compatability issue has been solved in `odc-stac`
+
+#### Documentation updates
+
+* Fix unlinked URLs in changelog by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/103
+
+#### Other changes
+
+* Remove dask pin to close #76 by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/106
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.7.4...0.7.5
+
 ## 0.7.4 - 2025-05-30
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
