@@ -7,6 +7,7 @@ import pytest
 
 from eo_tides.model import model_tides
 from eo_tides.utils import (
+    _set_directory,
     _standardise_models,
     _standardise_time,
     clip_models,
@@ -80,6 +81,54 @@ def test_standardise_models(model, ensemble_models, exp_process, exp_request, ex
     assert models_to_process == exp_process
     assert models_requested == exp_request
     assert (sorted(ensemble_models) if ensemble_models else None) == (sorted(exp_ensemble) if exp_ensemble else None)
+
+
+# Test expected failures during model standardisation
+@pytest.mark.parametrize(
+    "model, ensemble_models, err_msg",
+    [
+        # Case 1: Duplicate models
+        (["EOT20", "EOT20"], None, "duplicate values"),
+        # Case 2: Invalid model
+        (["bad_model"], None, "not valid"),
+        # Case 3: Valid but unavailable model
+        (["FES2012"], None, "not available"),
+        # Case 4: Unavailable ensemble model
+        (["ensemble"], ["EOT20", "FES2012"], "ensemble models are not available"),
+    ],
+    ids=["duplicate_model", "invalid_model", "unavailable_model", "unavailable_ensemble"],
+)
+def test_standardise_models_errors(model, ensemble_models, err_msg):
+    with pytest.raises(ValueError, match=err_msg):
+        _standardise_models(
+            model=model,
+            directory="tests/data/tide_models",
+            ensemble_models=ensemble_models,
+        )
+
+
+# Use monkeypatch to test setting and unsetting environment var
+@pytest.mark.parametrize(
+    "directory,env_var,expected_exception",
+    [
+        # Case 1: No directory, no env var → Exception
+        (None, None, Exception),
+        # Case 2: Directory set, but path doesn't exist → FileNotFoundError
+        ("/some/nonexistent/path", None, FileNotFoundError),
+        # Case 3: Env var set, but path doesn't exist → FileNotFoundError
+        (None, "/some/nonexistent/path", FileNotFoundError),
+    ],
+    ids=["no_directory_or_env", "invalid_dir", "invalid_env_var"],
+)
+def test_set_directory_errors(monkeypatch, directory, env_var, expected_exception):
+    # Remove or modify env var if required
+    if env_var is None:
+        monkeypatch.delenv("EO_TIDES_TIDE_MODELS", raising=False)
+    else:
+        monkeypatch.setenv("EO_TIDES_TIDE_MODELS", env_var)
+
+    with pytest.raises(expected_exception):
+        _set_directory(directory)
 
 
 def test_clip_models():
@@ -270,7 +319,7 @@ def test_list_models():
     # Using env var
     available_models, supported_models = list_models()
     assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
-    assert len(supported_models) > 3
+    assert len(supported_models) > 3  # noqa: PLR2004
 
     # Not printing outputs
     available_models, supported_models = list_models(show_available=False, show_supported=False)

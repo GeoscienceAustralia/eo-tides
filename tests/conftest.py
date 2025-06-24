@@ -1,6 +1,4 @@
-"""
-This module contains shared fixtures for eo_tides tests.
-"""
+"""This module contains shared fixtures for eo_tides tests."""
 
 from copy import deepcopy
 from pathlib import Path
@@ -17,10 +15,9 @@ GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
 
 
-@pytest.fixture()
+@pytest.fixture
 def measured_tides_ds():
-    """
-    Load measured sea level data from the Broome ABSLMP tidal station:
+    """Load measured sea level data from the Broome ABSLMP tidal station:
     http://www.bom.gov.au/oceanography/projects/abslmp/data/data.shtml
     """
     # Metadata for Broome ABSLMP tidal station:
@@ -56,8 +53,7 @@ def measured_tides_ds():
     scope="session",  # only load data once, but copy for each test
 )
 def satellite_ds_load(request):
-    """
-    Load a sample timeseries of Landsat 8 data from either
+    """Load a sample timeseries of Landsat 8 data from either
     Microsoft Planetary Computer or Digital Earth Australia's
     STAC APIs using odc-stac.
     """
@@ -141,8 +137,7 @@ def satellite_ds_load(request):
 
 @pytest.fixture
 def satellite_ds(satellite_ds_load):
-    """
-    Make a copy of the previously loaded satellite data for
+    """Make a copy of the previously loaded satellite data for
     each test to ensure each test is independent
     """
     return deepcopy(satellite_ds_load)
@@ -152,8 +147,7 @@ def satellite_ds(satellite_ds_load):
 # allows this to run without being specifically called in tests
 @pytest.fixture(scope="session", autouse=True)
 def create_synthetic_hamtide11(base_dir="tests/data/tide_models_synthetic"):
-    """
-    Generates and exports synthetic HAMTIDE11 model data
+    """Generates and exports synthetic HAMTIDE11 model data
     to test clipping functionality.
     """
     base_dir = Path(base_dir)  # Ensure base_dir is a Path object
@@ -194,8 +188,7 @@ def create_synthetic_hamtide11(base_dir="tests/data/tide_models_synthetic"):
 # allows this to run without being specifically called in tests
 @pytest.fixture(scope="session", autouse=True)
 def create_synthetic_eot20(base_dir="tests/data/tide_models_synthetic"):
-    """
-    Generates and exports synthetic EOT20 model data
+    """Generates and exports synthetic EOT20 model data
     to test clipping functionality.
     """
     base_dir = Path(base_dir)  # Ensure base_dir is a Path object

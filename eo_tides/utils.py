@@ -1,3 +1,10 @@
+"""General-purpose utilities for tide model setup and data processing.
+
+This module includes tools for listing and clipping model files,
+performing spatial interpolation, and other helper tools used across
+the eo_tides package.
+"""
+
 # Used to postpone evaluation of type annotations
 from __future__ import annotations
 
@@ -7,7 +14,14 @@ import pathlib
 import textwrap
 import warnings
 from collections import Counter
-from typing import TypeAlias
+from typing import TYPE_CHECKING
+
+# Only import if running type checking
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from typing import Any, TypeAlias
+
+    from odc.geo.geom import BoundingBox
 
 import numpy as np
 import odc.geo
@@ -15,7 +29,6 @@ import pandas as pd
 import pyTMD
 import xarray as xr
 from colorama import Style, init
-from odc.geo.geom import BoundingBox
 from pyTMD.io.model import load_database
 from scipy.spatial import cKDTree as KDTree
 from tqdm import tqdm
@@ -24,10 +37,8 @@ from tqdm import tqdm
 DatetimeLike: TypeAlias = np.ndarray | pd.DatetimeIndex | pd.Timestamp | datetime.datetime | str | list[str]
 
 
-def _get_duplicates(array):
-    """
-    Return any duplicates in a list or array.
-    """
+def _get_duplicates(array: Sequence[Any]) -> list[Any]:
+    """Return any duplicates in a list or array."""
     c = Counter(array)
     return [k for k in c if c[k] > 1]
 
@@ -35,35 +46,37 @@ def _get_duplicates(array):
 def _set_directory(
     directory: str | os.PathLike | None = None,
 ) -> os.PathLike:
-    """
-    Set tide modelling files directory. If no custom
-    path is provided, try global `EO_TIDES_TIDE_MODELS`
+    """Set tide modelling files directory.
+
+    If no custom path is provided, try global `EO_TIDES_TIDE_MODELS`
     environmental variable instead.
     """
     if directory is None:
         if "EO_TIDES_TIDE_MODELS" in os.environ:
             directory = os.environ["EO_TIDES_TIDE_MODELS"]
         else:
-            raise Exception(
+            err_msg = (
                 "No tide model directory provided via `directory`, and/or no "
                 "`EO_TIDES_TIDE_MODELS` environment variable found. "
                 "Please provide a valid path to your tide model directory."
             )
+            raise Exception(err_msg)
 
     # Verify path exists
     directory = pathlib.Path(directory).expanduser()
     if not directory.exists():
-        raise FileNotFoundError(f"No valid tide model directory found at path `{directory}`")
+        err_msg = f"No valid tide model directory found at path `{directory}`"
+        raise FileNotFoundError(err_msg)
     return directory
 
 
 def _standardise_time(
     time: DatetimeLike | None,
 ) -> np.ndarray | None:
-    """
-    Accept any time format accepted by `pd.to_datetime`,
-    and return a datetime64 ndarray. Return None if None
-    passed.
+    """Standardise input times for analysis.
+
+    Accept any time format accepted by `pd.to_datetime`, and
+    return a datetime64 ndarray. Return None if None passed.
     """
     # Return time as-is if None
     if time is None:
@@ -82,7 +95,8 @@ def _standardise_models(
     ensemble_models: list[str] | None = None,
     extra_databases: str | os.PathLike | list | None = None,
 ) -> tuple[list[str], list[str], list[str] | None]:
-    """
+    """Standardise lists of models for analysis.
+
     Take an input model name or list of names, and return a list
     of models to process, requested models, and ensemble models,
     as required by the `model_tides` function.
@@ -92,14 +106,14 @@ def _standardise_models(
     "ensemble", which will model tides for all models in a list
     of ensemble models.
     """
-
     # Turn inputs into arrays for consistent handling
-    models_requested = list(np.atleast_1d(model))
+    models_requested = [str(m) for m in np.atleast_1d(model)]
 
     # Raise error if list contains duplications
     duplicates = _get_duplicates(models_requested)
     if len(duplicates) > 0:
-        raise ValueError(f"The model parameter contains duplicate values: {duplicates}")
+        err_msg = f"The model parameter contains duplicate values: {duplicates}"
+        raise ValueError(err_msg)
 
     # Load supported models from pyTMD database
     available_models, valid_models = list_models(
@@ -114,22 +128,22 @@ def _standardise_models(
     # Error if any models are not supported
     if not all(m in valid_models + custom_options for m in models_requested):
         error_text = (
-            f"One or more of the requested models are not valid:\n"
-            f"{models_requested}\n\n"
-            "The following models are supported:\n"
-            f"{valid_models}"
+            f"One or more of the requested models are not valid.\n"
+            f"Requested models: {models_requested}\n"
+            f"Valid models: {valid_models}\n"
+            "For tide model setup instructions, refer to the guide: https://geoscienceaustralia.github.io/eo-tides/setup/"
         )
-        raise ValueError(error_text)
+        raise ValueError(error_text) from None
 
     # Error if any models are not available in `directory`
     if not all(m in available_models + custom_options for m in models_requested):
         error_text = (
-            f"One or more of the requested models are valid, but not available in `{directory}`:\n"
-            f"{models_requested}\n\n"
-            f"The following models are available in `{directory}`:\n"
-            f"{available_models}"
+            f"One or more of the requested tide models are not available in `{directory}`.\n"
+            f"Requested models: {models_requested}\n"
+            f"Available models: {available_models}\n"
+            "For tide model setup instructions, refer to the guide: https://geoscienceaustralia.github.io/eo-tides/setup/"
         )
-        raise ValueError(error_text)
+        raise ValueError(error_text) from None
 
     # If "all" models are requested, update requested list to include available models
     if "all" in models_requested:
@@ -182,8 +196,7 @@ def _clip_model_file(
     ycoord: str,
     xcoord: str,
 ) -> xr.Dataset:
-    """
-    Clips tide model netCDF datasets to a bounding box.
+    """Clips tide model netCDF datasets to a bounding box.
 
     If the bounding box crosses 0 degrees longitude (e.g. Greenwich prime
     meridian), the dataset will be clipped into two parts and concatenated
@@ -224,8 +237,8 @@ def _clip_model_file(
     >>> nc = xr.open_dataset("GOT5.5/ocean_tides/2n2.nc")
     >>> bbox = BoundingBox(left=108, bottom=-48, right=158, top=-6, crs='EPSG:4326')
     >>> clipped_nc = _clip_model_file(nc, bbox,  xdim="lon", ydim="lat", ycoord="latitude", xcoord="longitude")
-    """
 
+    """
     # Extract x and y coords from xarray and load into memory
     xcoords = nc[xcoord].compute()
     ycoords = nc[ycoord].compute()
@@ -270,12 +283,12 @@ def _clip_model_file(
         # Combine left and right data along x dimension
         nc_clipped = xr.concat([nc_left, nc_right], dim=xdim)
 
-        # Hack fix to remove expanded x dim on lat variables issue
+        # Temporary fix to remove expanded x dim on lat variables issue
         # for TPXO data; remove x dim by selecting the first obs
         for i in ["lat_z", "lat_v", "lat_u", "con"]:
             try:
                 nc_clipped[i] = nc_clipped[i].isel(nx=0)
-            except KeyError:
+            except KeyError:  # noqa: PERF203
                 pass
 
     return nc_clipped
@@ -288,9 +301,8 @@ def clip_models(
     model: list | None = None,
     buffer: float = 5,
     overwrite: bool = False,
-):
-    """
-    Clip NetCDF-format ocean tide models to a bounding box.
+) -> None:
+    """Clip NetCDF-format ocean tide models to a bounding box.
 
     This function identifies all NetCDF-format tide models in a
     given input directory, including "ATLAS-netcdf" (e.g. TPXO9-atlas-nc),
@@ -301,8 +313,8 @@ def clip_models(
     directory and verified with `pyTMD` to ensure the clipped data is
     suitable for tide modelling.
 
-    For instructions on accessing and downloading tide models, see:
-    <https://geoscienceaustralia.github.io/eo-tides/setup/>
+    For tide model setup instructions, refer to the guide:
+    https://geoscienceaustralia.github.io/eo-tides/setup/
 
     Parameters
     ----------
@@ -331,8 +343,8 @@ def clip_models(
     ...     output_directory="tide_models_clipped/",
     ...     bbox=(-8.968392, 50.070574, 2.447160, 59.367122),
     ... )
-    """
 
+    """
     # Get input and output paths
     input_directory = _set_directory(input_directory)
     output_directory = pathlib.Path(output_directory)
@@ -352,7 +364,8 @@ def clip_models(
 
     # Raise error if no valid models found
     if len(available_netcdf_models) == 0:
-        raise ValueError(f"No valid NetCDF models found in {input_directory}.")
+        err_msg = f"No valid NetCDF models found in {input_directory}."
+        raise ValueError(err_msg)
 
     # If model list is provided,
     print(f"Preparing to clip suitable NetCDF models: {available_netcdf_models}\n")
@@ -431,7 +444,8 @@ def clip_models(
                 )
 
             else:
-                raise Exception(f"Model {m} not supported")
+                err_msg = f"Model {m} not supported"
+                raise Exception(err_msg)
 
             # Create directory and export
             (output_directory / file).parent.mkdir(parents=True, exist_ok=True)
@@ -454,16 +468,15 @@ def list_models(
     raise_error: bool = False,
     extra_databases: str | os.PathLike | list | None = None,
 ) -> tuple[list[str], list[str]]:
-    """
-    List all tide models available for tide modelling.
+    """List all tide models available for tide modelling.
 
     This function scans the specified tide model directory
     and returns a list of models that are available in the
     directory as well as the full list of all models supported
     by `eo-tides` and `pyTMD`.
 
-    For instructions on setting up tide models, see:
-    <https://geoscienceaustralia.github.io/eo-tides/setup/>
+    For tide model setup instructions, refer to the guide:
+    https://geoscienceaustralia.github.io/eo-tides/setup/
 
     Parameters
     ----------
@@ -494,6 +507,7 @@ def list_models(
         A list of all tide models available within `directory`.
     supported_models : list of str
         A list of all tide models supported by `eo-tides`.
+
     """
     init()  # Initialize colorama
 
@@ -515,7 +529,7 @@ def list_models(
 
         # Handle GOT5.6 differently to ensure we test for presence of GOT5.6 constituents
         if m in ("GOT5.6", "GOT5.6_extrapolated"):
-            model_file = [file for file in model_file if "GOT5.6" in file][0]
+            model_file = next(file for file in model_file if "GOT5.6" in file)
         else:
             model_file = model_file[0] if isinstance(model_file, list) else model_file
 
@@ -548,13 +562,12 @@ def list_models(
                 # Mark available models with a green tick
                 status = "✅"
                 print(f"{status:^{status_width}}│ {m:<{name_width}} │ {expected_paths[m]:<{path_width}}")
-
-        except FileNotFoundError:
+        except FileNotFoundError:  # noqa: PERF203
             if show_supported:
                 # Mark unavailable models with a red cross
                 status = "❌"
                 print(
-                    f"{status:^{status_width}}│ {Style.DIM}{m:<{name_width}} │ {expected_paths[m]:<{path_width}}{Style.RESET_ALL}"
+                    f"{status:^{status_width}}│ {Style.DIM}{m:<{name_width}} │ {expected_paths[m]:<{path_width}}{Style.RESET_ALL}",
                 )
 
     if show_available or show_supported:
@@ -568,16 +581,15 @@ def list_models(
     if not available_models:
         warning_msg = textwrap.dedent(
             f"""
-            No valid tide models are available in `{directory}`.
-            Are you sure you have provided the correct `directory` path, or set the
-            `EO_TIDES_TIDE_MODELS` environment variable to point to the location of your
-            tide model directory?
-            """
+            No valid tide models were found in `{directory}`.
+            Please ensure that the path you provided is correct, or set the `EO_TIDES_TIDE_MODELS` environment variable to point to a valid tide model directory.
+            For tide model setup instructions, refer to the guide: https://geoscienceaustralia.github.io/eo-tides/setup/
+            """,
         ).strip()
 
         if raise_error:
-            raise Exception(warning_msg)
-        warnings.warn(warning_msg, UserWarning)
+            raise Exception(warning_msg) from None
+        warnings.warn(warning_msg, UserWarning, stacklevel=2)
 
     # Return list of available and supported models
     return available_models, supported_models
@@ -669,18 +681,22 @@ def idw(
 
     # Verify input and outputs have matching lengths
     if not (input_z.shape[0] == len(input_x) == len(input_y)):
-        raise ValueError("All of `input_z`, `input_x` and `input_y` must be the same length.")
-    if not (len(output_x) == len(output_y)):
-        raise ValueError("Both `output_x` and `output_y` must be the same length.")
+        err_msg = "All of `input_z`, `input_x` and `input_y` must be the same length."
+        raise ValueError(err_msg)
+    if len(output_x) != len(output_y):
+        err_msg = "Both `output_x` and `output_y` must be the same length."
+        raise ValueError(err_msg)
 
     # Verify k is smaller than total number of points, and non-zero
     if k > input_z.shape[0]:
-        raise ValueError(
+        err_msg = (
             f"The requested number of nearest neighbours (`k={k}`) "
             f"is smaller than the total number of points ({input_z.shape[0]}).",
         )
+        raise ValueError(err_msg)
     if k == 0:
-        raise ValueError("Interpolation based on `k=0` nearest neighbours is not valid.")
+        err_msg = "Interpolation based on `k=0` nearest neighbours is not valid."
+        raise ValueError(err_msg)
 
     # Create KDTree to efficiently find nearest neighbours
     points_xy = np.column_stack((input_y, input_x))

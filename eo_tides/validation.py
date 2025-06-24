@@ -1,3 +1,9 @@
+"""Validation tools for comparing modelled tides to observed tide gauge data.
+
+This module provides functions for loading, filtering, and analysing
+observed tide gauge data to validate modelled tide heights.
+"""
+
 import datetime
 import warnings
 from math import sqrt
@@ -14,10 +20,8 @@ from shapely.geometry import Point
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
-def eval_metrics(x, y, round=3, all_regress=False):
-    """
-    Calculate a set of common statistical metrics
-    based on two input actual and predicted vectors.
+def eval_metrics(x, y, round=3, all_regress=False):  # noqa: A002
+    """Calculate common statistical validation metrics.
 
     These include:
 
@@ -46,8 +50,8 @@ def eval_metrics(x, y, round=3, all_regress=False):
     -------
     pandas.Series
         A `pd.Series` containing all calculated metrics.
-    """
 
+    """
     # Create dataframe to drop na
     xy_df = pd.DataFrame({"x": x, "y": y}).dropna()
 
@@ -77,9 +81,7 @@ def eval_metrics(x, y, round=3, all_regress=False):
 
 
 def _round_date_strings(date, round_type="end"):
-    """
-    Round a date string up or down to the start or end of a given time
-    period.
+    """Round a date string up or down to the start or end of a time period.
 
     Parameters
     ----------
@@ -107,8 +109,8 @@ def _round_date_strings(date, round_type="end"):
 
     >>> round_date_strings('2020-01', round_type='end')
     '2020-01-31 00:00:00'
-    """
 
+    """
     # Determine precision of input date string
     date_segments = len(date.split("-"))
 
@@ -194,8 +196,7 @@ def load_gauge_gesla(
     data_path="GESLA3.0_ALL",
     metadata_path="",
 ):
-    """
-    Load Global Extreme Sea Level Analysis (GESLA) tide gauge data.
+    """Load Global Extreme Sea Level Analysis (GESLA) tide gauge data.
 
     Load and process all available GESLA measured sea-level data
     with an `x, y, time` spatio-temporal query, or from a list of
@@ -259,24 +260,27 @@ def load_gauge_gesla(
         - "use_flag": Use-in-analysis flag (1 = use, 0 = do not use),
 
         ...and additional columns from station metadata.
+
     """
     # Expand and validate data and metadata paths
     data_path = Path(data_path).expanduser()
     metadata_path = Path(metadata_path).expanduser()
 
     if not data_path.exists():
-        raise FileNotFoundError(
+        err_msg = (
             f"GESLA raw data directory not found at: {data_path}\n"
             "Download 'GESLA-3 DATA' from: "
-            "https://gesla787883612.wordpress.com/downloads/"
+            "https://gesla787883612.wordpress.com/downloads/",
         )
+        raise FileNotFoundError(err_msg)
 
     if not metadata_path.exists():
-        raise FileNotFoundError(
+        err_msg = (
             f"GESLA station metadata file not found at: {metadata_path}\n"
             "Download the 'GESLA-3 CSV META-DATA FILE' from: "
-            "https://gesla787883612.wordpress.com/downloads/"
+            "https://gesla787883612.wordpress.com/downloads/",
         )
+        raise FileNotFoundError(err_msg)
 
     # Load tide gauge metadata
     metadata_df, metadata_gdf = _load_gauge_metadata(metadata_path)
@@ -297,20 +301,21 @@ def load_gauge_gesla(
             site_code = (
                 _nearest_row(metadata_gdf, x, y, max_distance).rename({"index_right": "site_code"}, axis=1).site_code
             )
-            # site_code = _nearest_row(metadata_gdf, x, y, max_distance).site_code
 
         # Raise exception if no valid tide gauges are found
-        if site_code.isnull().all():
-            raise Exception(f"No tide gauge found within {max_distance} degrees of {x}, {y}.")
+        if site_code.isna().all():
+            err_msg = f"No tide gauge found within {max_distance} degrees of {x}, {y}."
+            raise Exception(err_msg)
 
     # Otherwise if all are None, return all available site codes
     elif (site_code is None) & (x is None) & (y is None):
         site_code = metadata_df.index.to_list()
 
     else:
-        raise TypeError(
-            "`x` and `y` must be provided as either singular coordinates (e.g. `x=150`), or as a tuple bounding box (e.g. `x=(150, 152)`)."
+        err_msg = (
+            "`x` and `y` must be provided as either singular coordinates (e.g. `x=150`), or as a tuple bounding box (e.g. `x=(150, 152)`).",
         )
+        raise Exception(err_msg)
 
     # Prepare times
     if time is None:
@@ -342,7 +347,7 @@ def load_gauge_gesla(
     data_df = data_df.set_index("time", append=True)
     duplicates = data_df.index.duplicated()
     if duplicates.sum() > 0:
-        warnings.warn("Duplicate timestamps were removed.")
+        warnings.warn("Duplicate timestamps were removed.", stacklevel=2)
         data_df = data_df.loc[~duplicates]
 
     # Remove observed mean sea level if requested
