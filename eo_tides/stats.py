@@ -1,8 +1,14 @@
+"""Tools for analysing local tide dynamics and satellite biases.
+
+This module provides functions to assess how well satellite EO data
+captures real-world tides, and reveals potential tide biases in
+satellite EO data coverage.
+"""
+
 # Used to postpone evaluation of type annotations
 from __future__ import annotations
 
-import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,13 +17,21 @@ import xarray as xr
 
 # Only import if running type checking
 if TYPE_CHECKING:
+    import os
+
     from odc.geo.geobox import GeoBox
 
+    from .utils import DatetimeLike
+
 from .eo import _pixel_tides_resample, _resample_chunks, _standardise_inputs, pixel_tides, tag_tides
-from .utils import DatetimeLike
 
 
-def _tide_statistics(obs_tides, all_tides, min_max_q=(0.0, 1.0), dim="time"):
+def _tide_statistics(
+    obs_tides: xr.DataArray,
+    all_tides: xr.DataArray,
+    min_max_q: tuple = (0.0, 1.0),
+    dim: str = "time",
+) -> xr.Dataset:
     # Calculate means of observed and modelled tides
     mot = obs_tides.mean(dim=dim)
     mat = all_tides.mean(dim=dim)
@@ -62,7 +76,19 @@ def _tide_statistics(obs_tides, all_tides, min_max_q=(0.0, 1.0), dim="time"):
     )
 
 
-def _stats_plain_english(mot, mat, hot, hat, lot, lat, otr, tr, spread, offset_low, offset_high):
+def _stats_plain_english(
+    mot,
+    mat,
+    hot,
+    hat,
+    lot,
+    lat,
+    otr,
+    tr,
+    spread,
+    offset_low,
+    offset_high,
+) -> None:
     # Plain text descriptors
     mean_diff = "higher" if mot > mat else "lower"
     mean_diff_icon = "⬆️" if mot > mat else "⬇️"
@@ -75,26 +101,32 @@ def _stats_plain_english(mot, mat, hot, hat, lot, lat, otr, tr, spread, offset_l
     print(f"🛰️ Observed tide range: {otr:.2f} m ({lot:.2f} to {hot:.2f} m).\n")
     print(f"{spread_icon} {spread:.0%} of the modelled astronomical tide range was observed at this location.")
     print(
-        f"{high_tide_icon} The highest {offset_high:.0%} ({offset_high * tr:.2f} m) of the tide range was never observed."
+        f"{high_tide_icon} The highest {offset_high:.0%} ({offset_high * tr:.2f} m) of the tide range was never observed.",
     )
     print(
-        f"{low_tide_icon} The lowest {offset_low:.0%} ({offset_low * tr:.2f} m) of the tide range was never observed.\n"
+        f"{low_tide_icon} The lowest {offset_low:.0%} ({offset_low * tr:.2f} m) of the tide range was never observed.\n",
     )
     print(f"🌊 Mean modelled astronomical tide height: {mat:.2f} m.")
     print(f"🛰️ Mean observed tide height: {mot:.2f} m.")
     print(
-        f"{mean_diff_icon} The mean observed tide height was {mot - mat:.2f} m {mean_diff} than the mean modelled astronomical tide height."
+        f"{mean_diff_icon} The mean observed tide height was {mot - mat:.2f} m {mean_diff} than the mean modelled astronomical tide height.",
     )
 
 
 def _stats_figure(
-    all_tides_da, obs_tides_da, hot, hat, lot, lat, spread, offset_low, offset_high, plot_var, point_col=None
+    all_tides_da,
+    obs_tides_da,
+    hot,
+    hat,
+    lot,
+    lat,
+    spread,
+    offset_low,
+    offset_high,
+    plot_var,
+    point_col=None,
 ):
-    """
-    Plot tide bias statistics as a figure, including both
-    satellite observations and all modelled tides.
-    """
-
+    """Plot tide bias statistics as a figure comparing satellite observations and all modelled tides."""
     # Create plot and add all modelled tides
     fig, ax = plt.subplots(figsize=(10, 6))
     all_tides_da.plot(ax=ax, alpha=0.4, label="Modelled tides")
@@ -207,7 +239,8 @@ def tide_stats(
     round_stats: int = 3,
     **tag_tides_kwargs,
 ) -> pd.Series:
-    """
+    """Generate tide statistics and satellite tide bias metrics for every dataset timestep.
+
     Takes a multi-dimensional dataset and generate tide statistics
     and satellite-observed tide bias metrics, calculated based on
     every timestep in the satellite data and the geographic centroid
@@ -222,7 +255,7 @@ def tide_stats(
 
     For more information about the tidal statistics computed by this
     function, refer to Figure 8 in Bishop-Taylor et al. 2018:
-    <https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8>
+    https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8
 
     Parameters
     ----------
@@ -309,8 +342,8 @@ def tide_stats(
         - `spread`: proportion of the full modelled tidal range observed by the satellite
         - `offset_low`: proportion of the lowest tides never observed by the satellite
         - `offset_high`: proportion of the highest tides never observed by the satellite
-    """
 
+    """
     # Standardise data inputs, time and models
     gbox, obs_times = _standardise_inputs(data, time)
 
@@ -333,8 +366,8 @@ def tide_stats(
         time=obs_times,
         model=model,
         directory=directory,
-        tidepost_lat=tidepost_lat,  # type: ignore
-        tidepost_lon=tidepost_lon,  # type: ignore
+        tidepost_lat=tidepost_lat,
+        tidepost_lon=tidepost_lon,
         **tag_tides_kwargs,
     )
 
@@ -344,13 +377,18 @@ def tide_stats(
         time=all_times,
         model=model,
         directory=directory,
-        tidepost_lat=tidepost_lat,  # type: ignore
-        tidepost_lon=tidepost_lon,  # type: ignore
+        tidepost_lat=tidepost_lat,
+        tidepost_lon=tidepost_lon,
         **tag_tides_kwargs,
     )
 
     # Calculate statistics
-    stats_ds = _tide_statistics(obs_tides_da, all_tides_da, min_max_q=min_max_q)
+    # # (cast ensures typing knows these are always DataArrays)
+    stats_ds = _tide_statistics(
+        cast(xr.DataArray, obs_tides_da),
+        cast(xr.DataArray, all_tides_da),
+        min_max_q=min_max_q,
+    )
 
     # Convert to pandas and add tide post coordinates
     stats_df = stats_ds.to_pandas().astype("float32")
@@ -412,8 +450,9 @@ def pixel_stats(
     cutoff: float = 10,
     **pixel_tides_kwargs,
 ) -> xr.Dataset:
-    """
-    Takes a multi-dimensional dataset and generate spatial
+    """Generate tide statistics and satellite tide bias metrics for every dataset pixel.
+
+    Takes a multi-dimensional dataset and generate pixel-level
     tide statistics and satellite-observed tide bias metrics,
     calculated based on every timestep in the satellite data and
     modelled into the spatial extent of the imagery.
@@ -519,7 +558,6 @@ def pixel_stats(
         - `offset_high`: proportion of the highest tides never observed by the satellite
 
     """
-
     # Standardise data inputs, time and models
     gbox, obs_times = _standardise_inputs(data, time)
     dask_chunks = _resample_chunks(data, dask_chunks)

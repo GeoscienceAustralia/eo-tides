@@ -198,7 +198,7 @@ def test_list_models():
     # Using env var
     available_models, supported_models = list_models()
     assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
-    assert len(supported_models) > 3
+    assert len(supported_models) > 3  # noqa: PLR2004
 
     # Not printing outputs
     available_models, supported_models = list_models(show_available=False, show_supported=False)

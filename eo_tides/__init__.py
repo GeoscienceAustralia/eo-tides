@@ -1,8 +1,4 @@
-"""
-eo_tides
-========
-
-Tide modelling tools for large-scale satellite earth observation analysis.
+"""eo_tides: Tide modelling tools for large-scale satellite earth observation analysis.
 
 `eo-tides` provides powerful parallelized tools for integrating satellite
 Earth observation data with tide modelling. `eo-tides` combines advanced
@@ -20,10 +16,10 @@ location globally.
 Modules
 -------
 model : Core tide modelling functionality
-eo : Combine satellite EO data with tide modelling
-stats : Calculate local tide dynamics and satellite bias statistics
-utils : Utility functions and helper tools
-validation : Load observed tide gauge data to validate modelled tides
+eo : Tools for integrating satellite EO data with tide modelling
+stats : Tools for analysing local tide dynamics and satellite biases
+utils : General-purpose utilities for tide model setup and data processing
+validation : Validation tools for comparing modelled tides to observed tide gauge data.
 """
 
 from importlib.metadata import version
@@ -37,18 +33,18 @@ from .validation import eval_metrics, load_gauge_gesla
 
 # Define what should be imported with "from eo_tides import *"
 __all__ = [
-    "model_tides",
-    "model_phases",
-    "ensemble_tides",
-    "tag_tides",
-    "pixel_tides",
-    "tide_stats",
-    "pixel_stats",
-    "eval_metrics",
-    "load_gauge_gesla",
     "clip_models",
-    "list_models",
+    "ensemble_tides",
+    "eval_metrics",
     "idw",
+    "list_models",
+    "load_gauge_gesla",
+    "model_phases",
+    "model_tides",
+    "pixel_stats",
+    "pixel_tides",
+    "tag_tides",
+    "tide_stats",
 ]
 
 # Add version metadata to package

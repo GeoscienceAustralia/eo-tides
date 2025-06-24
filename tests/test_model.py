@@ -36,9 +36,7 @@ ENSEMBLE_MODELS = ["EOT20", "HAMTIDE11"]  # simplified for tests
     ],
 )
 def test_parallel_splits(total_points, model_count, parallel_max, expected_splits):
-    """
-    Test the _parallel_splits function with various parameter combinations.
-    """
+    """Test the _parallel_splits function with various parameter combinations."""
     result = _parallel_splits(
         total_points=total_points,
         model_count=model_count,
@@ -370,7 +368,7 @@ def test_model_tides_ensemble():
     assert set(modelled_tides_df.columns) == set(models)
     assert all(
         (modelled_tides_df.ensemble == modelled_tides_df.EOT20)
-        | (modelled_tides_df.ensemble == modelled_tides_df.HAMTIDE11)
+        | (modelled_tides_df.ensemble == modelled_tides_df.HAMTIDE11),
     )
 
     # Check that correct model is the closest at each row

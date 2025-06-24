@@ -1,3 +1,9 @@
+"""Core tide modelling functionality.
+
+This module provides tools for modelling ocean tide heights and phases
+for any location or time period using one or more global tide models.
+"""
+
 # Used to postpone evaluation of type annotations
 from __future__ import annotations
 
@@ -32,12 +38,13 @@ def _parallel_splits(
     parallel_max: int | None = None,
     min_points_per_split: int = 1000,
 ) -> int:
-    """
-    Calculates the optimal number of parallel splits for data
-    processing based on system resources and processing constraints.
+    """Calculate the optimal number of parallel splits for data processing.
 
-    Parameters:
-    -----------
+    Optimal parallelisation is estimated based on system resources
+    and processing constraints.
+
+    Parameters
+    ----------
     total_points : int
         Total number of data points to process
     model_count : int
@@ -46,6 +53,7 @@ def _parallel_splits(
         Maximum number of parallel processes to use. If None, uses CPU core count
     min_points_per_split : int, default=1000
         Minimum number of points that should be processed in each split
+
     """
     # Get available CPUs. First see if `CPU_GUARANTEE` exists in
     # environment (if running in JupyterHub); if not use psutil
@@ -81,10 +89,12 @@ def _model_tides(
     crop,
     crop_buffer,
     append_node,
+    constituents,
 ):
-    """Worker function applied in parallel by `model_tides`. Handles the
-    extraction of tide modelling constituents and tide modelling using
-    `pyTMD`.
+    """Worker function applied in parallel by `model_tides`.
+
+    Handles the extraction of tide modelling constituents and tide
+    modelling using `pyTMD`.
     """
     # Obtain model details
     pytmd_model = pyTMD.io.model(directory).elevation(model)
@@ -108,6 +118,7 @@ def _model_tides(
             extrapolate=extrapolate,
             cutoff=cutoff,
             append_node=append_node,
+            constituents=constituents,
         )
 
         # TODO: Return constituents
@@ -124,7 +135,8 @@ def _model_tides(
                 "affect your results but may lead to a minor slowdown. "
                 "This can occur when analysing clipped model files restricted "
                 "to the western hemisphere. To suppress this warning, manually "
-                "set `crop=False`."
+                "set `crop=False`.",
+                stacklevel=2,
             )
 
             # Read tidal constants and interpolate to grid points
@@ -138,6 +150,7 @@ def _model_tides(
                 extrapolate=extrapolate,
                 cutoff=cutoff,
                 append_node=append_node,
+                constituents=constituents,
             )
 
         # Otherwise, raise error if cropping if set to True
@@ -237,10 +250,11 @@ def ensemble_tides(
     ranking_valid_perc=0.02,
     **idw_kwargs,
 ):
-    """Combine multiple tide models into a single locally optimised
-    ensemble tide model using external model ranking data (e.g.
-    satellite altimetry or NDWI-tide correlations along the coastline)
-    to inform the selection of the best local models.
+    """Combine multiple tide models into a single locally optimised ensemble tide model.
+
+    Uses external model ranking data (e.g. satellite altimetry or
+    NDWI-tide correlations along the coastline) to inform the
+    selection of the best local models.
 
     This function performs the following steps:
 
@@ -311,11 +325,12 @@ def ensemble_tides(
     """
     # Raise data if `tide_df` provided in wide format
     if "tide_model" not in tide_df:
-        raise Exception(
+        err_msg = (
             "`tide_df` does not contain the expected 'tide_model' and "
             "'tide_height' columns. Ensure that tides were modelled in "
-            "long format (i.e. `output_format='long'` in `model_tides`)."
+            "long format (i.e. `output_format='long'` in `model_tides`).",
         )
+        raise Exception(err_msg)
 
     # Extract x and y coords from dataframe
     x = tide_df.index.get_level_values(level="x")
@@ -331,7 +346,7 @@ def ensemble_tides(
             gpd.read_file(ranking_points, engine="pyogrio")
             .to_crs(crs)
             .query(f"valid_perc > {ranking_valid_perc}")
-            .dropna(how="all")[model_ranking_cols + ["geometry"]]
+            .dropna(how="all")[*model_ranking_cols, "geometry"]
         )
     except KeyError:
         error_msg = f"""
@@ -433,15 +448,14 @@ def model_tides(
     crop: bool | str = "auto",
     crop_buffer: float | None = 5,
     append_node: bool = False,
+    constituents: list[str] | None = None,
     parallel: bool = True,
     parallel_splits: int | str = "auto",
     parallel_max: int | None = None,
     ensemble_models: list[str] | None = None,
     **ensemble_kwargs,
 ) -> pd.DataFrame:
-    """
-    Model tide heights at multiple coordinates and/or timesteps
-    using using one or more ocean tide models.
+    """Model tide heights at multiple coordinates or timesteps using using multiple ocean tide models.
 
     This function is parallelised to improve performance, and
     supports all tidal models supported by `pyTMD`, including:
@@ -454,33 +468,30 @@ def model_tides(
     - Technical University of Denmark tide models (DTU23)
 
     This function requires access to tide model data files.
-    These should be placed in a folder with subfolders matching
-    the structure required by `pyTMD`. For more details:
-    <https://geoscienceaustralia.github.io/eo-tides/setup/>
-    <https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories>
+    For tide model setup instructions, refer to the guide:
+    https://geoscienceaustralia.github.io/eo-tides/setup/
 
     This function is a modification of the `pyTMD` package's
     `pyTMD.compute.tide_elevations` function. For more info:
-    <https://pytmd.readthedocs.io/en/latest/api_reference/compute.html#pyTMD.compute.tide_elevations>
+    https://pytmd.readthedocs.io/en/latest/api_reference/compute.html#pyTMD.compute.tide_elevations
+    https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories
 
     Parameters
     ----------
-    x : float or list of float
-        One or more x coordinates used to define the location at
-        which to model tides. By default these coordinates should
-        be in "EPSG:4326" WGS84 degrees longitude; use "crs" if they
-        are in a custom coordinate reference system.
-    y : float or list of float
-        One or more y coordinates used to define the location at
-        which to model tides. By default these coordinates should
-        be in "EPSG:4326" WGS84 degrees latitude; use "crs" if they
-        are in a custom coordinate reference system.
+    x : float or list of floats
+        One or more x coordinates at which to model tides. Assumes
+        degrees longitude (EPSG:4326) by default; use `crs` to specify
+        a different coordinate reference system.
+    y : float or list of floats
+        One or more y coordinates at which to model tides. Assumes
+        degrees latitude (EPSG:4326) by default; use `crs` to specify
+        a different coordinate reference system.
     time : DatetimeLike
-        Times at which to model tide heights (in UTC). Accepts
-        any format that can be converted by `pandas.to_datetime()`;
-        e.g. np.ndarray[datetime64], pd.DatetimeIndex, pd.Timestamp,
-        datetime.datetime and strings (e.g. "2020-01-01 23:00").
-        For example: `time=pd.date_range(start="2000", end="2001", freq="5h")`
+        One or more UTC times at which to model tide heights. Accepts
+        any time format compatible with `pandas.to_datetime()`, e.g.
+        datetime.datetime, pd.Timestamp, pd.DatetimeIndex, numpy.datetime64,
+        or date/time strings (e.g. "2020-01-01 23:00"). For example:
+        `time = pd.date_range(start="2000", end="2001", freq="5h")`.
     model : str or list of str, optional
         The tide model (or list of models) to use to model tides.
         Defaults to "EOT20"; specify "all" to use all models available
@@ -494,65 +505,67 @@ def model_tides(
         model that match the structure required by `pyTMD`
         (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
     crs : str, optional
-        Input coordinate reference system for x and y coordinates.
-        Defaults to "EPSG:4326" (WGS84; degrees latitude, longitude).
+        Input coordinate reference system for x/y coordinates.
+        Defaults to "EPSG:4326" (degrees latitude, longitude).
     mode : str, optional
-        The analysis mode to use for tide modelling. Supports two options:
+        Tide modelling analysis mode. Supports two options:
 
-        - "one-to-many": Models tides for every timestep in "time" at
-        every input x and y coordinate point. This is useful if you
-        want to model tides for a specific list of timesteps across
-        multiple spatial points (e.g. for the same set of satellite
-        acquisition times at various locations across your study area).
-        - "one-to-one": Model tides using a unique timestep for each
-        x and y coordinate pair. In this mode, the number of x and
-        y points must equal the number of timesteps provided in "time".
+        - `"one-to-many"`: Models tides at every x/y coordinate for
+        every timestep in `time`. This is useful for Earth observation
+        workflows where you want to model tides at many spatial points
+        for a common set of acquisition times (e.g. satellite overpasses).
+
+        - `"one-to-one"`: Model tides using one timestep for each x/y
+        coordinate. In this mode, the number of x/y coordinates must
+        match the number of timesteps in `time`.
     output_format : str, optional
         Whether to return the output dataframe in long format (with
         results stacked vertically along "tide_model" and "tide_height"
         columns), or wide format (with a column for each tide model).
         Defaults to "long".
     output_units : str, optional
-        Whether to return modelled tides in floating point metre units,
-        or integer centimetre units (i.e. scaled by 100) or integer
-        millimetre units (i.e. scaled by 1000. Returning outputs in
-        integer units can be useful for reducing memory usage.
-        Defaults to "m" for metres; set to "cm" for centimetres or "mm"
-        for millimetres.
-    method : str, optional
-        Method used to interpolate tidal constituents
-        from model files. Defaults to "linear"; options include:
+        Units for the returned tide heights. Options are:
 
-        - "linear", "nearest": scipy regular grid interpolations
-        - "spline": scipy bivariate spline interpolation
-        - "bilinear": quick bilinear interpolation
+        - `"m"` (default): floating point values in metres
+        - `"cm"`: integer values in centimetres (x100)
+        - `"mm"`: integer values in millimetres (x1000)
+
+        Using integer units can help reduce memory usage.
+    method : str, optional
+        Method used to interpolate tide model constituent files.
+        Defaults to "linear"; options include:
+
+        - `"linear"`, `"nearest"`: scipy regular grid interpolations
+        - `"spline"`: scipy bivariate spline interpolation
+        - `"bilinear"`: quick bilinear interpolation
     extrapolate : bool, optional
-        Whether to extrapolate tides into x and y coordinates outside
-        of the valid tide modelling domain using nearest-neighbor
-        interpolation. The default of True ensures that modelled tides
-        will be returned even if there is no underlying tide model
-        data for a location (e.g. inside estuaries far from the
-        coastline). However, this can also produce unreliable results.
+        If True (default), extrapolate tides inland of the valid tide
+        model extent using nearest-neighbor interpolation. This can
+        ensure tide are returned everywhere, but accuracy may degrade
+        with distance from the valid model extent (e.g. inland or along
+        complex estuaries or rivers). Set `cutoff` to define the
+        maximum extrapolation distance.
     cutoff : float, optional
-        Extrapolation cutoff in kilometers. The default is None, which
-        will extrapolate for all points regardless of distance from the
-        valid tide modelling domain.
+        Maximum distance in kilometres to extrapolate tides inland of the
+        valid tide model extent. The default of None allows extrapolation
+        at any (i.e. infinite) distance.
     crop : bool or str, optional
-        Whether to crop tide model constituent files on-the-fly to
-        improve performance. Defaults to "auto", which will attempt to
-        apply on-the-fly cropping where possible (some clipped model
-        files restricted entirely to the western hemisphere are not
-        suitable for on-the-fly cropping). Set `crop_buffer` to
-        customise the buffer distance used to crop the files.
+        Whether to crop tide model files on-the-fly to improve performance.
+        Defaults to "auto", which enables cropping when supported (some
+        clipped model files limited to the western hemisphere may not support
+        on-the-fly cropping). Use `crop_buffer` to adjust the buffer
+        distance used for cropping.
     crop_buffer : int or float, optional
-        The buffer distance in degrees used to crop tide model
-        constituent files around the modelling area. Defaults to 5,
-        which will crop constituents using a five degree buffer on
-        either side of the analysis extent.
-    append_node: bool, optional
+        The buffer distance in degrees to crop tide model files around the
+        requested x/y coordinates. Defaults to 5, which will crop model
+        files using a five degree buffer.
+    append_node : bool, optional
         Apply adjustments to harmonic constituents to allow for periodic
         modulations over the 18.6-year nodal period (lunar nodal tide).
         Default is False.
+    constituents : list, optional
+        Optional list of tide constituents to use for tide prediction.
+        Default is None, which will use all available constituents.
     parallel : bool, optional
         Whether to parallelise tide modelling. If multiple tide models
         are requested, these will be run in parallel. If enough workers
@@ -577,7 +590,7 @@ def model_tides(
         "TPXO10-atlas-v2-nc", "TPXO8-atlas-nc", "TPXO9-atlas-v5-nc"]`.
     **ensemble_kwargs :
         Keyword arguments used to customise the generation of optional
-        ensemble tide models if "ensemble" modelling are requested.
+        ensemble tide models if "ensemble" tide modelling is requested.
         These are passed to the underlying `_ensemble_model` function.
         Useful parameters include `ranking_points` (path to model
         rankings data), `k` (for controlling how model rankings are
@@ -642,6 +655,7 @@ def model_tides(
         crop=crop,
         crop_buffer=crop_buffer,
         append_node=append_node,
+        constituents=constituents,
     )
 
     # If automatic parallel splits, calculate optimal value
@@ -657,13 +671,14 @@ def model_tides(
     # Verify that parallel splits are not larger than number of points
     assert isinstance(parallel_splits, int)
     if parallel_splits > len(x):
-        raise ValueError(f"Parallel splits ({parallel_splits}) cannot be larger than the number of points ({len(x)}).")
+        err_msg = f"Parallel splits ({parallel_splits}) cannot be larger than the number of points ({len(x)})."
+        raise ValueError(err_msg)
 
     # Parallelise if either multiple models or multiple splits requested
     if parallel & ((len(models_to_process) > 1) | (parallel_splits > 1)):
         with ProcessPoolExecutor(max_workers=parallel_max) as executor:
             print(
-                f"Modelling tides with {', '.join(models_to_process)} in parallel (models: {len(models_to_process)}, splits: {parallel_splits})"
+                f"Modelling tides with {', '.join(models_to_process)} in parallel (models: {len(models_to_process)}, splits: {parallel_splits})",
             )
 
             # Optionally split lon/lat points into `splits_n` chunks
@@ -680,6 +695,7 @@ def model_tides(
             if mode == "one-to-many":
                 model_iters, x_iters, y_iters = zip(
                     *[(m, x_split[i], y_split[i]) for m in models_to_process for i in range(parallel_splits)],
+                    strict=False,
                 )
                 time_iters = [time] * len(model_iters)
             elif mode == "one-to-one":
@@ -690,6 +706,7 @@ def model_tides(
                         for m in models_to_process
                         for i in range(parallel_splits)
                     ],
+                    strict=False,
                 )
 
             # Apply func in parallel, iterating through each input param
@@ -701,11 +718,11 @@ def model_tides(
                     ),
                 )
             except BrokenProcessPool:
-                error_msg = (
+                err_msg = (
                     "Parallelised tide modelling failed, likely to to an out-of-memory error. "
                     "Try reducing the size of your analysis, or set `parallel=False`."
                 )
-                raise RuntimeError(error_msg)
+                raise RuntimeError(err_msg) from None
 
     # Model tides in series if parallelisation is off
     else:
@@ -733,7 +750,7 @@ def model_tides(
     if output_format == "wide":
         # Pivot into wide format with each time model as a column
         print("Converting to a wide format dataframe")
-        tide_df = tide_df.pivot(columns="tide_model", values="tide_height")
+        tide_df = tide_df.pivot(columns="tide_model", values="tide_height")  # noqa: PD010
 
         # If in 'one-to-one' mode, reindex using our input time/x/y
         # values to ensure the output is sorted the same as our inputs
@@ -754,41 +771,39 @@ def model_phases(
     return_tides: bool = False,
     **model_tides_kwargs,
 ) -> pd.DataFrame:
-    """
-    Model tide phases (low-flow, high-flow, high-ebb, low-ebb)
-    at multiple coordinates and/or timesteps using using one
-    or more ocean tide models.
+    """Model tide phases at multiple coordinates or timesteps using multiple ocean tide models.
 
-    Ebb and low phases are calculated by running the
-    `eo_tides.model.model_tides` function twice, once for
-    the requested timesteps, and again after subtracting a
-    small time offset (by default, 15 minutes). If tides
-    increased over this period, they are assigned as "flow";
-    if they decreased, they are assigned as "ebb".
+    Ebb and low phases (low-flow, high-flow, high-ebb, low-ebb)
+    are calculated by running the `eo_tides.model.model_tides`
+    function twice, once for the requested timesteps, and again
+    after subtracting a small time offset (15 mins by default).
+    If tides increased over this period, they are assigned as
+    "flow"; if they decreased, they are assigned as "ebb".
     Tides are considered "high" if equal or greater than 0
     metres tide height, otherwise "low".
 
     This function supports all parameters that are supported
     by `model_tides`.
 
+    For tide model setup instructions, refer to the guide:
+    https://geoscienceaustralia.github.io/eo-tides/setup/
+
     Parameters
     ----------
-    x : float or list of float
-        One or more x coordinates used to define the location at
-        which to model tide phases. By default these coordinates
-        should be in "EPSG:4326" WGS84 degrees longitude; use "crs"
-        if they are in a custom coordinate reference system.
-    y : float or list of float
-        One or more y coordinates used to define the location at
-        which to model tide phases. By default these coordinates
-        should be in "EPSG:4326" WGS84 degrees latitude; use "crs"
-        if they are in a custom coordinate reference system.
+    x : float or list of floats
+        One or more x coordinates at which to model tides. Assumes
+        degrees longitude (EPSG:4326) by default; use `crs` to specify
+        a different coordinate reference system.
+    y : float or list of floats
+        One or more y coordinates at which to model tides. Assumes
+        degrees latitude (EPSG:4326) by default; use `crs` to specify
+        a different coordinate reference system.
     time : DatetimeLike
-        Times at which to model tide phases (in UTC). Accepts
-        any format that can be converted by `pandas.to_datetime()`;
-        e.g. np.ndarray[datetime64], pd.DatetimeIndex, pd.Timestamp,
-        datetime.datetime and strings (e.g. "2020-01-01 23:00").
-        For example: `time=pd.date_range(start="2000", end="2001", freq="5h")`
+        One or more UTC times at which to model tide heights. Accepts
+        any time format compatible with `pandas.to_datetime()`, e.g.
+        datetime.datetime, pd.Timestamp, pd.DatetimeIndex, numpy.datetime64,
+        or date/time strings (e.g. "2020-01-01 23:00"). For example:
+        `time = pd.date_range(start="2000", end="2001", freq="5h")`.
     model : str or list of str, optional
         The tide model (or list of models) to use to model tides.
         Defaults to "EOT20"; specify "all" to use all models available
@@ -821,7 +836,6 @@ def model_phases(
         A dataframe containing modelled tide phases.
 
     """
-
     # Pop output format and mode for special handling
     output_format = model_tides_kwargs.pop("output_format", "long")
     mode = model_tides_kwargs.pop("mode", "one-to-many")
@@ -864,7 +878,7 @@ def model_phases(
     if output_format == "wide":
         # Pivot into wide format with each time model as a column
         print("Converting to a wide format dataframe")
-        tide_df = tide_df.pivot(columns="tide_model")
+        tide_df = tide_df.pivot(columns="tide_model")  # noqa: PD010
 
         # If in 'one-to-one' mode, reindex using our input time/x/y
         # values to ensure the output is sorted the same as our inputs
