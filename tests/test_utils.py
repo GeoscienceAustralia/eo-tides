@@ -7,6 +7,7 @@ import pytest
 
 from eo_tides.model import model_tides
 from eo_tides.utils import (
+    _set_directory,
     _standardise_models,
     _standardise_time,
     clip_models,
@@ -80,6 +81,30 @@ def test_standardise_models(model, ensemble_models, exp_process, exp_request, ex
     assert models_to_process == exp_process
     assert models_requested == exp_request
     assert (sorted(ensemble_models) if ensemble_models else None) == (sorted(exp_ensemble) if exp_ensemble else None)
+
+
+# Use monkeypatch to test setting and unsetting environment var
+@pytest.mark.parametrize(
+    "directory,env_var,expected_exception",
+    [
+        # Case 1: No directory, no env var → Exception
+        (None, None, Exception),
+        # Case 2: Directory set, but path doesn't exist → FileNotFoundError
+        ("/some/nonexistent/path", None, FileNotFoundError),
+        # Case 3: Env var set, but path doesn't exist → FileNotFoundError
+        (None, "/some/nonexistent/path", FileNotFoundError),
+    ],
+    ids=["no_directory_or_env", "invalid_dir", "invalid_env_var"],
+)
+def test_set_directory_errors(monkeypatch, directory, env_var, expected_exception):
+    # Remove or modify env var if required
+    if env_var is None:
+        monkeypatch.delenv("EO_TIDES_TIDE_MODELS", raising=False)
+    else:
+        monkeypatch.setenv("EO_TIDES_TIDE_MODELS", env_var)
+
+    with pytest.raises(expected_exception):
+        _set_directory(directory)
 
 
 def test_clip_models():

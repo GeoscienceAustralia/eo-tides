@@ -547,7 +547,7 @@ def test_model_tides_extra_databases(extra_databases):
         "time_length_mismatch",
     ],
 )
-def test_model_tides_fails(bad_args, expected_exception):
+def test_model_tides_errors(bad_args, expected_exception):
     # Dummy valid inputs
     args = {
         "x": GAUGE_X,
