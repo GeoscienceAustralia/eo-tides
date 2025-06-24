@@ -45,7 +45,7 @@ dependencies = [
     "psutil>=5.8.0",
     "pyogrio>=0.10.0",
     "pyproj>=3.7.0",
-    "pyTMD>=2.2.2,<2.2.5",
+    "pyTMD>=2.2.5",
     "scikit-learn>=1.4.0",
     "scipy>=1.14.1",
     "shapely>=2.0.6",
@@ -96,6 +96,9 @@ source = "vcs"
 
 [tool.hatch.version.raw-options]
 local_scheme = "no-local-version"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.mypy]
 files = ["eo_tides"]

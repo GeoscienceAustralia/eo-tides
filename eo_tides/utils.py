@@ -12,11 +12,11 @@ from typing import TypeAlias
 import numpy as np
 import odc.geo
 import pandas as pd
+import pyTMD
 import xarray as xr
 from colorama import Style, init
 from odc.geo.geom import BoundingBox
 from pyTMD.io.model import load_database
-from pyTMD.io.model import model as pytmd_model
 from scipy.spatial import cKDTree as KDTree
 from tqdm import tqdm
 
@@ -80,6 +80,7 @@ def _standardise_models(
     model: str | list[str],
     directory: str | os.PathLike,
     ensemble_models: list[str] | None = None,
+    extra_databases: str | os.PathLike | list | None = None,
 ) -> tuple[list[str], list[str], list[str] | None]:
     """
     Take an input model name or list of names, and return a list
@@ -89,7 +90,7 @@ def _standardise_models(
     Handles two special values passed to `model`: "all", which
     will model tides for all models available in `directory`, and
     "ensemble", which will model tides for all models in a list
-    of custom ensemble models.
+    of ensemble models.
     """
 
     # Turn inputs into arrays for consistent handling
@@ -100,9 +101,13 @@ def _standardise_models(
     if len(duplicates) > 0:
         raise ValueError(f"The model parameter contains duplicate values: {duplicates}")
 
-    # Get full list of supported models from pyTMD database
+    # Load supported models from pyTMD database
     available_models, valid_models = list_models(
-        directory, show_available=False, show_supported=False, raise_error=True
+        directory,
+        show_available=False,
+        show_supported=False,
+        raise_error=True,
+        extra_databases=extra_databases,
     )
     custom_options = ["ensemble", "all"]
 
@@ -433,8 +438,10 @@ def clip_models(
             nc_clipped.to_netcdf(output_directory / file, mode="w")
 
         # Verify that models are ready
-        pytmd_model(directory=output_directory).elevation(m=m).verify
-        print(" ✅ Clipped model exported and verified")
+        if pyTMD.io.model(directory=output_directory).elevation(m=m).verify:
+            print(" ✅ Clipped model exported and verified")
+        else:
+            print(" ❌ Clipped model exported but unable to be verified")
 
     print(f"\nOutputs exported to {output_directory}")
     list_models(directory=output_directory, show_available=True, show_supported=False)
@@ -445,6 +452,7 @@ def list_models(
     show_available: bool = True,
     show_supported: bool = True,
     raise_error: bool = False,
+    extra_databases: str | os.PathLike | list | None = None,
 ) -> tuple[list[str], list[str]]:
     """
     List all tide models available for tide modelling.
@@ -474,6 +482,11 @@ def list_models(
     raise_error : bool, optional
         If True, raise an error if no available models are found.
         If False, raise a warning.
+    extra_databases : str or path or list, optional
+        Additional custom tide model definitions to load, provided as
+        dictionaries or paths to JSON database files. Use this to
+        enable custom tide models not included with `pyTMD`.
+        See: https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#model-database
 
     Returns
     -------
@@ -488,8 +501,11 @@ def list_models(
     # provided, try global environment variable.
     directory = _set_directory(directory)
 
-    # Get full list of supported models from pyTMD database
-    model_database = load_database()["elevation"]
+    # Load supported models from pyTMD database, adding extras if required
+    extra_databases = [] if extra_databases is None else extra_databases
+    model_database = load_database(extra_databases=extra_databases)["elevation"]
+
+    # Get full list of supported models
     supported_models = list(model_database.keys())
 
     # Extract expected model paths
@@ -503,7 +519,7 @@ def list_models(
         else:
             model_file = model_file[0] if isinstance(model_file, list) else model_file
 
-        # Add path to dict
+        # Add expected path to dict, adding directory prefix
         expected_paths[m] = str(directory / pathlib.Path(model_file).expanduser().parent)
 
     # Define column widths
@@ -522,13 +538,17 @@ def list_models(
     available_models = []
     for m in supported_models:
         try:
-            model_file = pytmd_model(directory=directory).elevation(m=m)
+            # Load model
+            model_file = pyTMD.io.model(directory=directory, extra_databases=extra_databases).elevation(m=m)
+
+            # Append model to list of available model
             available_models.append(m)
 
             if show_available:
                 # Mark available models with a green tick
                 status = "✅"
                 print(f"{status:^{status_width}}│ {m:<{name_width}} │ {expected_paths[m]:<{path_width}}")
+
         except FileNotFoundError:
             if show_supported:
                 # Mark unavailable models with a red cross

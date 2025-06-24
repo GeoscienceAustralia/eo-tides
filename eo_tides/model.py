@@ -81,13 +81,15 @@ def _model_tides(
     crop,
     crop_buffer,
     append_node,
+    extra_databases,
 ):
     """Worker function applied in parallel by `model_tides`. Handles the
     extraction of tide modelling constituents and tide modelling using
     `pyTMD`.
     """
-    # Obtain model details
-    pytmd_model = pyTMD.io.model(directory).elevation(model)
+    # Load models from pyTMD database
+    extra_databases = [] if extra_databases is None else extra_databases
+    pytmd_model = pyTMD.io.model(directory=directory, extra_databases=extra_databases).elevation(model)
 
     # Reproject x, y to latitude/longitude
     transformer = pyproj.Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
@@ -437,6 +439,7 @@ def model_tides(
     parallel_splits: int | str = "auto",
     parallel_max: int | None = None,
     ensemble_models: list[str] | None = None,
+    extra_databases: str | os.PathLike | list | None = None,
     **ensemble_kwargs,
 ) -> pd.DataFrame:
     """
@@ -575,6 +578,11 @@ def model_tides(
         `["EOT20", "FES2012", "FES2014_extrapolated", "FES2022_extrapolated",
         "GOT4.10", "GOT5.5_extrapolated", "GOT5.6_extrapolated",
         "TPXO10-atlas-v2-nc", "TPXO8-atlas-nc", "TPXO9-atlas-v5-nc"]`.
+    extra_databases : str or path or list, optional
+        Additional custom tide model definitions to load, provided as
+        dictionaries or paths to JSON database files. Use this to
+        enable custom tide models not included with `pyTMD`.
+        See: https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#model-database
     **ensemble_kwargs :
         Keyword arguments used to customise the generation of optional
         ensemble tide models if "ensemble" modelling are requested.
@@ -621,11 +629,13 @@ def model_tides(
     # provided, try global environment variable.
     directory = _set_directory(directory)
 
-    # Standardise model list, handling "all" and "ensemble" functionality
+    # Standardise model list, handling "all" and "ensemble" functionality,
+    # and any custom tide model definitions
     models_to_process, models_requested, ensemble_models = _standardise_models(
         model=model,
         directory=directory,
         ensemble_models=ensemble_models,
+        extra_databases=extra_databases,
     )
 
     # Update tide modelling func to add default keyword arguments that
@@ -642,6 +652,7 @@ def model_tides(
         crop=crop,
         crop_buffer=crop_buffer,
         append_node=append_node,
+        extra_databases=extra_databases,
     )
 
     # If automatic parallel splits, calculate optimal value

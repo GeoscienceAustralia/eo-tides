@@ -782,7 +782,7 @@ requires-dist = [
     { name = "pyogrio", specifier = ">=0.10.0" },
     { name = "pyproj", specifier = ">=3.7.0" },
     { name = "pystac-client", marker = "extra == 'notebooks'", specifier = ">=0.8.3" },
-    { name = "pytmd", specifier = ">=2.2.2,<2.2.5" },
+    { name = "pytmd", specifier = ">=2.2.5" },
     { name = "scikit-learn", specifier = ">=1.4.0" },
     { name = "scipy", specifier = ">=1.14.1" },
     { name = "shapely", specifier = ">=2.0.6" },
@@ -1881,11 +1881,11 @@ wheels = [
 
 [[package]]
 name = "narwhals"
-version = "1.43.1"
+version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/61/82/9f351a79260a6456db3f53d248268b4c3791f1e3228eec3c745e8816afd6/narwhals-1.43.1.tar.gz", hash = "sha256:6ff56d600da67a0a0980b83bd5577d076772fdba96474076ba4e76c920dbc1e5", size = 496655, upload-time = "2025-06-19T09:37:56.398Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/56/e5/0b875d29e2a4d112c58fef6aac2ed3a73bbdd4d8d0dce722fd154357248a/narwhals-1.44.0.tar.gz", hash = "sha256:8cf0616d4f6f21225b3b56fcde96ccab6d05023561a0f162402aa9b8c33ad31d", size = 499250, upload-time = "2025-06-23T08:28:08.653Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8f/1e/b741d4eabbde95b1790e7df3c33c6b19f9b48db98a1416c6a6f06572bc66/narwhals-1.43.1-py3-none-any.whl", hash = "sha256:1ee508fa4dc0e05aa5b88717ba11613d8d9ccf0dd1e48513d4a3afb237dba9f2", size = 362737, upload-time = "2025-06-19T09:37:54.415Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/fb/12f4a971467aac3cb7cbccbbfca5d0f05e23722068112c1ac4a393613ebe/narwhals-1.44.0-py3-none-any.whl", hash = "sha256:a170ea0bab4cf1f323d9f8bf17f2d7042c3d73802bea321996b39bf075d57de5", size = 365240, upload-time = "2025-06-23T08:28:06.314Z" },
 ]
 
 [[package]]
@@ -2864,7 +2864,7 @@ wheels = [
 
 [[package]]
 name = "pytmd"
-version = "2.2.4"
+version = "2.2.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lxml" },
@@ -2878,9 +2878,9 @@ dependencies = [
     { name = "setuptools-scm" },
     { name = "timescale" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/72/dd/4368e24136a3964437457e84f579930ed2984073cddb3ee5683ea161d983/pytmd-2.2.4.tar.gz", hash = "sha256:0b38d499b0159209b20efd89a454c2651a44eba58cec1df3097142ae37d76d72", size = 6334322, upload-time = "2025-05-07T18:31:33.588Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/93/d4/b087234e49a1e9b206a7260f185ecf297fc1c60c49c16c07acc6859b117f/pytmd-2.2.5.tar.gz", hash = "sha256:4e969c693205607cc34577b1488c93d6191681e52bc1c04f897033b59f4403f3", size = 6335895, upload-time = "2025-06-23T16:40:28.904Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/47/b0aa85b8f883ab2d92c6404acdb305d82b667fea2537db91a55ba994ccaf/pytmd-2.2.4-py3-none-any.whl", hash = "sha256:f289d8827733f8cacbb6bc2e435c58e1bb498eb37d771df60d4bbd4baca0b81d", size = 6356538, upload-time = "2025-05-07T18:31:31.338Z" },
+    { url = "https://files.pythonhosted.org/packages/cd/8c/db1e1f72ebde819e072b67a9a74b54429e5a1023d83753dd2dc9b11c7217/pytmd-2.2.5-py3-none-any.whl", hash = "sha256:2ec5ae56d98a3464bf2d05cffcef0bba2bd5f1a325068b6cbabeb90ecdbef8ec", size = 6358190, upload-time = "2025-06-23T16:40:27.054Z" },
 ]
 
 [[package]]
