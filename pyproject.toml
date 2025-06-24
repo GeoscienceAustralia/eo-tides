@@ -36,7 +36,7 @@ classifiers = [
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "colorama>=0.4.3",
-    "dask[complete]>=2023.1.0,<2025.3.0",
+    "dask[complete]>=2023.1.0",
     "geopandas>=0.10.0",
     "matplotlib>=3.8.0",
     "numpy>=1.26.0",
@@ -45,7 +45,7 @@ dependencies = [
     "psutil>=5.8.0",
     "pyogrio>=0.10.0",
     "pyproj>=3.7.0",
-    "pyTMD>=2.2.2,<2.2.5",
+    "pyTMD>=2.2.5",
     "scikit-learn>=1.4.0",
     "scipy>=1.14.1",
     "shapely>=2.0.6",
@@ -97,6 +97,9 @@ source = "vcs"
 [tool.hatch.version.raw-options]
 local_scheme = "no-local-version"
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.mypy]
 files = ["eo_tides"]
 python_version = "3.10"
@@ -115,7 +118,6 @@ lint.ignore = [
   "E501",     # Don't enforce line length
   "SIM105",   # contextlib.suppress
   "RUF002",   # Ignore en-dash
-  "ANN001",   # Allow missing type annotations
   "PLR0913",  # Allow too many arguments
   "PLR0915",  # Allow too many statements
   "PLR0912",  # Allow too many branches
@@ -128,7 +130,9 @@ lint.ignore = [
   "C901",     # Ignore too complex function
   "D213",     # Ignore mutually exclusive one-blank-line-before-class rule
   "FIX002",   # Allow TODO
-  "TD002",    # Ignore missing authors in TODO
+  "TD",       # Ignore missing info in TODO
+  "ERA001",   # Ignore commented out code (to revert)
+  "ANN",       # Allow missing type annotations (to revert)
 ]
 exclude = ["tests/testing.ipynb"]  # Don't modify testing notebook
 

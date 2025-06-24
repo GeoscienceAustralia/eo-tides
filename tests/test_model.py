@@ -460,6 +460,67 @@ def test_model_tides_ensemble_dtype(dtype):
     assert ensemble_df.tide_height.dtype == modelled_tides_df.tide_height.dtype
 
 
+# Test listing extra_databases models from dict and file
+@pytest.mark.parametrize(
+    "extra_databases",
+    [
+        # Extra database as a JSON file
+        ["./tests/data/extra_database.json"],
+        # Extra database as a dictionary
+        [
+            {
+                "elevation": {
+                    "EOT20_custom": {
+                        "format": "FES-netcdf",
+                        "model_file": [
+                            "EOT20/ocean_tides/2N2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/J1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/K1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/K2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/M2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/M4_ocean_eot20.nc",
+                            "EOT20/ocean_tides/MF_ocean_eot20.nc",
+                            "EOT20/ocean_tides/MM_ocean_eot20.nc",
+                            "EOT20/ocean_tides/N2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/O1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/P1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/Q1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/S1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/S2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/SA_ocean_eot20.nc",
+                            "EOT20/ocean_tides/SSA_ocean_eot20.nc",
+                            "EOT20/ocean_tides/T2_ocean_eot20.nc",
+                        ],
+                        "name": "EOT20_custom",
+                        "reference": "https://doi.org/10.17882/79489",
+                        "scale": 0.01,
+                        "type": "z",
+                        "variable": "tide_ocean",
+                        "version": "EOT20",
+                    }
+                }
+            }
+        ],
+    ],
+    ids=["file", "dict"],
+)
+def test_model_tides_extra_databases(extra_databases):
+    # Run modelling for custom tide model in extra database
+    modelled_tides_df = model_tides(
+        x=[GAUGE_X],
+        y=[GAUGE_Y],
+        time=pd.date_range("2020-01-01", "2020-01-02", freq="h"),
+        model=["EOT20_custom", "EOT20"],
+        extra_databases=extra_databases,
+        output_format="wide",
+    )
+
+    # Verify custom column exists and contains data
+    assert "EOT20_custom" in modelled_tides_df
+    assert modelled_tides_df["EOT20_custom"].notna().any()
+    assert np.allclose(modelled_tides_df["EOT20_custom"], modelled_tides_df["EOT20"])
+
+
 @pytest.mark.parametrize("time_offset", ["15 min", "20 min"])
 def test_model_phases(time_offset):
     phase_df = model_phases(

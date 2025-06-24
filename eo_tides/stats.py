@@ -348,7 +348,7 @@ def tide_stats(
     gbox, obs_times = _standardise_inputs(data, time)
 
     # Generate range of times covering entire period of satellite record
-    assert obs_times is not None
+    assert obs_times is not None  # noqa: S101
     all_times = pd.date_range(
         start=obs_times.min().item(),
         end=obs_times.max().item(),
@@ -564,7 +564,7 @@ def pixel_stats(
     model = [model] if isinstance(model, str) else model
 
     # Generate range of times covering entire period of satellite record
-    assert obs_times is not None
+    assert obs_times is not None  # noqa: S101
     all_times = pd.date_range(
         start=obs_times.min().item(),
         end=obs_times.max().item(),

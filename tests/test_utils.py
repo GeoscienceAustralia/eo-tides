@@ -6,7 +6,13 @@ import pandas as pd
 import pytest
 
 from eo_tides.model import model_tides
-from eo_tides.utils import _standardise_models, _standardise_time, clip_models, idw, list_models
+from eo_tides.utils import (
+    _standardise_models,
+    _standardise_time,
+    clip_models,
+    idw,
+    list_models,
+)
 
 
 @pytest.mark.parametrize(
@@ -16,11 +22,35 @@ from eo_tides.utils import _standardise_models, _standardise_time, clip_models, 
         ("EOT20", None, ["EOT20"], ["EOT20"], None),
         (["EOT20"], None, ["EOT20"], ["EOT20"], None),
         # Case 3, 4: Using "all" to request all available models
-        ("all", None, ["EOT20", "GOT5.5", "HAMTIDE11"], ["EOT20", "GOT5.5", "HAMTIDE11"], None),
-        (["all"], None, ["EOT20", "GOT5.5", "HAMTIDE11"], ["EOT20", "GOT5.5", "HAMTIDE11"], None),
+        (
+            "all",
+            None,
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            None,
+        ),
+        (
+            ["all"],
+            None,
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            None,
+        ),
         # Case 5, 6: Using "ensemble" to model tides for specific set of ensemble models
-        ("ensemble", ["EOT20", "HAMTIDE11"], ["EOT20", "HAMTIDE11"], ["ensemble"], ["EOT20", "HAMTIDE11"]),
-        (["ensemble"], ["EOT20", "HAMTIDE11"], ["EOT20", "HAMTIDE11"], ["ensemble"], ["EOT20", "HAMTIDE11"]),
+        (
+            "ensemble",
+            ["EOT20", "HAMTIDE11"],
+            ["EOT20", "HAMTIDE11"],
+            ["ensemble"],
+            ["EOT20", "HAMTIDE11"],
+        ),
+        (
+            ["ensemble"],
+            ["EOT20", "HAMTIDE11"],
+            ["EOT20", "HAMTIDE11"],
+            ["ensemble"],
+            ["EOT20", "HAMTIDE11"],
+        ),
         # Case 7: Modelling tides using ensemble set and an additional model
         (
             ["ensemble", "GOT5.5"],
@@ -97,14 +127,44 @@ def test_clip_models():
 @pytest.mark.parametrize(
     "model, bbox, point, name",
     [
-        ("EOT20", (-166, 14, -151, 29), (19.60, -155.46), "hawaii"),  # entirely W of prime meridian
+        (
+            "EOT20",
+            (-166, 14, -151, 29),
+            (19.60, -155.46),
+            "hawaii",
+        ),  # entirely W of prime meridian
         ("EOT20", (-13, 49, 6, 60), (51.47, 0.84), "uk"),  # crossing prime meridian
-        ("EOT20", (105, -48, 160, -5), (-25.59, 153.03), "aus"),  # entirely E of prime meridian
-        ("EOT20", (-257, 7, -120, 63), (19.59, -155.45), "pacific"),  # crossing antimeridian
-        ("HAMTIDE11", (-166, 14, -151, 29), (19.60, -155.46), "hawaii"),  # entirely W of prime meridian
+        (
+            "EOT20",
+            (105, -48, 160, -5),
+            (-25.59, 153.03),
+            "aus",
+        ),  # entirely E of prime meridian
+        (
+            "EOT20",
+            (-257, 7, -120, 63),
+            (19.59, -155.45),
+            "pacific",
+        ),  # crossing antimeridian
+        (
+            "HAMTIDE11",
+            (-166, 14, -151, 29),
+            (19.60, -155.46),
+            "hawaii",
+        ),  # entirely W of prime meridian
         ("HAMTIDE11", (-13, 49, 6, 60), (51.47, 0.84), "uk"),  # crossing prime meridian
-        ("HAMTIDE11", (105, -48, 160, -5), (-25.59, 153.03), "aus"),  # entirely E of prime meridian
-        ("HAMTIDE11", (-257, 7, -120, 63), (19.59, -155.45), "pacific"),  # crossing antimeridian
+        (
+            "HAMTIDE11",
+            (105, -48, 160, -5),
+            (-25.59, 153.03),
+            "aus",
+        ),  # entirely E of prime meridian
+        (
+            "HAMTIDE11",
+            (-257, 7, -120, 63),
+            (19.59, -155.45),
+            "pacific",
+        ),  # crossing antimeridian
     ],
 )
 def test_clip_models_bbox(model, bbox, point, name):
@@ -151,11 +211,20 @@ def test_clip_models_bbox(model, bbox, point, name):
         # Case 1: None
         (None, None),
         # Case 2: Single datetime.datetime object
-        (datetime(2020, 1, 12, 21, 14), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
+        (
+            datetime(2020, 1, 12, 21, 14),
+            np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]"),
+        ),
         # Case 3: Single pandas.Timestamp
-        (pd.Timestamp("2020-01-12 21:14"), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
+        (
+            pd.Timestamp("2020-01-12 21:14"),
+            np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]"),
+        ),
         # Case 4: np.datetime64 scalar
-        (np.datetime64("2020-01-12T21:14:00"), np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]")),
+        (
+            np.datetime64("2020-01-12T21:14:00"),
+            np.array(["2020-01-12T21:14:00"], dtype="datetime64[ns]"),
+        ),
         # Case 5: 1D numpy array of np.datetime64
         (
             np.array(["2020-01-12T21:14:00", "2021-02-14T15:30:00"], dtype="datetime64[ns]"),
@@ -169,7 +238,10 @@ def test_clip_models_bbox(model, bbox, point, name):
         # Case 7: pandas.DatetimeIndex
         (
             pd.date_range(start="2000-01-01", end="2000-01-02", periods=3),
-            np.array(["2000-01-01T00:00:00", "2000-01-01T12:00:00", "2000-01-02T00:00:00"], dtype="datetime64[ns]"),
+            np.array(
+                ["2000-01-01T00:00:00", "2000-01-01T12:00:00", "2000-01-02T00:00:00"],
+                dtype="datetime64[ns]",
+            ),
         ),
         # Case 8: Mixed array with datetime.datetime and np.datetime64
         (
@@ -212,6 +284,60 @@ def test_list_models():
     path = pathlib.Path("./tests/data/tide_models")
     available_models, supported_models = list_models(directory=path)
     assert available_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
+
+
+# Test running extra_databases models from dict and file
+@pytest.mark.parametrize(
+    "extra_databases",
+    [
+        # Extra database as a JSON file
+        ["./tests/data/extra_database.json"],
+        # Extra database as a dictionary
+        [
+            {
+                "elevation": {
+                    "EOT20_custom": {
+                        "format": "FES-netcdf",
+                        "model_file": [
+                            "EOT20/ocean_tides/2N2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/J1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/K1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/K2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/M2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/M4_ocean_eot20.nc",
+                            "EOT20/ocean_tides/MF_ocean_eot20.nc",
+                            "EOT20/ocean_tides/MM_ocean_eot20.nc",
+                            "EOT20/ocean_tides/N2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/O1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/P1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/Q1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/S1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/S2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/SA_ocean_eot20.nc",
+                            "EOT20/ocean_tides/SSA_ocean_eot20.nc",
+                            "EOT20/ocean_tides/T2_ocean_eot20.nc",
+                        ],
+                        "name": "EOT20_custom",
+                        "reference": "https://doi.org/10.17882/79489",
+                        "scale": 0.01,
+                        "type": "z",
+                        "variable": "tide_ocean",
+                        "version": "EOT20",
+                    }
+                }
+            }
+        ],
+    ],
+    ids=["file", "dict"],
+)
+def test_list_models_extra_databases(extra_databases):
+    # Verify that custom models are added to lists of
+    # available and supported models
+    available_models, supported_models = list_models(
+        extra_databases=extra_databases,
+    )
+    assert "EOT20_custom" in available_models
+    assert "EOT20_custom" in supported_models
 
 
 # Test Inverse Distance Weighted function

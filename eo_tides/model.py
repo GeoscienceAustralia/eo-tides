@@ -90,14 +90,16 @@ def _model_tides(
     crop_buffer,
     append_node,
     constituents,
+    extra_databases,
 ):
     """Worker function applied in parallel by `model_tides`.
 
     Handles the extraction of tide modelling constituents and tide
     modelling using `pyTMD`.
     """
-    # Obtain model details
-    pytmd_model = pyTMD.io.model(directory).elevation(model)
+    # Load models from pyTMD database
+    extra_databases = [] if extra_databases is None else extra_databases
+    pytmd_model = pyTMD.io.model(directory=directory, extra_databases=extra_databases).elevation(model)
 
     # Reproject x, y to latitude/longitude
     transformer = pyproj.Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
@@ -119,6 +121,7 @@ def _model_tides(
             cutoff=cutoff,
             append_node=append_node,
             constituents=constituents,
+            extra_databases=extra_databases,
         )
 
         # TODO: Return constituents
@@ -151,6 +154,7 @@ def _model_tides(
                 cutoff=cutoff,
                 append_node=append_node,
                 constituents=constituents,
+                extra_databases=extra_databases,
             )
 
         # Otherwise, raise error if cropping if set to True
@@ -453,6 +457,7 @@ def model_tides(
     parallel_splits: int | str = "auto",
     parallel_max: int | None = None,
     ensemble_models: list[str] | None = None,
+    extra_databases: str | os.PathLike | list | None = None,
     **ensemble_kwargs,
 ) -> pd.DataFrame:
     """Model tide heights at multiple coordinates or timesteps using using multiple ocean tide models.
@@ -588,6 +593,11 @@ def model_tides(
         `["EOT20", "FES2012", "FES2014_extrapolated", "FES2022_extrapolated",
         "GOT4.10", "GOT5.5_extrapolated", "GOT5.6_extrapolated",
         "TPXO10-atlas-v2-nc", "TPXO8-atlas-nc", "TPXO9-atlas-v5-nc"]`.
+    extra_databases : str or path or list, optional
+        Additional custom tide model definitions to load, provided as
+        dictionaries or paths to JSON database files. Use this to
+        enable custom tide models not included with `pyTMD`.
+        See: https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#model-database
     **ensemble_kwargs :
         Keyword arguments used to customise the generation of optional
         ensemble tide models if "ensemble" tide modelling is requested.
@@ -609,36 +619,55 @@ def model_tides(
     time = _standardise_time(time)
 
     # Validate input arguments
-    assert time is not None, "Times for modelling tides must be provided via `time`."
-    assert method in ("bilinear", "spline", "linear", "nearest")
-    assert output_units in (
-        "m",
-        "cm",
-        "mm",
-    ), "Output units must be either 'm', 'cm', or 'mm'."
-    assert output_format in (
-        "long",
-        "wide",
-    ), "Output format must be either 'long' or 'wide'."
-    assert np.issubdtype(x.dtype, np.number), "`x` must contain only valid numeric values, and must not be None."
-    assert np.issubdtype(y.dtype, np.number), "`y` must contain only valid numeric values, and must not be None.."
-    assert len(x) == len(y), "x and y must be the same length."
-    if mode == "one-to-one":
-        assert len(x) == len(time), (
-            "The number of supplied x and y points and times must be "
-            "identical in 'one-to-one' mode. Use 'one-to-many' mode if "
-            "you intended to model multiple timesteps at each point."
+    if time is None:
+        err_msg = "Times for modelling tides must be provided via `time`."
+        raise ValueError(err_msg)
+
+    if method not in ("bilinear", "spline", "linear", "nearest"):
+        err_msg = (
+            f"Invalid interpolation method '{method}'. Must be one of 'bilinear', 'spline', 'linear', or 'nearest'."
         )
+        raise ValueError(err_msg)
+
+    if output_units not in ("m", "cm", "mm"):
+        err_msg = "Output units must be either 'm', 'cm', or 'mm'."
+        raise ValueError(err_msg)
+
+    if output_format not in ("long", "wide"):
+        err_msg = "Output format must be either 'long' or 'wide'."
+        raise ValueError(err_msg)
+
+    if not np.issubdtype(x.dtype, np.number):
+        err_msg = "`x` must contain only valid numeric values, and must not be None."
+        raise TypeError(err_msg)
+
+    if not np.issubdtype(y.dtype, np.number):
+        err_msg = "`y` must contain only valid numeric values, and must not be None."
+        raise TypeError(err_msg)
+
+    if len(x) != len(y):
+        err_msg = "`x` and `y` must be the same length."
+        raise ValueError(err_msg)
+
+    if mode == "one-to-one" and len(x) != len(time):
+        err_msg = (
+            "The number of supplied `x` and `y` points and `time` values must be "
+            "identical in 'one-to-one' mode. Use 'one-to-many' mode if you intended "
+            "to model multiple timesteps at each point."
+        )
+        raise ValueError(err_msg)
 
     # Set tide modelling files directory. If no custom path is
     # provided, try global environment variable.
     directory = _set_directory(directory)
 
-    # Standardise model list, handling "all" and "ensemble" functionality
+    # Standardise model list, handling "all" and "ensemble" functionality,
+    # and any custom tide model definitions
     models_to_process, models_requested, ensemble_models = _standardise_models(
         model=model,
         directory=directory,
         ensemble_models=ensemble_models,
+        extra_databases=extra_databases,
     )
 
     # Update tide modelling func to add default keyword arguments that
@@ -656,6 +685,7 @@ def model_tides(
         crop_buffer=crop_buffer,
         append_node=append_node,
         constituents=constituents,
+        extra_databases=extra_databases,
     )
 
     # If automatic parallel splits, calculate optimal value
@@ -669,7 +699,7 @@ def model_tides(
         )
 
     # Verify that parallel splits are not larger than number of points
-    assert isinstance(parallel_splits, int)
+    assert isinstance(parallel_splits, int)  # noqa: S101
     if parallel_splits > len(x):
         err_msg = f"Parallel splits ({parallel_splits}) cannot be larger than the number of points ({len(x)})."
         raise ValueError(err_msg)
@@ -865,7 +895,7 @@ def model_phases(
     # Compare tides computed for each timestep. If the previous tide
     # was higher than the current tide, the tide is 'ebbing'. If the
     # previous tide was lower, the tide is 'flowing'
-    ebb_flow = (tide_df.tide_height < pre_df.tide_height.values).replace({True: "ebb", False: "flow"})
+    ebb_flow = (tide_df.tide_height < pre_df.tide_height.to_numpy()).replace({True: "ebb", False: "flow"})
 
     # If tides are greater than 0, then "high", otherwise "low"
     high_low = (tide_df.tide_height >= 0).replace({True: "high", False: "low"})

@@ -459,7 +459,7 @@ def pixel_tides(
 
     # Determine resolution and buffer, using different defaults for
     # geographic (i.e. degrees) and projected (i.e. metres) CRSs:
-    assert gbox.crs is not None
+    assert gbox.crs is not None  # noqa: S101
     crs_units = gbox.crs.units[0][0:6]
     if gbox.crs.geographic:
         if resolution is None:
@@ -512,7 +512,7 @@ def pixel_tides(
     rescaled_ds = odc.geo.xr.xr_zeros(rescaled_geobox)
 
     # Flatten grid to 1D, then add time dimension
-    flattened_ds = rescaled_ds.stack(z=(x_dim, y_dim))
+    flattened_ds = rescaled_ds.stack(z=(x_dim, y_dim))  # noqa: PD013
     flattened_ds = flattened_ds.expand_dims(dim={"time": time_coords})
 
     # Model tides in parallel, returning a pandas.DataFrame
