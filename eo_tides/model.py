@@ -29,7 +29,13 @@ import pyTMD
 import timescale.time
 from tqdm import tqdm
 
-from .utils import DatetimeLike, _set_directory, _standardise_models, _standardise_time, idw
+from .utils import (
+    DatetimeLike,
+    _set_directory,
+    _standardise_models,
+    _standardise_time,
+    idw,
+)
 
 
 def _parallel_splits(
@@ -99,7 +105,10 @@ def _model_tides(
     """
     # Load models from pyTMD database
     extra_databases = [] if extra_databases is None else extra_databases
-    pytmd_model = pyTMD.io.model(directory=directory, extra_databases=extra_databases).elevation(model)
+    pytmd_model = pyTMD.io.model(
+        directory=directory,
+        extra_databases=extra_databases,
+    ).elevation(model)
 
     # Reproject x, y to latitude/longitude
     transformer = pyproj.Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
@@ -225,13 +234,15 @@ def _model_tides(
 
     # Convert data to pandas.DataFrame, and set index to our input
     # time/x/y values
-    tide_df = pd.DataFrame({
-        "time": np.tile(time, points_repeat),
-        "x": np.repeat(x, time_repeat),
-        "y": np.repeat(y, time_repeat),
-        "tide_model": model,
-        "tide_height": tide,
-    }).set_index(["time", "x", "y"])
+    tide_df = pd.DataFrame(
+        {
+            "time": np.tile(time, points_repeat),
+            "x": np.repeat(x, time_repeat),
+            "y": np.repeat(y, time_repeat),
+            "tide_model": model,
+            "tide_height": tide,
+        },
+    ).set_index(["time", "x", "y"])
 
     # Optionally convert outputs to integer units (can save memory)
     if output_units == "m":
@@ -350,7 +361,8 @@ def ensemble_tides(
             gpd.read_file(ranking_points, engine="pyogrio")
             .to_crs(crs)
             .query(f"valid_perc > {ranking_valid_perc}")
-            .dropna(how="all")[*model_ranking_cols, "geometry"]
+            .dropna(how="all")
+            .filter(model_ranking_cols + ["geometry"])  # noqa: RUF005
         )
     except KeyError:
         error_msg = f"""
@@ -743,7 +755,13 @@ def model_tides(
             try:
                 model_outputs = list(
                     tqdm(
-                        executor.map(iter_func, model_iters, x_iters, y_iters, time_iters),
+                        executor.map(
+                            iter_func,
+                            model_iters,
+                            x_iters,
+                            y_iters,
+                            time_iters,
+                        ),
                         total=len(model_iters),
                     ),
                 )
@@ -772,8 +790,12 @@ def model_tides(
 
         # Update requested models with any custom ensemble models, then
         # filter the dataframe to keep only models originally requested
-        models_requested = list(np.union1d(models_requested, ensemble_df.tide_model.unique()))
-        tide_df = pd.concat([tide_df, ensemble_df]).query("tide_model in @models_requested")
+        models_requested = list(
+            np.union1d(models_requested, ensemble_df.tide_model.unique()),
+        )
+        tide_df = pd.concat([tide_df, ensemble_df]).query(
+            "tide_model in @models_requested",
+        )
 
     # Optionally convert to a wide format dataframe with a tide model in
     # each dataframe column
@@ -785,7 +807,10 @@ def model_tides(
         # If in 'one-to-one' mode, reindex using our input time/x/y
         # values to ensure the output is sorted the same as our inputs
         if mode == "one-to-one":
-            output_indices = pd.MultiIndex.from_arrays([time, x, y], names=["time", "x", "y"])
+            output_indices = pd.MultiIndex.from_arrays(
+                [time, x, y],
+                names=["time", "x", "y"],
+            )
             tide_df = tide_df.reindex(output_indices)
 
     return tide_df
@@ -895,7 +920,9 @@ def model_phases(
     # Compare tides computed for each timestep. If the previous tide
     # was higher than the current tide, the tide is 'ebbing'. If the
     # previous tide was lower, the tide is 'flowing'
-    ebb_flow = (tide_df.tide_height < pre_df.tide_height.to_numpy()).replace({True: "ebb", False: "flow"})
+    ebb_flow = (tide_df.tide_height < pre_df.tide_height.to_numpy()).replace(
+        {True: "ebb", False: "flow"},
+    )
 
     # If tides are greater than 0, then "high", otherwise "low"
     high_low = (tide_df.tide_height >= 0).replace({True: "high", False: "low"})
@@ -913,7 +940,10 @@ def model_phases(
         # If in 'one-to-one' mode, reindex using our input time/x/y
         # values to ensure the output is sorted the same as our inputs
         if mode == "one-to-one":
-            output_indices = pd.MultiIndex.from_arrays([time, x, y], names=["time", "x", "y"])
+            output_indices = pd.MultiIndex.from_arrays(
+                [time, x, y],
+                names=["time", "x", "y"],
+            )
             tide_df = tide_df.reindex(output_indices)
 
         # Optionally drop tides
