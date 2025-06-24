@@ -102,6 +102,7 @@ def test_standardise_models_errors(model, ensemble_models, err_msg):
     with pytest.raises(ValueError, match=err_msg):
         _standardise_models(
             model=model,
+            directory="tests/data/tide_models",
             ensemble_models=ensemble_models,
         )
 
