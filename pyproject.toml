@@ -152,6 +152,7 @@ DEP002 = [
     "folium",
     "pyogrio",
     "dask",
+    "jupyter",
 ]
 
 [tool.coverage.report]
