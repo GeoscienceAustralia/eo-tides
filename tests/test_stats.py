@@ -153,7 +153,7 @@ def test_pixel_stats(satellite_ds, models, resample):
 
 
 @pytest.mark.parametrize(
-    "satellites, c, units, style, expect_error, expected_type",
+    "satellites, c, units, style, expect_error",
     [
         (["landsat"], ["m2", "k1"], "days", False, None),
         (["sentinel-2"], None, "hours", True, None),
