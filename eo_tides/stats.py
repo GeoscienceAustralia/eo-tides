@@ -735,7 +735,7 @@ def pixel_stats(
     return stats_lowres
 
 
-def eo_tide_aliasing(
+def tide_aliasing(
     satellites: list[str],
     c: list[str] | None = None,
     units: str = "days",
