@@ -129,6 +129,7 @@ lint.ignore = [
   "FBT002",   # Allow boolean default positional arguments
   "FBT001",   # Allow boolean default positional arguments
   "C901",     # Ignore too complex function
+  "D211",     # Ignore mutually exclusive one-blank-line-before-class rule
   "D213",     # Ignore mutually exclusive one-blank-line-before-class rule
   "FIX002",   # Allow TODO
   "TD",       # Ignore missing info in TODO
