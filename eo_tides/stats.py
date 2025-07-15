@@ -745,10 +745,10 @@ def eo_tide_aliasing(
     """Calculate aliasing periods for tidal constituents given satellite revisit intervals.
 
     This function uses `pyTMD.arguments.aliasing_period` to calculate the
-    aliasing periods between satellite overpass frequency and the natural
+    aliasing periods between satellite overpass periods and the natural
     cycles of tidal constituents. The aliasing period describes how long
     it would take for a satellite to sample the entire tidal cycle for
-    each constituent, based on the observation frequency of the satellite.
+    each constituent, based on the satellite's observation frequency.
 
     Short aliasing periods mean the satellite will observe the full range
     of tidal variation relatively quickly, reducing the risk of tide-related
@@ -803,6 +803,13 @@ def eo_tide_aliasing(
     >>> eo_tide_aliasing(["swot"], c=["m2", "k1"], units="hours", style=False)
 
     """
+    # Validate satellite names
+    invalid_sats = set(satellites) - set(REVISIT_DICT)
+    if invalid_sats:
+        valid = ", ".join(sorted(REVISIT_DICT))
+        error_msg = f"Unknown satellite(s): {', '.join(invalid_sats)}. Must be one of: {valid}"
+        raise ValueError(error_msg)
+
     # Time unit factors
     unit_factors = {
         "seconds": 1,
