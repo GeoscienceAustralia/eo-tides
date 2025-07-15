@@ -8,12 +8,16 @@ satellite EO data coverage.
 # Used to postpone evaluation of type annotations
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
+from pyTMD.arguments import _constituent_parameters, aliasing_period
+
+from .eo import _pixel_tides_resample, _resample_chunks, _standardise_inputs, pixel_tides, tag_tides
 
 # Only import if running type checking
 if TYPE_CHECKING:
@@ -23,7 +27,121 @@ if TYPE_CHECKING:
 
     from .utils import DatetimeLike
 
-from .eo import _pixel_tides_resample, _resample_chunks, _standardise_inputs, pixel_tides, tag_tides
+
+# Satellite revisit times (assuming at equator)
+REVISIT_DICT = {
+    # SWOT (non-sun-synchronous, KaRIn swath altimetry)
+    "swot": 0.99349,
+    # Landsat series (sun-synchronous, optical)
+    "landsat": 8,  # Combined revisit (e.g. two satallites)
+    "landsat-5": 16,
+    "landsat-7": 16,
+    "landsat-8": 16,
+    "landsat-9": 16,
+    # Sentinel-2 (sun-synchronous, optical)
+    "sentinel-2": 5,  # Combined revisit (e.g. two satallites)
+    "sentinel-2a": 10,
+    "sentinel-2b": 10,
+    "sentinel-2c": 10,
+    "sentinel-2d": 10,
+    # Sentinel-1 (sun-synchronous, C-band SAR)
+    "sentinel-1": 6,  # Combined revisit (e.g. two satallites)
+    "sentinel-1a": 12,
+    "sentinel-1b": 12,
+    "sentinel-1c": 12,
+    "sentinel-1d": 12,
+    # Sentinel-3 OLCI (sun-synchronous, Ocean and Land Color Instrument)
+    "sentinel-3a-olci": 2,
+    "sentinel-3b-olci": 2,
+    "sentinel-3c-olci": 2,
+    "sentinel-3d-olci": 2,
+    # Sentinel-3 SLSTR (sun-synchronous, Sea and Land Surface Temperature Radiometer)
+    "sentinel-3a-slstr": 1.7,
+    "sentinel-3b-slstr": 1.7,
+    "sentinel-3c-slstr": 1.7,
+    "sentinel-3d-slstr": 1.7,
+    # Sentinel-3 SRAL (sun-synchronous, SAR Radar Altimeter)
+    "sentinel-3a-sral": 27,
+    "sentinel-3b-sral": 27,
+    "sentinel-3c-sral": 27,
+    "sentinel-3d-sral": 27,
+    # NISAR (sun-synchronous, L- and S-band SAR)
+    "nisar": 12,
+}
+
+# Available constituents and names
+C_NAMES = {
+    "m2": "principal lunar semidiurnal",
+    "s2": "principal solar semidiurnal",
+    "k1": "lunar-solar diurnal",
+    "o1": "principal lunar diurnal",
+    "n2": "larger lunar elliptic semidiurnal",
+    "p1": "principal solar diurnal",
+    "k2": "lunar-solar semidiurnal",
+    "q1": "larger lunar elliptic diurnal",
+    "2n2": "lunar elliptic semidiurnal second order",
+    "mu2": "variational constituent",
+    "nu2": "larger lunar evectional",
+    "l2": "smaller lunar elliptic semidiurnal",
+    "t2": "larger solar elliptic",
+    "j1": "smaller lunar elliptic diurnal",
+    "m1": "smaller lunar elliptic diurnal",
+    "oo1": "lunar diurnal",
+    "rho1": "larger lunar evectional diurnal",
+    "mf": "lunisolar fortnightly",
+    "mm": "lunar monthly",
+    "ssa": "solar semiannual",
+    "m4": "shallow water overtides of principal lunar",
+    "ms4": "shallow water quarter diurnal",
+    "mn4": "shallow water quarter diurnal",
+    "m6": "shallow water overtides of principal lunar",
+    "m8": "shallow water eighth diurnal",
+    "mk3": "shallow water terdiurnal",
+    "s6": "shallow water overtides of principal solar",
+    "2sm2": "shallow water semidiurnal",
+    "2mk3": "shallow water terdiurnal",
+    "msf": "lunisolar synodic fortnightly",
+    "sa": "solar annual",
+    "mt": "meteorological tides",
+    "2q1": "lunar elliptic diurnal second order",
+}
+
+# Constituent types
+C_TYPE = {
+    "m2": "semidiurnal",
+    "s2": "semidiurnal",
+    "k1": "diurnal",
+    "o1": "diurnal",
+    "n2": "semidiurnal",
+    "p1": "diurnal",
+    "k2": "semidiurnal",
+    "q1": "diurnal",
+    "2n2": "semidiurnal",
+    "mu2": "semidiurnal",
+    "nu2": "semidiurnal",
+    "l2": "semidiurnal",
+    "t2": "semidiurnal",
+    "j1": "diurnal",
+    "m1": "diurnal",
+    "oo1": "diurnal",
+    "rho1": "diurnal",
+    "mf": "long period",
+    "mm": "long period",
+    "ssa": "long period",
+    "m4": "shallow water",
+    "ms4": "shallow water",
+    "mn4": "shallow water",
+    "m6": "shallow water",
+    "m8": "shallow water",
+    "mk3": "shallow water",
+    "s6": "shallow water",
+    "2sm2": "semidiurnal",
+    "2mk3": "shallow water",
+    "msf": "long period",
+    "sa": "long period",
+    "mt": "long period",
+    "2q1": "diurnal",
+}
 
 
 def _tide_statistics(
@@ -615,3 +733,145 @@ def pixel_stats(
 
     print("Returning low resolution statistics array")
     return stats_lowres
+
+
+def eo_tide_aliasing(
+    satellites: list[str],
+    c: list[str] | None = None,
+    units: str = "days",
+    max_inf: float = 1_000_000,
+    style: bool = True,
+):
+    """Calculate aliasing periods for tidal constituents given satellite revisit intervals.
+
+    This function uses `pyTMD.arguments.aliasing_period` to calculate the
+    aliasing periods between satellite overpass frequency and the natural
+    cycles of tidal constituents. The aliasing period describes how long
+    it would take for a satellite to sample the entire tidal cycle for
+    each constituent, based on the observation frequency of the satellite.
+
+    Short aliasing periods mean the satellite will observe the full range
+    of tidal variation relatively quickly, reducing the risk of tide-related
+    bias. Long aliasing periods indicate that it will take much longer to
+    sample all tidal conditions, increasing the risk that satellite analyses
+    may misrepresent tidal dynamics.
+
+    For more information, refer to https://pytmd.readthedocs.io/en/latest/api_reference/arguments.html#pyTMD.arguments.aliasing_period
+
+    Parameters
+    ----------
+    satellites : list of str
+        List of satellite names to analyse. Supported satellites include:
+
+        - Landsat (optical):
+            - Two satellites combined: "landsat"
+            - Individual: "landsat-5", "landsat-7", "landsat-8", "landsat-9"
+        - Sentinel-2 (optical):
+            - Two satellites combined: "sentinel-2"
+            - Individual: "sentinel-2a", "sentinel-2b", "sentinel-2c"
+        - Sentinel-1 (C-band SAR):
+            - Two satellites combined: "sentinel-1"
+            - Individual: "sentinel-1a", "sentinel-1b", "sentinel-1c"
+        - Sentinel-3:
+            - OLCI (optical): "sentinel-3a-olci", "sentinel-3b-olci", "sentinel-3c-olci"
+            - SLSTR (thermal): "sentinel-3a-slstr", "sentinel-3b-slstr, "sentinel-3c-slstr"
+            - SRAL (altimetry): "sentinel-3a-sral", "sentinel-3b-sral, "sentinel-3c-sral"
+        - SWOT (KaRIn swath altimetry): "swot"
+        - NISAR (L- and S-band SAR): "nisar"
+    c : list of str or None, optional
+        List of tidal constituents to include. If None, all known constituents
+        are included. Constituent names should be lowercase (e.g., "m2", "k1").
+    units : str, optional
+        Output time units for the aliasing periods. Must be one of:
+        "years", "days", "hours", or "minutes". Default is "days".
+    max_inf : float, optional
+        Maximum aliasing period to display. Values exceeding this threshold
+        are replaced with `np.inf`. Default is 1,000,000.
+    style : bool, optional
+        If True, returns a styled `pandas.DataFrame`. If False, returns a raw
+        DataFrame. Default is True.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A table showing aliasing periods for each tidal constituent across the given satellites.
+        The result is styled with a color gradient if `style=True`, or returned as a plain DataFrame.
+
+    Examples
+    --------
+    >>> eo_tide_aliasing(["sentinel-2", "landsat-8"])
+    >>> eo_tide_aliasing(["swot"], c=["m2", "k1"], units="hours", style=False)
+
+    """
+    # Time unit factors
+    unit_factors = {
+        "seconds": 1,
+        "minutes": 60,
+        "hours": 3600,
+        "days": 86400,
+        "years": 365.25 * 86400,
+    }
+
+    # Use default list of constituents if none provided
+    if c is None:
+        c = list(C_NAMES.keys())
+
+    # Unpack all parameters (amplitude, phase, omega, alpha, species)
+    params = [_constituent_parameters(c_i) for c_i in c]
+    _, _, omega, _, _ = np.array(params).T
+
+    # Convert frequency in radians per second to period in seconds
+    period = 2 * np.pi / omega
+
+    # Compute aliasing period for each satellite
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=RuntimeWarning,
+            message="divide by zero encountered in divide",
+        )
+        aliasing_periods = {}
+        for sat in satellites:
+            revisit = REVISIT_DICT[sat]
+            print(f"Using {revisit} day revisit for {sat}")
+            aliasing_periods[("aliasing_period", sat)] = aliasing_period(
+                c,
+                unit_factors["days"] * revisit,
+            )
+
+    # Combine into a dataframe
+    alias_df = pd.DataFrame(
+        index=c,
+        data={
+            ("period", ""): period,
+            **aliasing_periods,
+        },
+    )
+
+    # Raise error if unit is not supported
+    if units not in unit_factors:
+        error_msg = f"Unit not supported: {units}; must be one of 'years', 'days', 'hours', 'minutes'"
+        raise ValueError(error_msg)
+
+    # Rescale
+    alias_df = alias_df / unit_factors[units]
+
+    # Max value to set to inf:
+    alias_df[alias_df > max_inf] = np.inf
+
+    # Add additional columns
+    alias_df.insert(0, column="name", value=[C_NAMES[c_i] for c_i in alias_df.index])
+    alias_df.insert(1, column="type", value=[C_TYPE[c_i] for c_i in alias_df.index])
+
+    # Style and return
+    df_subset = alias_df.loc[:, "aliasing_period"]
+    max_col = np.nanquantile(df_subset[np.isfinite(df_subset)].values, 0.9)
+
+    if style:
+        return alias_df.style.background_gradient(
+            axis=None,
+            vmin=0,
+            vmax=max_col * 1.5,
+            cmap="YlOrRd",
+        ).format(precision=3)
+    return alias_df
