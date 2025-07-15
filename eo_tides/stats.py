@@ -735,7 +735,7 @@ def pixel_stats(
     return stats_lowres
 
 
-def eo_tide_aliasing(
+def tide_aliasing(
     satellites: list[str],
     c: list[str] | None = None,
     units: str = "days",
@@ -803,6 +803,13 @@ def eo_tide_aliasing(
     >>> eo_tide_aliasing(["swot"], c=["m2", "k1"], units="hours", style=False)
 
     """
+    # Validate satellite names
+    invalid_sats = set(satellites) - set(REVISIT_DICT)
+    if invalid_sats:
+        valid = ", ".join(sorted(REVISIT_DICT))
+        error_msg = f"Unknown satellite(s): {', '.join(invalid_sats)}. Must be one of: {valid}"
+        raise ValueError(error_msg)
+
     # Validate satellite names
     invalid_sats = set(satellites) - set(REVISIT_DICT)
     if invalid_sats:
