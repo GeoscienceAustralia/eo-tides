@@ -166,9 +166,9 @@ def test_pixel_stats(satellite_ds, models, resample):
 def test_tide_aliasing(satellites, c, units, style, expect_error):
     if expect_error:
         with pytest.raises(expect_error):
-            eo_tide_aliasing(satellites, c=c, units=units, style=style)
+            tide_aliasing(satellites, c=c, units=units, style=style)
     else:
-        result = eo_tide_aliasing(satellites, c=c, units=units, style=style)
+        result = tide_aliasing(satellites, c=c, units=units, style=style)
 
         # Verify output is a dataframe
         if style:
