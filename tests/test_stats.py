@@ -161,6 +161,8 @@ def test_pixel_stats(satellite_ds, models, resample):
         (["landsat"], ["mm"], "days", False, None),
         (["invalid-sat"], ["m2"], "days", False, ValueError),
         (["landsat"], ["m2"], "centuries", False, ValueError),
+        ({"custom-sat": 6}, None, "hours", True, None),
+        ({"custom-sat1": 6, "custom-sat2": 10}, None, "hours", True, None),
     ],
 )
 def test_tide_aliasing(satellites, c, units, style, expect_error):

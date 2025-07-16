@@ -736,7 +736,7 @@ def pixel_stats(
 
 
 def tide_aliasing(
-    satellites: list[str],
+    satellites: list[str] | dict[str, float],
     c: list[str] | None = None,
     units: str = "days",
     max_inf: float = 1_000_000,
@@ -760,8 +760,10 @@ def tide_aliasing(
 
     Parameters
     ----------
-    satellites : list of str
-        List of satellite names to analyse. Supported satellites include:
+    satellites : list of str or dict
+        List of satellite names to analyse, or a custom dictionary with
+        satellite names as keys and revisit frequency in days as values.
+        Supported satellites include:
 
         - Landsat (optical):
             - Two satellites combined: "landsat"
@@ -801,19 +803,20 @@ def tide_aliasing(
     --------
     >>> eo_tide_aliasing(["sentinel-2", "landsat-8"])
     >>> eo_tide_aliasing(["swot"], c=["m2", "k1"], units="hours", style=False)
+    >>> eo_tide_aliasing({"custom-sat": 5})
 
     """
-    # Validate satellite names
-    invalid_sats = set(satellites) - set(REVISIT_DICT)
-    if invalid_sats:
-        valid = ", ".join(sorted(REVISIT_DICT))
-        error_msg = f"Unknown satellite(s): {', '.join(invalid_sats)}. Must be one of: {valid}"
-        raise ValueError(error_msg)
+    # If satellites is a dict
+    if isinstance(satellites, dict):
+        revisit_dict = satellites | REVISIT_DICT
+        satellites = list(satellites.keys())
+    else:
+        revisit_dict = REVISIT_DICT
 
     # Validate satellite names
-    invalid_sats = set(satellites) - set(REVISIT_DICT)
+    invalid_sats = set(satellites) - set(revisit_dict)
     if invalid_sats:
-        valid = ", ".join(sorted(REVISIT_DICT))
+        valid = ", ".join(sorted(revisit_dict))
         error_msg = f"Unknown satellite(s): {', '.join(invalid_sats)}. Must be one of: {valid}"
         raise ValueError(error_msg)
 
@@ -846,7 +849,7 @@ def tide_aliasing(
         )
         aliasing_periods = {}
         for sat in satellites:
-            revisit = REVISIT_DICT[sat]
+            revisit = revisit_dict[sat]
             print(f"Using {revisit} day revisit for {sat}")
             aliasing_periods[("aliasing_period", sat)] = aliasing_period(
                 c,
