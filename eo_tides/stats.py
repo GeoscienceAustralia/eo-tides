@@ -756,6 +756,11 @@ def tide_aliasing(
     sample all tidal conditions, increasing the risk that satellite analyses
     may misrepresent tidal dynamics.
 
+    Revisit periods are approximate and based on nominal repeat cycles at the equator.
+    Actual observation frequency may vary due to latitude, cloud cover, sensor
+    availability, and acquisition planning. Custom revisit intervals can be
+    defined by passing a dictionary to `satellites`, e.g. `satellites={"custom-sat": 5}`.
+
     For more information, refer to https://pytmd.readthedocs.io/en/latest/api_reference/arguments.html#pyTMD.arguments.aliasing_period
 
     Parameters
