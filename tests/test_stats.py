@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from eo_tides.stats import pixel_stats, tide_stats
+from eo_tides.stats import pixel_stats, tide_stats, tide_aliasing
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
@@ -150,3 +150,38 @@ def test_pixel_stats(satellite_ds, models, resample):
     assert np.allclose(stats_ds.offset_high.mean().item(), 0.30, atol=0.02)
     assert np.allclose(stats_ds.offset_low.mean().item(), 0.27, atol=0.02)
     assert np.allclose(stats_ds.spread.mean().item(), 0.43, atol=0.02)
+
+
+@pytest.mark.parametrize(
+    "satellites, c, units, style, expect_error",
+    [
+        (["landsat"], ["m2", "k1"], "days", False, None),
+        (["sentinel-2"], None, "hours", True, None),
+        (["swot", "landsat"], ["k1"], "years", False, None),
+        (["landsat"], ["mm"], "days", False, None),
+        (["invalid-sat"], ["m2"], "days", False, ValueError),
+        (["landsat"], ["m2"], "centuries", False, ValueError),
+        ({"custom-sat": 6}, None, "hours", True, None),
+        ({"custom-sat1": 6, "custom-sat2": 10}, None, "hours", True, None),
+    ],
+)
+def test_tide_aliasing(satellites, c, units, style, expect_error):
+    if expect_error:
+        with pytest.raises(expect_error):
+            tide_aliasing(satellites, c=c, units=units, style=style)
+    else:
+        result = tide_aliasing(satellites, c=c, units=units, style=style)
+
+        # Verify output is a dataframe
+        if style:
+            assert isinstance(result, pd.io.formats.style.Styler)
+        else:
+            assert isinstance(result, pd.DataFrame)
+
+        # Verify
+        assert "name" in result.columns
+        assert "type" in result.columns
+        assert "period" in result.columns
+
+        for sat in satellites:
+            assert ("aliasing_period", sat) in result.columns
