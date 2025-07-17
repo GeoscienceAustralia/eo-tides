@@ -27,7 +27,7 @@ from importlib.metadata import version
 # Import commonly used functions for convenience
 from .eo import pixel_tides, tag_tides
 from .model import ensemble_tides, model_phases, model_tides
-from .stats import pixel_stats, tide_stats
+from .stats import pixel_stats, tide_aliasing, tide_stats
 from .utils import clip_models, idw, list_models
 from .validation import eval_metrics, load_gauge_gesla
 
@@ -44,6 +44,7 @@ __all__ = [
     "pixel_stats",
     "pixel_tides",
     "tag_tides",
+    "tide_aliasing",
     "tide_stats",
 ]
 
