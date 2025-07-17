@@ -876,7 +876,7 @@ def tide_aliasing(
         raise ValueError(error_msg)
 
     # Rescale
-    alias_df = alias_df / unit_factors[units]
+    alias_df = (alias_df / unit_factors[units]).round(3)
 
     # Max value to set to inf:
     alias_df[alias_df > max_inf] = np.inf
