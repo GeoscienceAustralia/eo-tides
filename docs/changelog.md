@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.1 - 2025-07-17
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other changes
+
+* Add new EO satellite tide aliasing function for evaluating potential temporal biases in EO analyses in https://github.com/GeoscienceAustralia/eo-tides/pull/113
+* Add `jupyter` to notebook optional dependencies to make Jupyter Notebooks easier to run in https://github.com/GeoscienceAustralia/eo-tides/pull/112
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.8.0...0.8.1
+
 ## 0.8.0 - 2025-06-24
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
@@ -58,6 +70,7 @@ model_tides(
     extra_databases=custom_db_dict,
     output_format="wide",
 )
+
 
 ```
 #### New features
