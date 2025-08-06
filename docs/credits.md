@@ -35,7 +35,7 @@ Sutterley, T. C., Alley, K., Brunt, K., Howard, S., Padman, L., Siegfried, M. (2
 
 `eo-tides` builds on (and wouldn't be possible without!) fundamental tide modelling tools provided by `pyTMD`. The authors wish to thank Dr. Tyler Sutterley for his ongoing development and support of this incredible modelling tool.
 
-Functions from `eo-tides` were originally developed in the [`Digital Earth Australia Notebooks and Tools` repository](https://github.com/GeoscienceAustralia/dea-notebooks/). The authors would like to thank all DEA Notebooks contributers and maintainers for their invaluable assistance with code review, feature suggestions and code edits.
+Functions from `eo-tides` were originally developed in the [`Digital Earth Australia Notebooks and Tools` repository](https://github.com/GeoscienceAustralia/dea-notebooks/). The authors would like to thank all DEA Notebooks contributors and maintainers for their invaluable assistance with code review, feature suggestions and code edits.
 
 FES Finite Element Solution tide models were developed, validated by the CTOH/LEGOS, France and distributed by Aviso+: <https://www.aviso.altimetry.fr/en/data/products/sea-surface-height-products/regional/x-track-sla/x-track-l2p-sla-version-2022.html>
 
