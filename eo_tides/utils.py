@@ -235,8 +235,8 @@ def _clip_model_file(
     Examples
     --------
     >>> nc = xr.open_dataset("GOT5.5/ocean_tides/2n2.nc")
-    >>> bbox = BoundingBox(left=108, bottom=-48, right=158, top=-6, crs='EPSG:4326')
-    >>> clipped_nc = _clip_model_file(nc, bbox,  xdim="lon", ydim="lat", ycoord="latitude", xcoord="longitude")
+    >>> bbox = BoundingBox(left=108, bottom=-48, right=158, top=-6, crs="EPSG:4326")
+    >>> clipped_nc = _clip_model_file(nc, bbox, xdim="lon", ydim="lat", ycoord="latitude", xcoord="longitude")
 
     """
     # Extract x and y coords from xarray and load into memory
@@ -612,7 +612,7 @@ def idw(
     This function performs fast IDW interpolation by creating a KDTree
     from the input coordinates then uses it to find the `k` nearest
     neighbors for each output point. Weights are calculated based on the
-    inverse distance to each neighbor, with weights descreasing with
+    inverse distance to each neighbor, with weights decreasing with
     increasing distance.
 
     Code inspired by: <https://github.com/DahnJ/REM-xarray>

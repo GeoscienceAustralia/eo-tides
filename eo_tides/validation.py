@@ -101,13 +101,13 @@ def _round_date_strings(date, round_type="end"):
 
     Examples
     --------
-    >>> round_date_strings('2020')
+    >>> round_date_strings("2020")
     '2020-12-31 00:00:00'
 
-    >>> round_date_strings('2020-01', round_type='start')
+    >>> round_date_strings("2020-01", round_type="start")
     '2020-01-01 00:00:00'
 
-    >>> round_date_strings('2020-01', round_type='end')
+    >>> round_date_strings("2020-01", round_type="end")
     '2020-01-31 00:00:00'
 
     """

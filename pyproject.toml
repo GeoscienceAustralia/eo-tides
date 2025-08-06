@@ -147,6 +147,7 @@ exclude = ["tests/testing.ipynb"]  # Don't modify testing notebook
 
 [tool.ruff.format]
 preview = true    # Enable experimental formatting improvements
+docstring-code-format = true # Reformat code in doc strings.
 
 [tool.deptry.per_rule_ignores]
 DEP002 = [

@@ -101,7 +101,7 @@ Follow the guides below for some of the most commonly used global ocean tide mod
 
             The "extrapolated" version of FES models have been extended inland using a simple "nearest" extrapolation method to ensure data coverage across the entire coastal zone. This can be useful for ensuring you always return a modelled tide, but can also introduce uncertainty into your modelling (particularly in complex regions such as narrow peninsulas or inlets/embayments).
 
-    8. Create a new nested folder inside your [tide model directory](#setting-up-a-tide-model-directory) called either `fes2022b/ocean_tide_20241025/` (if using standard model data) or `fes2022b/ocean_tide_extrapolated/` (if using extrapolated model data) to store your dowloaded files.
+    8. Create a new nested folder inside your [tide model directory](#setting-up-a-tide-model-directory) called either `fes2022b/ocean_tide_20241025/` (if using standard model data) or `fes2022b/ocean_tide_extrapolated/` (if using extrapolated model data) to store your downloaded files.
 
     9. Copy your downloaded files into your new tide model directory folder, then uncompress each compressed `*.nc.xz` file (e.g. `xz -dk *.nc.xz`).
 

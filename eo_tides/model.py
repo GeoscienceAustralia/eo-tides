@@ -392,7 +392,7 @@ def ensemble_tides(
         # Drop any duplicates then melt columns into long format
         .drop_duplicates()
         .melt(id_vars=["x", "y"], var_name="tide_model", value_name="rank")
-        # Remore "rank_" prefix to get plain model names
+        # Remove "rank_" prefix to get plain model names
         .replace({"^rank_": ""}, regex=True)
         # Set index columns and rank across groups
         .set_index(["tide_model", "x", "y"])
@@ -873,7 +873,7 @@ def model_phases(
         (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
     time_offset: str, optional
         The time offset/delta used to generate a time series of
-        offset tide heights required for phase calculation. Defeaults
+        offset tide heights required for phase calculation. Defaults
         to "15 min"; can be any string passed to `pandas.Timedelta`.
     return_tides: bool, optional
         Whether to return intermediate modelled tide heights as a

@@ -503,8 +503,8 @@ def tide_stats(
     # Calculate statistics
     # # (cast ensures typing knows these are always DataArrays)
     stats_ds = _tide_statistics(
-        cast(xr.DataArray, obs_tides_da),
-        cast(xr.DataArray, all_tides_da),
+        cast("xr.DataArray", obs_tides_da),
+        cast("xr.DataArray", all_tides_da),
         min_max_q=min_max_q,
     )
 

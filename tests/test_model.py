@@ -148,7 +148,7 @@ def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
         # Verify tide model column contains correct values
         assert modelled_tides_df.tide_model.unique().tolist() == models
 
-        # Verify that dataframe has length of original timesteps multipled by
+        # Verify that dataframe has length of original timesteps multiplied by
         # n models
         assert len(modelled_tides_df.index) == len(measured_tides_ds.time) * len(models)
 
@@ -157,7 +157,7 @@ def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
         assert modelled_tides_df.index.names == ["time", "x", "y"]
         assert modelled_tides_df.columns.tolist() == models
 
-        # Verify output has same length as orginal timesteps
+        # Verify output has same length as original timesteps
         assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
 
 
@@ -455,7 +455,7 @@ def test_model_tides_ensemble_dtype(dtype):
     # Run ensemble modelling on modelled tides input
     ensemble_df = ensemble_tides(modelled_tides_df, ensemble_models=ENSEMBLE_MODELS, crs="EPSG:4326")
 
-    # Verify that output tides match are as expected, and match the iput data
+    # Verify that output tides match are as expected, and match the input data
     assert ensemble_df.tide_height.dtype == dtype
     assert ensemble_df.tide_height.dtype == modelled_tides_df.tide_height.dtype
 

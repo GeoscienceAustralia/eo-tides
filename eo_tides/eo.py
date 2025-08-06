@@ -468,7 +468,7 @@ def pixel_tides(
             err_msg = (
                 f"A resolution of greater than 360 was "
                 f"provided, but `data` has a geographic CRS "
-                f"in {crs_units} units. Did you accidently "
+                f"in {crs_units} units. Did you accidentally "
                 f"provide a resolution in projected "
                 f"(i.e. metre) units?",
             )
@@ -482,7 +482,7 @@ def pixel_tides(
             err_msg = (
                 f"A resolution of less than 1 was provided, "
                 f"but `data` has a projected CRS in "
-                f"{crs_units} units. Did you accidently "
+                f"{crs_units} units. Did you accidentally "
                 f"provide a resolution in geographic "
                 f"(degree) units?",
             )
@@ -512,7 +512,7 @@ def pixel_tides(
     rescaled_ds = odc.geo.xr.xr_zeros(rescaled_geobox)
 
     # Flatten grid to 1D, then add time dimension
-    flattened_ds = rescaled_ds.stack(z=(x_dim, y_dim))  # noqa: PD013
+    flattened_ds = rescaled_ds.stack(z=(x_dim, y_dim))
     flattened_ds = flattened_ds.expand_dims(dim={"time": time_coords})
 
     # Model tides in parallel, returning a pandas.DataFrame

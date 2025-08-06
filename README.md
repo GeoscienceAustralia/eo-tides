@@ -10,7 +10,7 @@
 [![JOSS paper](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e/status.svg)](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e)
 
 - ⚙️ **Github repository**: <https://github.com/GeoscienceAustralia/eo-tides/>
-- 🐍 **PyPI**: <https://pypi.org/project/eo-tides/>
+- 📦 **PyPI**: <https://pypi.org/project/eo-tides/>
 - ℹ️ **Documentation**: <https://GeoscienceAustralia.github.io/eo-tides/>
 - 📰 **Paper**: <https://doi.org/10.21105/joss.07786>
 
