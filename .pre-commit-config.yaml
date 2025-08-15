@@ -12,7 +12,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.7
+    rev: "v0.12.9"
     hooks:
       - id: ruff-check # Run linter using pyproject.toml config
       - id: ruff-format # Run formatter using pyproject.toml config
@@ -23,14 +23,12 @@ repos:
       - id: prettier
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.7.5
+    rev: "0.8.11"
     hooks:
       - id: uv-lock
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+    rev: "v2.4.1"
     hooks:
       - id: codespell
-        args:
-          - --ignore-regex=[A-Za-z0-9+/]{100,}
-          - --ignore-words-list=AHD,mot
+        additional_dependencies: ["tomli; python_version < '3.11'"]
