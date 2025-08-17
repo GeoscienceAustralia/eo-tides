@@ -229,9 +229,6 @@ def _model_tides(
         corrections=pytmd_model.corrections,
         minor=pytmd_model.minor,
     )
-
-    # If valid minor corrections are returned, add to tide data
-    # if not isinstance(minor, float):
     tide.data[:] += minor.data[:]
 
     # Replace invalid values with fill value
