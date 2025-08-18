@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import xarray as xr
 import pytest
 
 from eo_tides.stats import pixel_stats, tide_stats, tide_aliasing, MAJOR_CONSTITUENTS

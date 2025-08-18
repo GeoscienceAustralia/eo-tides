@@ -8,7 +8,6 @@ import pandas as pd
 import planetary_computer
 import pystac_client
 import pytest
-import xarray as xr
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
