@@ -211,7 +211,7 @@ def _model_tides(
     tide = np.ma.zeros((len(t)), fill_value=np.nan)
     tide.mask = np.any(hc.mask, axis=1)
 
-    # Predict tidal elevations at time and infer minor corrections
+    # Predict tidal elevations at time
     tide.data[:] = pyTMD.predict.drift(
         t,
         hc,
@@ -219,6 +219,8 @@ def _model_tides(
         deltat=deltat,
         corrections=pytmd_model.corrections,
     )
+
+    # Infer minor corrections
     minor = pyTMD.predict.infer_minor(
         t,
         hc,

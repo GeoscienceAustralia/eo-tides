@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-from pyTMD.arguments import _constituent_parameters, aliasing_period
+from pyTMD.arguments import aliasing_period, frequency
 
 from .eo import _pixel_tides_resample, _resample_chunks, _standardise_inputs, pixel_tides, tag_tides
 
@@ -69,78 +69,47 @@ REVISIT_DICT = {
     "nisar": 12,
 }
 
-# Available constituents and names
-C_NAMES = {
-    "m2": "principal lunar semidiurnal",
-    "s2": "principal solar semidiurnal",
-    "k1": "lunar-solar diurnal",
-    "o1": "principal lunar diurnal",
-    "n2": "larger lunar elliptic semidiurnal",
-    "p1": "principal solar diurnal",
-    "k2": "lunar-solar semidiurnal",
-    "q1": "larger lunar elliptic diurnal",
-    "2n2": "lunar elliptic semidiurnal second order",
-    "mu2": "variational constituent",
-    "nu2": "larger lunar evectional",
-    "l2": "smaller lunar elliptic semidiurnal",
-    "t2": "larger solar elliptic",
-    "j1": "smaller lunar elliptic diurnal",
-    "m1": "smaller lunar elliptic diurnal",
-    "oo1": "lunar diurnal",
-    "rho1": "larger lunar evectional diurnal",
-    "mf": "lunisolar fortnightly",
-    "mm": "lunar monthly",
-    "ssa": "solar semiannual",
-    "m4": "shallow water overtides of principal lunar",
-    "ms4": "shallow water quarter diurnal",
-    "mn4": "shallow water quarter diurnal",
-    "m6": "shallow water overtides of principal lunar",
-    "m8": "shallow water eighth diurnal",
-    "mk3": "shallow water terdiurnal",
-    "s6": "shallow water overtides of principal solar",
-    "2sm2": "shallow water semidiurnal",
-    "2mk3": "shallow water terdiurnal",
-    "msf": "lunisolar synodic fortnightly",
-    "sa": "solar annual",
-    "mt": "meteorological tides",
-    "2q1": "lunar elliptic diurnal second order",
-}
-
-# Constituent types
-C_TYPE = {
-    "m2": "semidiurnal",
-    "s2": "semidiurnal",
-    "k1": "diurnal",
-    "o1": "diurnal",
-    "n2": "semidiurnal",
-    "p1": "diurnal",
-    "k2": "semidiurnal",
-    "q1": "diurnal",
-    "2n2": "semidiurnal",
-    "mu2": "semidiurnal",
-    "nu2": "semidiurnal",
-    "l2": "semidiurnal",
-    "t2": "semidiurnal",
-    "j1": "diurnal",
-    "m1": "diurnal",
-    "oo1": "diurnal",
-    "rho1": "diurnal",
-    "mf": "long period",
-    "mm": "long period",
-    "ssa": "long period",
-    "m4": "shallow water",
-    "ms4": "shallow water",
-    "mn4": "shallow water",
-    "m6": "shallow water",
-    "m8": "shallow water",
-    "mk3": "shallow water",
-    "s6": "shallow water",
-    "2sm2": "semidiurnal",
-    "2mk3": "shallow water",
-    "msf": "long period",
-    "sa": "long period",
-    "mt": "long period",
-    "2q1": "diurnal",
+# List of major constituents from pyTMD table:
+# https://pytmd.readthedocs.io/en/latest/background/Constituent-Table.html
+# TODO: read these from code once available in pyTMD package
+MAJOR_CONSTITUENTS = {
+    "sa": "Solar annual",
+    "ssa": "Solar semiannual",
+    "mm": "Lunar monthly",
+    "msf": "Lunisolar synodic fortnightly",
+    "mf": "Lunar declinational fortnightly",
+    "mt": "Termensual",
+    "2q1": "Smaller elliptical diurnal",
+    "sigma1": "Lunar variational diurnal",
+    "q1": "Larger lunar elliptical diurnal",
+    "rho1": "Larger lunar evectional diurnal",
+    "o1": "Lunar diurnal",
+    "tau1": "",
+    "m1": "Smaller lunar elliptical diurnal",
+    "chi1": "Smaller evectional diurnal",
+    "pi1": "Solar elliptical diurnal",
+    "p1": "Principal solar diurnal",
+    "s1": "Raditional solar diurnal",
+    "k1": "Principal declinational diurnal",
+    "psi1": "Smaller solar elliptical diurnal",
+    "phi1": "Second-order solar diurnal",
+    "theta1": "Evectional diurnal",
+    "j1": "Smaller lunar elliptical diurnal",
+    "oo1": "Second-order lunar diurnal",
+    "eps2": "",
+    "2n2": "Second-order lunar elliptical semidiurnal",
+    "mu2": "Lunar variational",
+    "n2": "Larger lunar elliptical semidiurnal",
+    "nu2": "Larger lunar evectional semidiurnal",
+    "m2": "Principal lunar semidiurnal",
+    "lambda2": "Smaller lunar evectional",
+    "l2": "Smaller lunar elliptical semidiurnal",
+    "t2": "Larger solar elliptical semidiurnal",
+    "s2": "Principal solar semidiurnal",
+    "r2": "Smaller solar elliptical semidiurnal",
+    "k2": "Lunisolar declinational semidiurnal",
+    "eta2": "",
+    "m3": "Principal lunar terdiurnal",
 }
 
 
@@ -737,9 +706,9 @@ def pixel_stats(
 
 def tide_aliasing(
     satellites: list[str] | dict[str, float],
-    c: list[str] | None = None,
+    constituents: list[str] | None = None,
     units: str = "days",
-    max_inf: float = 1_000_000,
+    max_inf: float | None = None,
     style: bool = True,
 ):
     """Calculate aliasing periods for tidal constituents given satellite revisit intervals.
@@ -785,15 +754,16 @@ def tide_aliasing(
             - SRAL (altimetry): "sentinel-3a-sral", "sentinel-3b-sral, "sentinel-3c-sral"
         - SWOT (KaRIn swath altimetry): "swot"
         - NISAR (L- and S-band SAR): "nisar"
-    c : list of str or None, optional
-        List of tidal constituents to include. If None, all known constituents
-        are included. Constituent names should be lowercase (e.g., "m2", "k1").
+    constituents : list of str or None, optional
+        List of tidal constituents to include. If None, use a list of major
+        constituents. Constituent names should be lowercase (e.g., "m2", "k1").
     units : str, optional
         Output time units for the aliasing periods. Must be one of:
         "years", "days", "hours", or "minutes". Default is "days".
     max_inf : float, optional
-        Maximum aliasing period to display. Values exceeding this threshold
-        are replaced with `np.inf`. Default is 1,000,000.
+        Maximum aliasing period to display in seconds. Values exceeding
+        this threshold are replaced with `np.inf`. Defaults to equivalent of 10
+        years if no value is provided.
     style : bool, optional
         If True, returns a styled `pandas.DataFrame`. If False, returns a raw
         DataFrame. Default is True.
@@ -807,7 +777,7 @@ def tide_aliasing(
     Examples
     --------
     >>> eo_tide_aliasing(["sentinel-2", "landsat-8"])
-    >>> eo_tide_aliasing(["swot"], c=["m2", "k1"], units="hours", style=False)
+    >>> eo_tide_aliasing(["swot"], constituents=["m2", "k1"], units="hours", style=False)
     >>> eo_tide_aliasing({"custom-sat": 5})
 
     """
@@ -831,18 +801,16 @@ def tide_aliasing(
         "minutes": 60,
         "hours": 3600,
         "days": 86400,
-        "years": 365.25 * 86400,
+        "years": 31556952,
     }
 
     # Use default list of constituents if none provided
-    if c is None:
-        c = list(C_NAMES.keys())
+    if constituents is None:
+        constituents = list(MAJOR_CONSTITUENTS.keys())
 
-    # Unpack all parameters (amplitude, phase, omega, alpha, species)
-    params = [_constituent_parameters(c_i) for c_i in c]
-    _, _, omega, _, _ = np.array(params).T
-
-    # Convert frequency in radians per second to period in seconds
+    # Extract frequency in radians per second for each constituent,
+    # and convert to period in seconds
+    omega = np.array([frequency(c)[0] for c in constituents])
     period = 2 * np.pi / omega
 
     # Compute aliasing period for each satellite
@@ -857,13 +825,13 @@ def tide_aliasing(
             revisit = revisit_dict[sat]
             print(f"Using {revisit} day revisit for {sat}")
             aliasing_periods[("aliasing_period", sat)] = aliasing_period(
-                c,
+                constituents,
                 unit_factors["days"] * revisit,
             )
 
     # Combine into a dataframe
     alias_df = pd.DataFrame(
-        index=c,
+        index=pd.Index(constituents, name="constituents"),
         data={
             ("period", ""): period,
             **aliasing_periods,
@@ -875,15 +843,17 @@ def tide_aliasing(
         error_msg = f"Unit not supported: {units}; must be one of 'years', 'days', 'hours', 'minutes'"
         raise ValueError(error_msg)
 
-    # Rescale
-    alias_df = (alias_df / unit_factors[units]).round(3)
-
-    # Max value to set to inf:
+    # Set max value to infinity. If no max is provided, use 10 years
+    if max_inf is None:
+        max_inf = unit_factors["years"] * 10
     alias_df[alias_df > max_inf] = np.inf
 
-    # Add additional columns
-    alias_df.insert(0, column="name", value=[C_NAMES[c_i] for c_i in alias_df.index])
-    alias_df.insert(1, column="type", value=[C_TYPE[c_i] for c_i in alias_df.index])
+    # Rescale to desired output time units
+    precision = 3 if units != "years" else 4
+    alias_df = (alias_df / unit_factors[units]).round(precision)
+
+    # Add constituent name column
+    alias_df.insert(0, column="name", value=[MAJOR_CONSTITUENTS.get(c) for c in constituents])
 
     # Style and return
     df_subset = alias_df.loc[:, "aliasing_period"]
@@ -895,5 +865,5 @@ def tide_aliasing(
             vmin=0,
             vmax=max_col * 1.5,
             cmap="YlOrRd",
-        ).format(precision=3)
+        ).format(precision=precision)
     return alias_df

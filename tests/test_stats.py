@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from eo_tides.stats import pixel_stats, tide_stats, tide_aliasing
+from eo_tides.stats import pixel_stats, tide_stats, tide_aliasing, MAJOR_CONSTITUENTS
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
@@ -153,7 +153,7 @@ def test_pixel_stats(satellite_ds, models, resample):
 
 
 @pytest.mark.parametrize(
-    "satellites, c, units, style, expect_error",
+    "satellites, constituents, units, style, expect_error",
     [
         (["landsat"], ["m2", "k1"], "days", False, None),
         (["sentinel-2"], None, "hours", True, None),
@@ -163,14 +163,15 @@ def test_pixel_stats(satellite_ds, models, resample):
         (["landsat"], ["m2"], "centuries", False, ValueError),
         ({"custom-sat": 6}, None, "hours", True, None),
         ({"custom-sat1": 6, "custom-sat2": 10}, None, "hours", True, None),
+        (["landsat"], ["invalid-constituent"], "days", False, ValueError),
     ],
 )
-def test_tide_aliasing(satellites, c, units, style, expect_error):
+def test_tide_aliasing(satellites, constituents, units, style, expect_error):
     if expect_error:
         with pytest.raises(expect_error):
-            tide_aliasing(satellites, c=c, units=units, style=style)
+            tide_aliasing(satellites, constituents=constituents, units=units, style=style)
     else:
-        result = tide_aliasing(satellites, c=c, units=units, style=style)
+        result = tide_aliasing(satellites, constituents=constituents, units=units, style=style)
 
         # Verify output is a dataframe
         if style:
@@ -178,10 +179,16 @@ def test_tide_aliasing(satellites, c, units, style, expect_error):
         else:
             assert isinstance(result, pd.DataFrame)
 
-        # Verify
+        # Verify correct columns are included
         assert "name" in result.columns
-        assert "type" in result.columns
         assert "period" in result.columns
 
+        # Verify correct satellites are included
         for sat in satellites:
             assert ("aliasing_period", sat) in result.columns
+
+        # Verify correct constituents are included
+        if constituents is not None:
+            assert result.index.equals(pd.Index(constituents, name="constituents"))
+        else:
+            assert result.index.equals(pd.Index(MAJOR_CONSTITUENTS.keys(), name="constituents"))

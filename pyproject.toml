@@ -45,7 +45,7 @@ dependencies = [
     "psutil>=5.8.0",
     "pyogrio>=0.10.0",
     "pyproj>=3.7.0",
-    "pyTMD>=2.2.5",
+    "pyTMD>=2.2.7",
     "scikit-learn>=1.4.0",
     "scipy>=1.14.1",
     "shapely>=2.0.6",
@@ -134,7 +134,9 @@ lint.ignore = [
   "FIX002",   # Allow TODO
   "TD",       # Ignore missing info in TODO
   "ERA001",   # Ignore commented out code (to revert)
-  "ANN",       # Allow missing type annotations (to revert)
+  "ANN",      # Allow missing type annotations (to revert)
+  "COM812",   # Ignored as recommended by ruff
+  "D203",     # Ignored as recommended by ruff
 ]
 exclude = ["tests/testing.ipynb"]  # Don't modify testing notebook
 
@@ -167,3 +169,7 @@ exclude_lines = [
 [tool.coverage.run]
 branch = true
 source = ["eo_tides"]
+
+[tool.codespell]
+ignore-regex = "[A-Za-z0-9+/]{100,}"
+ignore-words-list = "AHD,mot"

@@ -114,6 +114,54 @@ def test_model_tides(measured_tides_ds, x, y, crs, method, model):
         assert abs(val_stats["Bias"]) < 0.20
 
 
+# Verify constituent subsets can be modelled correctly
+@pytest.mark.parametrize(
+    "model, constituents",
+    [
+        ("EOT20", ["m2"]),
+        (
+            "EOT20",
+            ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
+        ),
+        ("GOT5.5", ["m2"]),
+        (
+            "GOT5.5",
+            ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
+        ),
+        ("HAMTIDE11", ["m2"]),
+        (
+            "HAMTIDE11",
+            ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
+        ),
+    ],
+)
+def test_model_tides_constituents(measured_tides_ds, model, constituents):
+    # Run modelling for locations and timesteps in tide gauge data
+    modelled_tides_df = model_tides(
+        x=[GAUGE_X],
+        y=[GAUGE_Y],
+        time=measured_tides_ds.time,
+        model=model,
+        constituents=constituents,
+    )
+
+    # Run equivalent pyTMD code
+    pytmd_tides = tide_elevations(
+        x=GAUGE_X,
+        y=GAUGE_Y,
+        delta_time=measured_tides_ds.time,
+        DIRECTORY=_set_directory(None),
+        MODEL=model,
+        TIME="datetime",
+        EXTRAPOLATE=True,
+        CUTOFF=np.inf,
+        CONSTITUENTS=constituents,
+    )
+
+    # Verify that pyTMD produces same results as `model_tides`
+    assert np.allclose(modelled_tides_df.tide_height.values, pytmd_tides.data)
+
+
 # Run tests for one or multiple models, and long and wide format outputs
 @pytest.mark.parametrize(
     "models, output_format",

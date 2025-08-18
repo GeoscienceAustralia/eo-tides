@@ -3,6 +3,7 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 import pytest
 
 from eo_tides.model import model_tides
@@ -14,6 +15,112 @@ from eo_tides.utils import (
     idw,
     list_models,
 )
+
+
+# Run once per module run to generate symethic HAMTIDE11 files; autouse=True
+# allows this to run without being specifically called in tests
+@pytest.fixture(scope="module", autouse=True)
+def create_synthetic_hamtide11(base_dir="tests/data/tide_models_synthetic"):
+    """Generates and exports synthetic HAMTIDE11 model data
+    to test clipping functionality.
+    """
+    base_dir = pathlib.Path(base_dir)  # Ensure base_dir is a Path object
+
+    # Create coordinate arrays
+    lon = np.arange(0, 360.125, 0.125)  # 2881 points
+    lat = np.arange(-90, 90.125, 0.125)  # 1441 points
+
+    # List of HAMTIDE11 tidal constituents
+    constituents = ["2n", "k1", "k2", "m2", "n2", "o1", "p1", "q1", "s2"]
+
+    # Create HAMTIDE11 output directory
+    hamtide_dir = base_dir / "hamtide"
+    hamtide_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create and save a NetCDF for each constituent
+    for constituent in constituents:
+        # Create synthetic HAMTIDE11 dataset with random data
+        shape = (len(lat), len(lon))  # 1441, 2881
+        data = np.random.random(shape).astype(np.float32)
+        ds = xr.Dataset(
+            {
+                "RE": (("LAT", "LON"), data),
+                "IM": (("LAT", "LON"), data),
+                "AMPL": (("LAT", "LON"), data),
+                "PHAS": (("LAT", "LON"), data),
+            },
+            coords={"LON": lon, "LAT": lat},
+            attrs={"title": f"HAMTIDE11a: {constituent} ocean tide"},
+        )
+
+        # Export
+        filename = hamtide_dir / f"{constituent}.hamtide11a.nc"
+        ds.to_netcdf(filename)
+
+
+# Run once per module run to generate symethic EOT20 files; autouse=True
+# allows this to run without being specifically called in tests
+@pytest.fixture(scope="module", autouse=True)
+def create_synthetic_eot20(base_dir="tests/data/tide_models_synthetic"):
+    """Generates and exports synthetic EOT20 model data
+    to test clipping functionality.
+    """
+    base_dir = pathlib.Path(base_dir)  # Ensure base_dir is a Path object
+
+    # Create coordinate arrays
+    lon = np.arange(0, 360.125, 0.125)  # 2881 points
+    lat = np.arange(-90, 90.125, 0.125)  # 1441 points
+
+    # List of EOT20 tidal constituents
+    constituents = [
+        "2N2",
+        "J1",
+        "K1",
+        "K2",
+        "M2",
+        "M4",
+        "MF",
+        "MM",
+        "N2",
+        "O1",
+        "P1",
+        "Q1",
+        "S1",
+        "S2",
+        "SA",
+        "SSA",
+        "T2",
+    ]
+
+    # Create EOT20 output directory
+    eot20_dir = base_dir / "EOT20/ocean_tides"
+    eot20_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create and save a NetCDF for each constituent
+    for constituent in constituents:
+        # Create synthetic EOT20 dataset with random data
+        shape = (len(lat), len(lon))  # 1441, 2881
+        data = np.random.random(shape).astype(np.float64)
+
+        # Add NaN values to match original
+        mask = np.random.random(shape) < 0.2
+        data[mask] = np.nan
+
+        # Create the dataset
+        ds = xr.Dataset(
+            {
+                "amplitude": (("lat", "lon"), data),
+                "phase": (("lat", "lon"), data),
+                "imag": (("lat", "lon"), data),
+                "real": (("lat", "lon"), data),
+            },
+            coords={"lat": lat, "lon": lon},
+            attrs={"title": "DGFI-TUM global empirical ocean tide model"},
+        )
+
+        # Export
+        filename = eot20_dir / f"{constituent}_ocean_eot20.nc"
+        ds.to_netcdf(filename)
 
 
 @pytest.mark.parametrize(
