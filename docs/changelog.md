@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.8.2 - 2025-08-18
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Breaking changes
+
+- Refactor `tide_aliasing` function to use `constituent` param name instead of `c`, use a list of default major tide constituents from `pyTMD`, remove "type" column, and set a 10 year default max on period values by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/118
+
+#### Bug fixes
+
+- Fix bug with specifying custom list of constituents in #117 by upgrading `pyTMD`
+
+#### Other changes
+
+- Add spell check to pre-commit, minor formatting updates by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/116
+- Minor updates and upgrades to tests and `ruff`, `uv` versions by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/118
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.8.1...0.8.2
+
 ## 0.8.1 - 2025-07-17
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
@@ -70,6 +90,7 @@ model_tides(
     extra_databases=custom_db_dict,
     output_format="wide",
 )
+
 
 
 ```
