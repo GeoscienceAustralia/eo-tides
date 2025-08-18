@@ -3,6 +3,7 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 import pytest
 
 from eo_tides.model import model_tides
