@@ -1,7 +1,6 @@
 """This module contains shared fixtures for eo_tides tests."""
 
 from copy import deepcopy
-from pathlib import Path
 
 import numpy as np
 import odc.stac

@@ -23,7 +23,7 @@ def create_synthetic_hamtide11(base_dir="tests/data/tide_models_synthetic"):
     """Generates and exports synthetic HAMTIDE11 model data
     to test clipping functionality.
     """
-    base_dir = Path(base_dir)  # Ensure base_dir is a Path object
+    base_dir = pathlib.Path(base_dir)  # Ensure base_dir is a Path object
 
     # Create coordinate arrays
     lon = np.arange(0, 360.125, 0.125)  # 2881 points
@@ -64,7 +64,7 @@ def create_synthetic_eot20(base_dir="tests/data/tide_models_synthetic"):
     """Generates and exports synthetic EOT20 model data
     to test clipping functionality.
     """
-    base_dir = Path(base_dir)  # Ensure base_dir is a Path object
+    base_dir = pathlib.Path(base_dir)  # Ensure base_dir is a Path object
 
     # Create coordinate arrays
     lon = np.arange(0, 360.125, 0.125)  # 2881 points
