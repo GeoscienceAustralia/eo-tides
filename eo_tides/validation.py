@@ -194,7 +194,7 @@ def load_gauge_gesla(
     filter_use_flag=True,
     site_metadata=True,
     data_path="GESLA3.0_ALL",
-    metadata_path="",
+    metadata_path="GESLA3_ALL 2.csv",
 ):
     """Load Global Extreme Sea Level Analysis (GESLA) tide gauge data.
 
@@ -268,7 +268,7 @@ def load_gauge_gesla(
 
     if not data_path.exists():
         err_msg = (
-            f"GESLA raw data directory not found at: {data_path}\n"
+            f"GESLA raw data directory not found at `data_path={data_path}`\n"
             "Download 'GESLA-3 DATA' from: "
             "https://gesla787883612.wordpress.com/downloads/"
         )
@@ -276,7 +276,7 @@ def load_gauge_gesla(
 
     if not metadata_path.exists():
         err_msg = (
-            f"GESLA station metadata file not found at: {metadata_path}\n"
+            f"GESLA station metadata file not found at: `metadata_path={metadata_path}`\n"
             "Download the 'GESLA-3 CSV META-DATA FILE' from: "
             "https://gesla787883612.wordpress.com/downloads/"
         )
