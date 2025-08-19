@@ -270,7 +270,7 @@ def load_gauge_gesla(
         err_msg = (
             f"GESLA raw data directory not found at: {data_path}\n"
             "Download 'GESLA-3 DATA' from: "
-            "https://gesla787883612.wordpress.com/downloads/",
+            "https://gesla787883612.wordpress.com/downloads/"
         )
         raise FileNotFoundError(err_msg)
 
@@ -278,7 +278,7 @@ def load_gauge_gesla(
         err_msg = (
             f"GESLA station metadata file not found at: {metadata_path}\n"
             "Download the 'GESLA-3 CSV META-DATA FILE' from: "
-            "https://gesla787883612.wordpress.com/downloads/",
+            "https://gesla787883612.wordpress.com/downloads/"
         )
         raise FileNotFoundError(err_msg)
 
