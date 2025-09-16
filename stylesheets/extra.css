@@ -1,0 +1,65 @@
+[data-md-color-scheme="eotides"] {
+  --md-primary-fg-color: #215f9a;
+  --md-primary-fg-color--light: #4a7dbe;
+  --md-primary-fg-color--dark: #184878;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: #ffffff;
+  --md-default-fg-color--lighter: #ffffff;
+  --md-footer-bg-color: #113457;
+  --md-footer-bg-color--dark: #113457;
+}
+
+/* Hide dark images in light mode */
+[data-md-color-scheme="eotides"] img[src$="#only-dark"],
+[data-md-color-scheme="eotides"] img[src$="#gh-dark-mode-only"] {
+  display: none;
+}
+
+/* Target the search input placeholder icon */
+.md-search__icon.md-icon svg {
+  color: #ffffff !important;
+}
+
+/* Add wrapping to code blocks */
+code {
+  white-space: pre-wrap !important;
+}
+
+/* Changes required for correct xarray rendering */
+.md-typeset pre.xr-text-repr-fallback {
+  display: none;
+}
+
+.md-typeset ul.xr-sections,
+.jupyter-wrapper .jp-OutputArea-output dl.xr-attrs {
+  display: grid;
+}
+
+.md-typeset li.xr-var-item,
+.md-typeset ul.xr-var-list {
+  display: contents;
+}
+
+.md-typeset .xr-section-details {
+  display: none;
+}
+
+.md-typeset ul.xr-dim-list li {
+  margin-bottom: 0;
+  margin-left: 0;
+}
+
+.md-typeset ul.xr-dim-list {
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+.jupyter-wrapper .jp-OutputArea-output .xr-attrs dt {
+  padding: 0;
+  margin: 0;
+  float: left;
+  padding-right: 10px;
+  width: auto;
+  font-weight: normal;
+  grid-column: 1;
+}
