@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.8.3 - 2025-09-16
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### New features
+
+* Add support for GESLA 4 tide gauge dataset in `validation.py` by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/123
+
+#### Other changes
+
+* Minor fix to validation error format by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/121
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.8.2...0.8.3
+
 ## 0.8.2 - 2025-08-18
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
@@ -90,6 +105,7 @@ model_tides(
     extra_databases=custom_db_dict,
     output_format="wide",
 )
+
 
 
 
