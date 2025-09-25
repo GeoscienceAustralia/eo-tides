@@ -1,0 +1,98 @@
+name: Run tests and checks
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "paper/**"
+      - "README.md"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "paper/**"
+      - "README.md"
+
+# Ensure only one test workflow runs per branch/PR at a time
+concurrency:
+  group: ${{ github.ref }} # Group by branch or PR ref
+  cancel-in-progress: true # Cancel any in-progress runs if a new one starts
+
+env:
+  EO_TIDES_TIDE_MODELS: ./tests/data/tide_models
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Run checks
+        run: make check
+
+  run-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        resolution: ["highest", "lowest-direct"]
+        exclude: # Temporarily excluded due to 3.13 only supported by Numpy >=2.0
+          - python-version: "3.13"
+            resolution: "lowest-direct"
+      fail-fast: false
+      max-parallel: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Extract model data
+        run: |
+          # Extract tide modelling test files
+          tar -xvzf ./tests/data/tide_models.tar.gz -C ./tests/data
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: ${{ matrix.python-version }}
+          resolution: ${{ matrix.resolution }}
+
+      - name: Run Python unit tests
+        timeout-minutes: 10
+        run: uv run python -m pytest tests --cov --cov-config=pyproject.toml --cov-report=xml --verbose
+
+      - name: Run Jupyter Notebook integration tests
+        timeout-minutes: 10
+        run: uv run python -m pytest --nbval-lax docs/notebooks/
+
+      - name: Check typing
+        run: uv run mypy
+
+      - name: Upload coverage reports to Codecov with GitHub Action on Python 3.10
+        uses: codecov/codecov-action@v4
+        if: ${{ matrix.python-version == '3.10' && matrix.resolution == 'highest' }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  check-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Check if documentation can be built
+        run: uv run mkdocs build -s

@@ -20,6 +20,7 @@ authors:
     orcid: 0000-0001-9568-9661
   - name: Vanessa Newey
     affiliation: 1
+    orcid: 0000-0003-3705-5665
   - name: Tyler Sutterley
     affiliation: 2
     orcid: 0000-0002-6964-1194
@@ -92,7 +93,7 @@ Table: Comparison of the `tag_tides` and `pixel_tides` functions. \label{tab:tid
 
 ## Calculating tide statistics and satellite biases
 
-The [`eo_tides.stats`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.stats) module identifies biases caused by complex tide alaising interations that can prevent satellites from observing the entire tide cycle [@eleveld2014estuarine; @bishop2019NIDEM; @sent2025time]. The `tide_stats` and `pixel_stats` functions produce useful statistics that summarise how well satellite data captures real-world tides (\autoref{fig:stats}).
+The [`eo_tides.stats`](https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.stats) module identifies biases caused by complex tide alaising interactions that can prevent satellites from observing the entire tide cycle [@eleveld2014estuarine; @bishop2019NIDEM; @sent2025time]. The `tide_stats` and `pixel_stats` functions produce useful statistics that summarise how well satellite data captures real-world tides (\autoref{fig:stats}).
 
 ![An example of tidally-biased satellite coverage, where only ~68% of the astronomical tide range is observed.\label{fig:stats}](figures/joss_fig_stats.png)
 

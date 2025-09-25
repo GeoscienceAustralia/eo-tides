@@ -64,6 +64,11 @@ test-utils: ## Test utils module with pytest
 	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
 	uv run python -m pytest tests/test_utils.py --verbose
 
+.PHONY: test-validation
+test-validation: ## Test validation module with pytest
+	@echo "🚀 Testing validation module: Running pytest"
+	uv run python -m pytest tests/test_validation.py --verbose
+
 .PHONY: test-notebooks
 test-notebooks: ## Test notebooks with pytest
 	@echo "🚀 Testing notebooks: Running pytest"

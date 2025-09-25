@@ -1,6 +1,6 @@
 [project]
 name = "eo-tides"
-version = "0.6.5"
+dynamic = ["version"]
 description = "Tide modelling tools for large-scale satellite earth observation analysis"
 authors = [
     { name = "Robbi Bishop-Taylor" },
@@ -36,7 +36,7 @@ classifiers = [
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "colorama>=0.4.3",
-    "dask[complete]>=2023.1.0,<2025.3.0",
+    "dask[complete]>=2023.1.0",
     "geopandas>=0.10.0",
     "matplotlib>=3.8.0",
     "numpy>=1.26.0",
@@ -45,7 +45,7 @@ dependencies = [
     "psutil>=5.8.0",
     "pyogrio>=0.10.0",
     "pyproj>=3.7.0",
-    "pyTMD>=2.2.2,<2.2.5",
+    "pyTMD>=2.2.7",
     "scikit-learn>=1.4.0",
     "scipy>=1.14.1",
     "shapely>=2.0.6",
@@ -61,7 +61,8 @@ Documentation = "https://GeoscienceAustralia.github.io/eo-tides/"
 
 [project.optional-dependencies]
 notebooks = [
-    "odc-stac>=0.3.10",
+    "jupyter>=1.0.0",
+    "odc-stac[botocore]>=0.3.10",
     "odc-geo[warp,tiff]>=0.4.7",
     "pystac-client>=0.8.3",
     "folium>=0.16.0",
@@ -88,11 +89,17 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
-[tool.setuptools]
-packages = ["eo_tides"]
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.mypy]
 files = ["eo_tides"]
@@ -104,23 +111,52 @@ allow_redefinition = true
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py310"
-line-length = 120
-fix = true
-
-[tool.ruff.format]
-preview = true
+target-version = "py310"     # Target Python 3.10 syntax
+line-length = 120            # Set max line length
+fix = true                   # Allow auto-fix when used without pre-commit
+lint.select = ["ALL"]
+lint.ignore = [
+  "E501",     # Don't enforce line length
+  "SIM105",   # contextlib.suppress
+  "RUF002",   # Ignore en-dash
+  "PLR0913",  # Allow too many arguments
+  "PLR0915",  # Allow too many statements
+  "PLR0912",  # Allow too many branches
+  "PLR2004",  # Allow magic value in comparison
+  "T201",     # Allow print
+  "DTZ005",   # Ignore timezones
+  "TRY002",   # Allow non-custom exceptions
+  "FBT002",   # Allow boolean default positional arguments
+  "FBT001",   # Allow boolean default positional arguments
+  "C901",     # Ignore too complex function
+  "D211",     # Ignore mutually exclusive one-blank-line-before-class rule
+  "D213",     # Ignore mutually exclusive one-blank-line-before-class rule
+  "FIX002",   # Allow TODO
+  "TD",       # Ignore missing info in TODO
+  "ERA001",   # Ignore commented out code (to revert)
+  "ANN",      # Allow missing type annotations (to revert)
+  "COM812",   # Ignored as recommended by ruff
+  "D203",     # Ignored as recommended by ruff
+]
+exclude = ["tests/testing.ipynb"]  # Don't modify testing notebook
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = [
-    "S101"   # Assert
+"tests/*" = ["ALL"]
+"eo_tides/validation.py" = [
+  "ANN201",   # Temporarily ignore type annotations for validation funcs
+  "ANN202",   # Temporarily ignore type annotations for validation funcs
 ]
+
+[tool.ruff.format]
+preview = true    # Enable experimental formatting improvements
+docstring-code-format = true # Reformat code in doc strings.
 
 [tool.deptry.per_rule_ignores]
 DEP002 = [
     "folium",
     "pyogrio",
     "dask",
+    "jupyter",
 ]
 
 [tool.coverage.report]
@@ -133,3 +169,7 @@ exclude_lines = [
 [tool.coverage.run]
 branch = true
 source = ["eo_tides"]
+
+[tool.codespell]
+ignore-regex = "[A-Za-z0-9+/]{100,}"
+ignore-words-list = "AHD,mot"

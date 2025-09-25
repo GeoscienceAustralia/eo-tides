@@ -1,0 +1,40 @@
+name: Update changelog
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.target_commitish }}
+          fetch-depth: 0 # Needed so create-pull-request can diff
+
+      - name: Update changelog
+        uses: stefanzweifel/changelog-updater-action@v1
+        with:
+          latest-version: ${{ github.event.release.tag_name }}
+          release-notes: ${{ github.event.release.body }}
+          path-to-changelog: docs/changelog.md
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: "Update changelog for ${{ github.event.release.tag_name }}"
+          body: |
+            This PR updates the changelog with details from the release [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }}).
+          commit-message: "Update changelog for ${{ github.event.release.tag_name }}"
+          branch: update-changelog-${{ github.event.release.tag_name }}
+          base: ${{ github.event.release.target_commitish }}
+          add-paths: |
+            docs/changelog.md
+          delete-branch: true

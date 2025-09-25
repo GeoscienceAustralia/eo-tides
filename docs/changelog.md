@@ -1,12 +1,185 @@
 # Changelog
 
-## v0.6.5
+## 0.8.2 - 2025-08-18
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Breaking changes
+
+- Refactor `tide_aliasing` function to use `constituent` param name instead of `c`, use a list of default major tide constituents from `pyTMD`, remove "type" column, and set a 10 year default max on period values by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/118
+
+#### Bug fixes
+
+- Fix bug with specifying custom list of constituents in #117 by upgrading `pyTMD`
+
+#### Other changes
+
+- Add spell check to pre-commit, minor formatting updates by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/116
+- Minor updates and upgrades to tests and `ruff`, `uv` versions by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/118
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.8.1...0.8.2
+
+## 0.8.1 - 2025-07-17
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other changes
+
+* Add new EO satellite tide aliasing function for evaluating potential temporal biases in EO analyses in https://github.com/GeoscienceAustralia/eo-tides/pull/113
+* Add `jupyter` to notebook optional dependencies to make Jupyter Notebooks easier to run in https://github.com/GeoscienceAustralia/eo-tides/pull/112
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.8.0...0.8.1
+
+## 0.8.0 - 2025-06-24
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+This release provides new functionality to customise tide modelling:
+
+1. A new `extra_databases` parameter to model tides using models that are not natively supported by `pyTMD`, accepting custom tide model databases in either Python dictionary or JSON file format
+2. A new `constituents` parameter to restrict tide modelling to a custom subset of harmonic constituents
+
+For example, to model tides using a custom `EOT20_custom` tide model:
+
+```
+import pandas as pd
+from eo_tides.model import model_tides
+
+custom_db_dict = {
+  "elevation": {
+    "EOT20_custom": {
+      "format": "FES-netcdf",
+      "model_file": [
+        "EOT20/ocean_tides/2N2_ocean_eot20.nc",
+        "EOT20/ocean_tides/J1_ocean_eot20.nc",
+        "EOT20/ocean_tides/K1_ocean_eot20.nc",
+        "EOT20/ocean_tides/K2_ocean_eot20.nc",
+        "EOT20/ocean_tides/M2_ocean_eot20.nc",
+        "EOT20/ocean_tides/M4_ocean_eot20.nc",
+        "EOT20/ocean_tides/MF_ocean_eot20.nc",
+        "EOT20/ocean_tides/MM_ocean_eot20.nc",
+        "EOT20/ocean_tides/N2_ocean_eot20.nc",
+        "EOT20/ocean_tides/O1_ocean_eot20.nc",
+        "EOT20/ocean_tides/P1_ocean_eot20.nc",
+        "EOT20/ocean_tides/Q1_ocean_eot20.nc",
+        "EOT20/ocean_tides/S1_ocean_eot20.nc",
+        "EOT20/ocean_tides/S2_ocean_eot20.nc",
+        "EOT20/ocean_tides/SA_ocean_eot20.nc",
+        "EOT20/ocean_tides/SSA_ocean_eot20.nc",
+        "EOT20/ocean_tides/T2_ocean_eot20.nc"
+      ],
+      "name": "EOT20_custom",
+      "reference": "https://doi.org/10.17882/79489",
+      "scale": 0.01,
+      "type": "z",
+      "variable": "tide_ocean",
+      "version": "EOT20"
+    }
+  }
+}
+
+model_tides(
+    x=148,
+    y=-16,
+    time=pd.date_range("2022-01-01", "2023-12-31", freq="1h"),
+    model=["EOT20_custom", "EOT20"],
+    directory="/var/share/tide_models/",
+    extra_databases=custom_db_dict,
+    output_format="wide",
+)
+
+
+
+```
+#### New features
+
+* Support custom tide models by passing in extra tide model databases by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/105
+* Support customising constituents during tide modelling by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/108
+
+#### Other changes
+
+* Major Ruff refactor by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/108
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.7.5...0.8.0
+
+## 0.7.5 - 2025-06-23
+
+### What's Changed
+
+Minor update to remove Dask pin now that Dask compatability issue has been solved in `odc-stac`
+
+#### Documentation updates
+
+* Fix unlinked URLs in changelog by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/103
+
+#### Other changes
+
+* Remove dask pin to close #76 by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/106
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.7.4...0.7.5
+
+## 0.7.4 - 2025-05-30
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### New features
+
+* Add version attribute to init file by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/98
+
+#### Documentation updates
+
+* Fix capitalisation in JOSS paper bibliography by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/97
+* Update suggested citation to use new JOSS paper citation by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/100
+
+#### Other changes
+
+* Update PR labelling and release template by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/99
+* Reformat code with additional `ruff` linting rules by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/101
+
+### New Contributors
+
+* @github-actions made their first contribution in https://github.com/GeoscienceAustralia/eo-tides/pull/96
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.7.3...0.7.4
+
+## 0.7.3 - 2025-05-22
+
+### Changes
+
+- Use dynamic version handling via `hatch-vcs`, add automatic changelog update action by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/95
+- Bump the python-deps group with 2 updates by @dependabot in https://github.com/GeoscienceAustralia/eo-tides/pull/94
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.7.2...0.7.3
+
+## 0.7.2 - 2025-05-19
+
+### New features
+
+- Minor updates to improve documentation around accessing GESLA 3.0 tide gauge data,
+- Made validation functions more re-usable by removing hard-coded paths and adding helpful error messages.
+
+## 0.7.1 - 2025-05-19
+
+Minor update to package dependencies
+
+## 0.7.0 - 2025-05-14
+
+### New features
+
+- This version corresponds to the code archived as part of [Journal of Open Source Software publication](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e).
+  No new features introduced.
+
+## 0.6.5 - 2025-05-08
 
 ### New features
 
 - Support for `pyTMD` versions 2.2.3 and 2.2.4
 
-## v0.6.4
+## 0.6.4 - 2025-02-31
 
 ### New features
 
@@ -16,7 +189,7 @@
 
 - Temporarily pinned Dask to avoid `odc-geo` and `odc-stac` errors
 
-## v0.6.3
+## 0.6.3 - 2025-03-20
 
 ### New features
 
@@ -27,7 +200,7 @@
 - Fixed bug where ensemble tide modelling used excessive memory, by ensuring dtype of ensemble modelled tides matches dtype of input modelled tides ([#70](https://github.com/GeoscienceAustralia/eo-tides/pull/70))
 - Added missing `dask` dependency to requirements ([#68](https://github.com/GeoscienceAustralia/eo-tides/pull/68))
 
-## v0.6.2
+## 0.6.2 - 2025-02-25
 
 ### New features
 
@@ -37,13 +210,13 @@
 
 - Further fixes for bug causing tide model clipping with `clip_tides` to fail for bounding boxes completely west of the prime meridian ([#50](https://github.com/GeoscienceAustralia/eo-tides/issues/50)); default value for `crop` param is now `"auto"` instead of `True`.
 
-## v0.6.1
+## 0.6.1 - 2025-02-20
 
 ### Bug fixes
 
 - Fixed bug causing tide model clipping with `clip_tides` to fail for bounding boxes completely west of the prime meridian ([#50](https://github.com/GeoscienceAustralia/eo-tides/issues/50))
 
-## v0.6.0
+## 0.6.0 - 2025-02-11
 
 ### New features
 
@@ -51,7 +224,7 @@
 - Added support for [Technical University of Denmark tide models](https://doi.org/10.11583/DTU.23828874) (DTU23)
 - Minor docs improvements, updates for new FES2022 data format
 
-## v0.5.0
+## 0.5.0 - 2025-01-17
 
 ### New features
 
@@ -67,23 +240,25 @@
 - Removed Python 3.9 support
 - Added Python 3.13 support
 
-## v0.4.0
+## 0.4.0 - 2025-12-21
 
 ### New features
 
 - Publishes ensemble tide modelling code for combining multiple global ocean tide models into a single locally optimised ensemble tide model using external model ranking data (e.g. satellite altimetry or NDWI-tide correlations along the coastline).
-
+  
   - Update ensemble code to latest version that includes FES2022, GOT5.6 and TPXO10 tide models
   - Make ensemble model calculation function a top level function (i.e. rename from `_ensemble_model` to `ensemble_tides`)
   - Load tide model ranking points from external `flatgeobuf` format file for faster cloud access
-
+  
 - Major refactor to statistics functions to standardise code across both `pixel_stats` and `tide_stats` and add support for multiple models
-
+  
   - `tide_stats` will now return a `pandas.Series` if one model is requested, and a `pandas.DataFrame` if multiple are requested
   - Added a new `point_col` parameter to `tide_stats` to control the colour of plotted points. If `plot_var` is also provided, points will now be coloured differently by default.
-
+  
 - Added a new `crop_buffer` parameter to configure buffer distance when cropping model files with `crop=True` (defaults to 5 degrees)
+  
 - Reorder `model_tides` parameters to provide more logical flow and move more common params like `mode`, `output_format` and `output_units` higher
+  
 
 ### Bug fixes
 
@@ -93,7 +268,7 @@
 
 - The `plot_col` parameter from `tide_stats` has been renamed to `plot_var`
 
-## v0.3.1 (2024-11-15)
+## 0.3.1 - 2024-11-15
 
 ### New features
 
@@ -103,7 +278,7 @@
 
 - Fix bug where GOT5.6 was not detected as a valid model because it contains files in multiple directories (e.g. both "GOT5.6" and "GOT5.5"). This also affected clipping GOT5.6 data using the `eo_tides.utils.clip_models` function.
 
-## v0.3.0 (2024-11-11)
+## 0.3.0 - 2024-11-11
 
 ### New features
 
@@ -121,7 +296,7 @@
 
 - The `list_models` function has been relocated to `eo_tides.utils` (from `eo_tides.model`)
 
-## v0.2.0 (2024-10-30)
+## 0.2.0 - 2024-10-30
 
 ### New features
 
@@ -135,7 +310,7 @@
 
 - The `ds` param in all satellite data functions (`tag_tides`, `pixel_tides`, `tide_stats`, `pixel_tides`) has been renamed to a more generic name `data` (to account for now accepting either `xarray.Dataset`, `xarray.DataArray` or a `odc.geo.geobox.GeoBox` inputs).
 
-## v0.1.0 (2024-10-18)
+## 0.1.0 - 2024-10-18
 
 ### New features
 
@@ -144,5 +319,3 @@
 ### Breaking changes
 
 See [Migrating from DEA Tools](migration.md) for a guide to updating your code from the original [`Digital Earth Australia Notebooks and Tools` repository](https://github.com/GeoscienceAustralia/dea-notebooks/).
-
-<!-- ### Bug fixes -->

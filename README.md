@@ -3,15 +3,16 @@
 <img align="right" width="200" src="https://github.com/GeoscienceAustralia/eo-tides/blob/main/docs/assets/eo-tides-logo.gif?raw=true" alt="eo-tides logo" style="margin-right: 40px;">
 
 [![Release](https://img.shields.io/github/v/release/GeoscienceAustralia/eo-tides)](https://pypi.org/project/eo-tides/)
-[![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/main.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/main.yml?query=branch%3Amain)
+[![Build status](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/eo-tides/tests.yml?branch=main)](https://github.com/GeoscienceAustralia/eo-tides/actions/workflows/tests.yml?query=branch%3Amain)
 [![Python Version from PEP 621 TOML](https://img.shields.io/pypi/pyversions/eo-tides)](https://github.com/GeoscienceAustralia/eo-tides/blob/main/pyproject.toml)
 [![codecov](https://codecov.io/gh/GeoscienceAustralia/eo-tides/branch/main/graph/badge.svg)](https://codecov.io/gh/GeoscienceAustralia/eo-tides)
 [![License](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)](https://img.shields.io/github/license/GeoscienceAustralia/eo-tides)
-[![status](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e/status.svg)](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e)
+[![JOSS paper](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e/status.svg)](https://joss.theoj.org/papers/b5680c39bf831c1159c41a2eb7ec9c5e)
 
 - ⚙️ **Github repository**: <https://github.com/GeoscienceAustralia/eo-tides/>
-- 📘 **Documentation**: <https://GeoscienceAustralia.github.io/eo-tides/>
-- 🐍 **PyPI**: <https://pypi.org/project/eo-tides/>
+- 📦 **PyPI**: <https://pypi.org/project/eo-tides/>
+- ℹ️ **Documentation**: <https://GeoscienceAustralia.github.io/eo-tides/>
+- 📰 **Paper**: <https://doi.org/10.21105/joss.07786>
 
 <br>
 
@@ -55,11 +56,32 @@ Interactive Jupyter Notebook usage examples and more complex coastal EO case stu
 
 ## Citing `eo-tides`
 
-To cite `eo-tides` in your work, please use the following citation:
+To cite `eo-tides` in your work, please use the following [Journal of Open Source Software](https://doi.org/10.21105/joss.07786) citation:
 
 ```
-Bishop-Taylor, R., Sagar, S., Phillips, C., & Newey, V. (2024). eo-tides: Tide modelling tools for large-scale satellite earth observation analysis. https://github.com/GeoscienceAustralia/eo-tides
+Bishop-Taylor, R., Phillips, C., Sagar, S., Newey, V., & Sutterley, T., (2025). eo-tides: Tide modelling tools for large-scale satellite Earth observation analysis. Journal of Open Source Software, 10(109), 7786, https://doi.org/10.21105/joss.07786
 ```
+
+<details>
+
+<summary>BibTeX</summary>
+
+```
+@article{Bishop-Taylor2025,
+  doi       = {10.21105/joss.07786},
+  url       = {https://doi.org/10.21105/joss.07786},
+  year      = {2025},
+  publisher = {The Open Journal},
+  volume    = {10},
+  number    = {109},
+  pages     = {7786},
+  author    = {Robbi Bishop-Taylor and Claire Phillips and Stephen Sagar and Vanessa Newey and Tyler Sutterley},
+  title     = {eo-tides: Tide modelling tools for large-scale satellite Earth observation analysis},
+  journal   = {Journal of Open Source Software}
+}
+```
+
+</details>
 
 In addition, please consider also citing the underlying [`pyTMD` Python package](https://pytmd.readthedocs.io/en/latest/) which powers the tide modelling functionality behind `eo-tides`:
 

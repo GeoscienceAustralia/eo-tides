@@ -36,9 +36,7 @@ ENSEMBLE_MODELS = ["EOT20", "HAMTIDE11"]  # simplified for tests
     ],
 )
 def test_parallel_splits(total_points, model_count, parallel_max, expected_splits):
-    """
-    Test the _parallel_splits function with various parameter combinations.
-    """
+    """Test the _parallel_splits function with various parameter combinations."""
     result = _parallel_splits(
         total_points=total_points,
         model_count=model_count,
@@ -116,6 +114,54 @@ def test_model_tides(measured_tides_ds, x, y, crs, method, model):
         assert abs(val_stats["Bias"]) < 0.20
 
 
+# Verify constituent subsets can be modelled correctly
+@pytest.mark.parametrize(
+    "model, constituents",
+    [
+        ("EOT20", ["m2"]),
+        (
+            "EOT20",
+            ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
+        ),
+        ("GOT5.5", ["m2"]),
+        (
+            "GOT5.5",
+            ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
+        ),
+        ("HAMTIDE11", ["m2"]),
+        (
+            "HAMTIDE11",
+            ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
+        ),
+    ],
+)
+def test_model_tides_constituents(measured_tides_ds, model, constituents):
+    # Run modelling for locations and timesteps in tide gauge data
+    modelled_tides_df = model_tides(
+        x=[GAUGE_X],
+        y=[GAUGE_Y],
+        time=measured_tides_ds.time,
+        model=model,
+        constituents=constituents,
+    )
+
+    # Run equivalent pyTMD code
+    pytmd_tides = tide_elevations(
+        x=GAUGE_X,
+        y=GAUGE_Y,
+        delta_time=measured_tides_ds.time,
+        DIRECTORY=_set_directory(None),
+        MODEL=model,
+        TIME="datetime",
+        EXTRAPOLATE=True,
+        CUTOFF=np.inf,
+        CONSTITUENTS=constituents,
+    )
+
+    # Verify that pyTMD produces same results as `model_tides`
+    assert np.allclose(modelled_tides_df.tide_height.values, pytmd_tides.data)
+
+
 # Run tests for one or multiple models, and long and wide format outputs
 @pytest.mark.parametrize(
     "models, output_format",
@@ -150,7 +196,7 @@ def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
         # Verify tide model column contains correct values
         assert modelled_tides_df.tide_model.unique().tolist() == models
 
-        # Verify that dataframe has length of original timesteps multipled by
+        # Verify that dataframe has length of original timesteps multiplied by
         # n models
         assert len(modelled_tides_df.index) == len(measured_tides_ds.time) * len(models)
 
@@ -159,7 +205,7 @@ def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
         assert modelled_tides_df.index.names == ["time", "x", "y"]
         assert modelled_tides_df.columns.tolist() == models
 
-        # Verify output has same length as orginal timesteps
+        # Verify output has same length as original timesteps
         assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
 
 
@@ -369,8 +415,8 @@ def test_model_tides_ensemble():
     # least one of the other models
     assert set(modelled_tides_df.columns) == set(models)
     assert all(
-        (modelled_tides_df.EOT20 == modelled_tides_df.ensemble)
-        | (modelled_tides_df.HAMTIDE11 == modelled_tides_df.ensemble)
+        (modelled_tides_df.ensemble == modelled_tides_df.EOT20)
+        | (modelled_tides_df.ensemble == modelled_tides_df.HAMTIDE11),
     )
 
     # Check that correct model is the closest at each row
@@ -404,7 +450,7 @@ def test_model_tides_ensemble():
     )
 
     # Check that expected models exist, and that valid data is produced
-    assert set(modelled_tides_df.columns) == set([
+    assert set(modelled_tides_df.columns) == {
         "EOT20",
         "HAMTIDE11",
         "ensemble-best",
@@ -412,7 +458,7 @@ def test_model_tides_ensemble():
         "ensemble-mean-top2",
         "ensemble-mean-weighted",
         "ensemble-mean",
-    ])
+    }
     assert all(modelled_tides_df.notnull())
 
     # Long mode, custom functions
@@ -427,7 +473,7 @@ def test_model_tides_ensemble():
     )
 
     # Check that expected models exist in "tide_model" column
-    assert set(modelled_tides_df.tide_model) == set([
+    assert set(modelled_tides_df.tide_model) == {
         "EOT20",
         "HAMTIDE11",
         "ensemble-best",
@@ -435,7 +481,7 @@ def test_model_tides_ensemble():
         "ensemble-mean-top2",
         "ensemble-mean-weighted",
         "ensemble-mean",
-    ])
+    }
 
 
 # Test ensemble dtype is set correctly
@@ -457,9 +503,112 @@ def test_model_tides_ensemble_dtype(dtype):
     # Run ensemble modelling on modelled tides input
     ensemble_df = ensemble_tides(modelled_tides_df, ensemble_models=ENSEMBLE_MODELS, crs="EPSG:4326")
 
-    # Verify that output tides match are as expected, and match the iput data
+    # Verify that output tides match are as expected, and match the input data
     assert ensemble_df.tide_height.dtype == dtype
     assert ensemble_df.tide_height.dtype == modelled_tides_df.tide_height.dtype
+
+
+# Test listing extra_databases models from dict and file
+@pytest.mark.parametrize(
+    "extra_databases",
+    [
+        # Extra database as a JSON file
+        ["./tests/data/extra_database.json"],
+        # Extra database as a dictionary
+        [
+            {
+                "elevation": {
+                    "EOT20_custom": {
+                        "format": "FES-netcdf",
+                        "model_file": [
+                            "EOT20/ocean_tides/2N2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/J1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/K1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/K2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/M2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/M4_ocean_eot20.nc",
+                            "EOT20/ocean_tides/MF_ocean_eot20.nc",
+                            "EOT20/ocean_tides/MM_ocean_eot20.nc",
+                            "EOT20/ocean_tides/N2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/O1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/P1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/Q1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/S1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/S2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/SA_ocean_eot20.nc",
+                            "EOT20/ocean_tides/SSA_ocean_eot20.nc",
+                            "EOT20/ocean_tides/T2_ocean_eot20.nc",
+                        ],
+                        "name": "EOT20_custom",
+                        "reference": "https://doi.org/10.17882/79489",
+                        "scale": 0.01,
+                        "type": "z",
+                        "variable": "tide_ocean",
+                        "version": "EOT20",
+                    }
+                }
+            }
+        ],
+    ],
+    ids=["file", "dict"],
+)
+def test_model_tides_extra_databases(extra_databases):
+    # Run modelling for custom tide model in extra database
+    modelled_tides_df = model_tides(
+        x=[GAUGE_X],
+        y=[GAUGE_Y],
+        time=pd.date_range("2020-01-01", "2020-01-02", freq="h"),
+        model=["EOT20_custom", "EOT20"],
+        extra_databases=extra_databases,
+        output_format="wide",
+    )
+
+    # Verify custom column exists and contains data
+    assert "EOT20_custom" in modelled_tides_df
+    assert modelled_tides_df["EOT20_custom"].notna().any()
+    assert np.allclose(modelled_tides_df["EOT20_custom"], modelled_tides_df["EOT20"])
+
+
+@pytest.mark.parametrize(
+    "bad_args, expected_exception",
+    [
+        ({"time": None}, ValueError),
+        ({"method": "cubic"}, ValueError),
+        ({"output_units": "feet"}, ValueError),
+        ({"output_format": "stacked"}, ValueError),
+        ({"x": np.array(["a", "b", "c"])}, TypeError),
+        ({"y": np.array(["a", "b", "c"])}, TypeError),
+        ({"x": np.array([1, 2])}, ValueError),
+        (
+            {"mode": "one-to-one", "time": np.array(["2025-01-01", "2025-01-02"])},
+            ValueError,
+        ),
+    ],
+    ids=[
+        "missing_time",
+        "invalid_method",
+        "invalid_units",
+        "invalid_format",
+        "non_numeric_x",
+        "non_numeric_y",
+        "x_y_length_mismatch",
+        "time_length_mismatch",
+    ],
+)
+def test_model_tides_errors(bad_args, expected_exception):
+    # Dummy valid inputs
+    args = {
+        "x": GAUGE_X,
+        "y": GAUGE_Y,
+        "time": np.array(["2025-01-01", "2025-01-02", "2025-01-03"], dtype="datetime64[ns]"),
+    }
+
+    # Update with bad kwargs
+    args.update(bad_args)
+
+    # Verify error is raised
+    with pytest.raises(expected_exception):
+        model_tides(**args)
 
 
 @pytest.mark.parametrize("time_offset", ["15 min", "20 min"])

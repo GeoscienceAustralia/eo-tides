@@ -176,7 +176,10 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
         extracted_tides = modelled_tides_ds.sel(x=x_coords, y=y_coords, time="2020-01-29", method="nearest")
     except KeyError:
         extracted_tides = modelled_tides_ds.sel(
-            longitude=x_coords, latitude=y_coords, time="2020-01-29", method="nearest"
+            longitude=x_coords,
+            latitude=y_coords,
+            time="2020-01-29",
+            method="nearest",
         )
 
     # Test if extracted tides match expected results (to within ~5 cm)
@@ -358,7 +361,7 @@ def test_pixel_tides_ensemble(satellite_ds):
         ensemble_models=ENSEMBLE_MODELS,
     )
 
-    assert set(modelled_tides_ds.tide_model.values) == set([
+    assert set(modelled_tides_ds.tide_model.values) == {
         "EOT20",
         "HAMTIDE11",
         "ensemble-best",
@@ -366,4 +369,4 @@ def test_pixel_tides_ensemble(satellite_ds):
         "ensemble-mean-top2",
         "ensemble-mean-weighted",
         "ensemble-mean",
-    ])
+    }

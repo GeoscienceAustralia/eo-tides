@@ -1,8 +1,15 @@
+"""Validation tools for comparing modelled tides to observed tide gauge data.
+
+This module provides functions for loading, filtering, and analysing
+observed tide gauge data to validate modelled tide heights.
+"""
+
 import datetime
 import os
 import warnings
 from math import sqrt
 from numbers import Number
+from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
@@ -18,10 +25,8 @@ from .eo import tag_tides
 from .io import load_ndwi_mpc
 
 
-def eval_metrics(x, y, round=3, all_regress=False):
-    """
-    Calculate a set of common statistical metrics
-    based on two input actual and predicted vectors.
+def eval_metrics(x, y, round=3, all_regress=False):  # noqa: A002
+    """Calculate common statistical validation metrics.
 
     These include:
 
@@ -50,8 +55,8 @@ def eval_metrics(x, y, round=3, all_regress=False):
     -------
     pandas.Series
         A `pd.Series` containing all calculated metrics.
-    """
 
+    """
     # Create dataframe to drop na
     xy_df = pd.DataFrame({"x": x, "y": y}).dropna()
 
@@ -81,9 +86,7 @@ def eval_metrics(x, y, round=3, all_regress=False):
 
 
 def _round_date_strings(date, round_type="end"):
-    """
-    Round a date string up or down to the start or end of a given time
-    period.
+    """Round a date string up or down to the start or end of a time period.
 
     Parameters
     ----------
@@ -103,16 +106,16 @@ def _round_date_strings(date, round_type="end"):
 
     Examples
     --------
-    >>> round_date_strings('2020')
+    >>> round_date_strings("2020")
     '2020-12-31 00:00:00'
 
-    >>> round_date_strings('2020-01', round_type='start')
+    >>> round_date_strings("2020-01", round_type="start")
     '2020-01-01 00:00:00'
 
-    >>> round_date_strings('2020-01', round_type='end')
+    >>> round_date_strings("2020-01", round_type="end")
     '2020-01-31 00:00:00'
-    """
 
+    """
     # Determine precision of input date string
     date_segments = len(date.split("-"))
 
@@ -168,7 +171,7 @@ def _load_gesla_dataset(site, path, na_value):
     )
 
     # Combine two date fields
-    gesla_df = (
+    return (
         gesla_df.assign(
             time=pd.to_datetime(gesla_df["date"] + " " + gesla_df["time"]),
             site_code=site,
@@ -176,8 +179,6 @@ def _load_gesla_dataset(site, path, na_value):
         .drop(columns=["date"])
         .set_index("time")
     )
-
-    return gesla_df
 
 
 def _nearest_row(gdf, x, y, max_distance=None):
@@ -197,11 +198,10 @@ def load_gauge_gesla(
     correct_mean=False,
     filter_use_flag=True,
     site_metadata=True,
-    data_path="/gdata1/data/sea_level/gesla/",
-    metadata_path="/gdata1/data/sea_level/GESLA3_ALL 2.csv",
+    data_path="GESLA3.0_ALL",
+    metadata_path="GESLA3_ALL 2.csv",
 ):
-    """
-    Load Global Extreme Sea Level Analysis (GESLA) tide gauge data.
+    """Load Global Extreme Sea Level Analysis (GESLA) tide gauge data.
 
     Load and process all available GESLA measured sea-level data
     with an `x, y, time` spatio-temporal query, or from a list of
@@ -246,11 +246,13 @@ def load_gauge_gesla(
         Whether to add tide gauge station metadata as additional columns
         in the output DataFrame. Defaults to True.
     data_path : str, optional
-        Path to the raw GESLA data files. Default is
-        `/gdata1/data/sea_level/gesla/`.
+        Path to the raw GESLA data files ("GESLA-3 DATA", accessible via:
+        https://gesla787883612.wordpress.com/downloads/). Defaults to
+        "GESLA3.0_ALL".
     metadata_path : str, optional
-        Path to the GESLA station metadata file.
-        Default is `/gdata1/data/sea_level/GESLA3_ALL 2.csv`.
+        Path to the GESLA station metadata file ("GESLA-3 CSV META-DATA FILE",
+        accessible via: https://gesla787883612.wordpress.com/downloads/).
+        Defaults to "GESLA3_ALL 2.csv".
 
     Returns
     -------
@@ -263,7 +265,28 @@ def load_gauge_gesla(
         - "use_flag": Use-in-analysis flag (1 = use, 0 = do not use),
 
         ...and additional columns from station metadata.
+
     """
+    # Expand and validate data and metadata paths
+    data_path = Path(data_path).expanduser()
+    metadata_path = Path(metadata_path).expanduser()
+
+    if not data_path.exists():
+        err_msg = (
+            f"GESLA raw data directory not found at `data_path={data_path}`\n"
+            "Download 'GESLA-3 DATA' from: "
+            "https://gesla787883612.wordpress.com/downloads/"
+        )
+        raise FileNotFoundError(err_msg)
+
+    if not metadata_path.exists():
+        err_msg = (
+            f"GESLA station metadata file not found at: `metadata_path={metadata_path}`\n"
+            "Download the 'GESLA-3 CSV META-DATA FILE' from: "
+            "https://gesla787883612.wordpress.com/downloads/"
+        )
+        raise FileNotFoundError(err_msg)
+
     # Load tide gauge metadata
     metadata_df, metadata_gdf = _load_gauge_metadata(metadata_path)
 
@@ -272,7 +295,7 @@ def load_gauge_gesla(
         site_code = [site_code] if not isinstance(site_code, list) else site_code
 
     # If x and y are tuples, use xy bounds to identify sites
-    elif isinstance(x, (tuple, list)) & isinstance(y, (tuple, list)):
+    elif isinstance(x, tuple | list) & isinstance(y, tuple | list):
         bbox = BoundingBox.from_xy(x, y)
         site_code = metadata_gdf.cx[bbox.left : bbox.right, bbox.top : bbox.bottom].index
 
@@ -283,30 +306,31 @@ def load_gauge_gesla(
             site_code = (
                 _nearest_row(metadata_gdf, x, y, max_distance).rename({"index_right": "site_code"}, axis=1).site_code
             )
-            # site_code = _nearest_row(metadata_gdf, x, y, max_distance).site_code
 
         # Raise exception if no valid tide gauges are found
-        if site_code.isnull().all():
-            raise Exception(f"No tide gauge found within {max_distance} degrees of {x}, {y}.")
+        if site_code.isna().all():
+            err_msg = f"No tide gauge found within {max_distance} degrees of {x}, {y}."
+            raise Exception(err_msg)
 
     # Otherwise if all are None, return all available site codes
     elif (site_code is None) & (x is None) & (y is None):
         site_code = metadata_df.index.to_list()
 
     else:
-        raise TypeError(
-            "`x` and `y` must be provided as either singular coordinates (e.g. `x=150`), or as a tuple bounding box (e.g. `x=(150, 152)`)."
+        err_msg = (
+            "`x` and `y` must be provided as either singular coordinates (e.g. `x=150`), or as a tuple bounding box (e.g. `x=(150, 152)`).",
         )
+        raise Exception(err_msg)
 
     # Prepare times
     if time is None:
         time = ["1800", str(datetime.datetime.now().year)]
-    time = [time] if not isinstance(time, (list, tuple)) else time
+    time = [time] if not isinstance(time, list | tuple) else time
     start_time = _round_date_strings(time[0], round_type="start")
     end_time = _round_date_strings(time[-1], round_type="end")
 
     # Identify paths to load and nodata values for each site
-    metadata_df["file_name"] = data_path + metadata_df["file_name"]
+    metadata_df["file_name"] = data_path / metadata_df["file_name"]
     paths_na = metadata_df.loc[site_code, ["file_name", "null_value"]]
 
     # Load and combine into a single dataframe
@@ -328,7 +352,7 @@ def load_gauge_gesla(
     data_df = data_df.set_index("time", append=True)
     duplicates = data_df.index.duplicated()
     if duplicates.sum() > 0:
-        warnings.warn("Duplicate timestamps were removed.")
+        warnings.warn("Duplicate timestamps were removed.", stacklevel=2)
         data_df = data_df.loc[~duplicates]
 
     # Remove observed mean sea level if requested
@@ -354,10 +378,7 @@ def model_rankings_ndwi(
     load_ls: bool = True,
     load_s2: bool = True,
 ):
-    """
-    Ranks tide models at a coastal location based on their
-    correlation with satellite-observed inundation patterns
-    derived from the Normalised Difference Water Index (NDWI).
+    """Ranks tide models based on their correlation with satellite-observed NDWI inundation patterns.
 
     Correlations are calculated across a buffered region around
     an input point. High correlations indicate that a tide model
@@ -428,6 +449,7 @@ def model_rankings_ndwi(
         intertidal pixels, with dynamic wetness frequency (e.g. not
         always dry or wet), and with a positive correlation with tide
         heights from at least one tide model.
+
     """
     # Create circular study area around point
     geom = point(x=x, y=y, crs=crs).to_crs("utm").buffer(buffer_radius).to_crs("EPSG:4326")
@@ -446,7 +468,7 @@ def model_rankings_ndwi(
     # Threshold NDWI to identify wet pixels, then calculate
     # overall wetness frequency (making sure NaN pixels are
     # correctly masked to ensure correct statistics)
-    wet = (ndwi > ndwi_threshold).where(ndwi.notnull())
+    wet = (ndwi > ndwi_threshold).where(ndwi.notna())
     freq = wet.mean(dim="time")
 
     # Model tides using selected models (all available by default)
@@ -465,7 +487,7 @@ def model_rankings_ndwi(
 
     # Calculate mean correlation per model and valid data coverage
     corr_mean = corr_clean.mean(dim=["x", "y"])
-    valid_perc = corr_clean.notnull().mean().item()
+    valid_perc = corr_clean.notna().mean().item()
 
     # Create DataFrame with correlation and rank
     corr_df = (

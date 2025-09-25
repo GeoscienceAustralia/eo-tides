@@ -1,10 +1,29 @@
 ## Citing `eo-tides`
 
-To cite `eo-tides` in your work, please use the following software citation:
+To cite `eo-tides` in your work, please use the following [Journal of Open Source Software](https://doi.org/10.21105/joss.07786) citation:
 
-```
-Bishop-Taylor, R., Sagar, S., Phillips, C., & Newey, V. (2024). eo-tides: Tide modelling tools for large-scale satellite earth observation analysis. https://github.com/GeoscienceAustralia/eo-tides
-```
+=== "Plain text"
+
+    ```
+    Bishop-Taylor, R., Phillips, C., Sagar, S., Newey, V., & Sutterley, T., (2025). eo-tides: Tide modelling tools for large-scale satellite Earth observation analysis. Journal of Open Source Software, 10(109), 7786, https://doi.org/10.21105/joss.07786
+    ```
+
+=== "BibTeX"
+
+    ```
+    @article{Bishop-Taylor2025,
+    doi       = {10.21105/joss.07786},
+    url       = {https://doi.org/10.21105/joss.07786},
+    year      = {2025},
+    publisher = {The Open Journal},
+    volume    = {10},
+    number    = {109},
+    pages     = {7786},
+    author    = {Robbi Bishop-Taylor and Claire Phillips and Stephen Sagar and Vanessa Newey and Tyler Sutterley},
+    title     = {eo-tides: Tide modelling tools for large-scale satellite Earth observation analysis},
+    journal   = {Journal of Open Source Software}
+    }
+    ```
 
 In addition, please consider also citing the underlying [`pyTMD` Python package](https://pytmd.readthedocs.io/en/latest/) which powers the tide modelling functionality behind `eo-tides`:
 
@@ -16,7 +35,7 @@ Sutterley, T. C., Alley, K., Brunt, K., Howard, S., Padman, L., Siegfried, M. (2
 
 `eo-tides` builds on (and wouldn't be possible without!) fundamental tide modelling tools provided by `pyTMD`. The authors wish to thank Dr. Tyler Sutterley for his ongoing development and support of this incredible modelling tool.
 
-Functions from `eo-tides` were originally developed in the [`Digital Earth Australia Notebooks and Tools` repository](https://github.com/GeoscienceAustralia/dea-notebooks/). The authors would like to thank all DEA Notebooks contributers and maintainers for their invaluable assistance with code review, feature suggestions and code edits.
+Functions from `eo-tides` were originally developed in the [`Digital Earth Australia Notebooks and Tools` repository](https://github.com/GeoscienceAustralia/dea-notebooks/). The authors would like to thank all DEA Notebooks contributors and maintainers for their invaluable assistance with code review, feature suggestions and code edits.
 
 FES Finite Element Solution tide models were developed, validated by the CTOH/LEGOS, France and distributed by Aviso+: <https://www.aviso.altimetry.fr/en/data/products/sea-surface-height-products/regional/x-track-sla/x-track-l2p-sla-version-2022.html>
 

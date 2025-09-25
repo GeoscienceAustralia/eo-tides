@@ -1,0 +1,49 @@
+name: Upgrade package version
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: "Version bump type (patch by default)"
+        required: false
+        default: "patch"
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Bump version
+        run: |
+          uv version --bump ${{ inputs.bump_type || 'patch' }}
+          uv sync --all-extras
+          NEW_VERSION=$(grep -m 1 "version = " pyproject.toml | cut -d '"' -f 2)
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Bump version to ${{ env.NEW_VERSION }} [skip ci]"
+          file_pattern: "pyproject.toml uv.lock"
+
+      - name: Create Release
+        if: success()
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ env.NEW_VERSION }}
+          tag_name: ${{ env.NEW_VERSION }}
+          generate_release_notes: true
+          token: ${{ secrets.PAT }} # token allows other Github actions to be triggered by release

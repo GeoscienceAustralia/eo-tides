@@ -1,0 +1,48 @@
+name: Build and publish package and docs
+
+on:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+
+jobs:
+  # Publish package to PyPI
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      # Check out Git repository with full history
+      # Required for `hatchling-vcs` to get correct version
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Set up environment using `uv`
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+
+      # Package will be built using version automatically
+      # generated from Git by `hatchling-vcs`
+      - name: Build package
+        run: uv build
+
+      # Publish to PyPI
+      - name: Publish package
+        run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+
+  # Deploy documentation to public-facing site
+  deploy-docs:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Deploy documentation
+        run: uv run mkdocs gh-deploy --force

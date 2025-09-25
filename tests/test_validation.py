@@ -9,14 +9,20 @@ GAUGE_Y = -18.0008
 
 # Run test for different spatial searches
 @pytest.mark.parametrize(
-    "x, y, site_code, max_distance, correct_mean, expected",
+    ("x", "y", "site_code", "max_distance", "correct_mean", "expected"),
     [
         # Test nearest gauge lookup
         (GAUGE_X, GAUGE_Y, None, None, False, ["62650"]),
         (-117.4, 32.6, None, None, False, ["569A"]),
         (152.0, -33.0, None, None, True, ["60370"]),
         pytest.param(
-            GAUGE_X + 1, GAUGE_Y, None, 0.1, False, ["62650"], marks=pytest.mark.xfail(reason="No nearest gauge")
+            GAUGE_X + 1,
+            GAUGE_Y,
+            None,
+            0.1,
+            False,
+            ["62650"],
+            marks=pytest.mark.xfail(reason="No nearest gauge"),
         ),
         # Test bounding box lookup
         ((GAUGE_X - 0.2, GAUGE_X + 0.2), (GAUGE_Y - 0.2, GAUGE_Y + 0.2), None, None, False, ["62650"]),
@@ -45,7 +51,7 @@ def test_load_gauge_gesla(x, y, site_code, max_distance, correct_mean, expected)
         max_distance=max_distance,
         correct_mean=correct_mean,
         time=("2018-01-01", "2018-01-20"),
-        data_path="tests/data/",
+        data_path="tests/data/GESLA3.0_ALL/",
         metadata_path="tests/data/GESLA3_ALL 2.csv",
     )
 

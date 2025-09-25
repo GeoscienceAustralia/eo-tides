@@ -1,3 +1,5 @@
+exclude: ^docs/changelog\.md$
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: "v4.4.0"
@@ -10,18 +12,23 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
-    rev: v0.6.4
+    rev: "v0.12.9"
     hooks:
-      # Run the linter.
-      - id: ruff
-        types_or: [python, pyi]
-        args: [--fix, --select=I] # --select=ALL, I
-      # Run the formatter.
-      - id: ruff-format
-        types_or: [python, pyi]
+      - id: ruff-check # Run linter using pyproject.toml config
+      - id: ruff-format # Run formatter using pyproject.toml config
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: "v3.0.3"
     hooks:
       - id: prettier
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: "0.8.11"
+    hooks:
+      - id: uv-lock
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: "v2.4.1"
+    hooks:
+      - id: codespell
+        additional_dependencies: ["tomli; python_version < '3.11'"]

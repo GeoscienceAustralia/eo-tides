@@ -1,9 +1,6 @@
-"""
-This module contains shared fixtures for eo_tides tests.
-"""
+"""This module contains shared fixtures for eo_tides tests."""
 
 from copy import deepcopy
-from pathlib import Path
 
 import numpy as np
 import odc.stac
@@ -11,16 +8,14 @@ import pandas as pd
 import planetary_computer
 import pystac_client
 import pytest
-import xarray as xr
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
 
 
-@pytest.fixture()
+@pytest.fixture
 def measured_tides_ds():
-    """
-    Load measured sea level data from the Broome ABSLMP tidal station:
+    """Load measured sea level data from the Broome ABSLMP tidal station:
     http://www.bom.gov.au/oceanography/projects/abslmp/data/data.shtml
     """
     # Metadata for Broome ABSLMP tidal station:
@@ -56,8 +51,7 @@ def measured_tides_ds():
     scope="session",  # only load data once, but copy for each test
 )
 def satellite_ds_load(request):
-    """
-    Load a sample timeseries of Landsat 8 data from either
+    """Load a sample timeseries of Landsat 8 data from either
     Microsoft Planetary Computer or Digital Earth Australia's
     STAC APIs using odc-stac.
     """
@@ -127,7 +121,7 @@ def satellite_ds_load(request):
         )
 
         # Search the STAC catalog for all items matching the query
-        ds = odc.stac.load(
+        return odc.stac.load(
             list(query.items()),
             bands=["nbart_red"],
             crs=crs,
@@ -138,121 +132,10 @@ def satellite_ds_load(request):
             chunks={},
         )
 
-        return ds
-
 
 @pytest.fixture
 def satellite_ds(satellite_ds_load):
-    """
-    Make a copy of the previously loaded satellite data for
+    """Make a copy of the previously loaded satellite data for
     each test to ensure each test is independent
     """
     return deepcopy(satellite_ds_load)
-
-
-# Run once per session to generate symethic HAMTIDE11 files; autouse=True
-# allows this to run without being specifically called in tests
-@pytest.fixture(scope="session", autouse=True)
-def create_synthetic_hamtide11(base_dir="tests/data/tide_models_synthetic"):
-    """
-    Generates and exports synthetic HAMTIDE11 model data
-    to test clipping functionality.
-    """
-    base_dir = Path(base_dir)  # Ensure base_dir is a Path object
-
-    # Create coordinate arrays
-    lon = np.arange(0, 360.125, 0.125)  # 2881 points
-    lat = np.arange(-90, 90.125, 0.125)  # 1441 points
-
-    # List of HAMTIDE11 tidal constituents
-    constituents = ["2n", "k1", "k2", "m2", "n2", "o1", "p1", "q1", "s2"]
-
-    # Create HAMTIDE11 output directory
-    hamtide_dir = base_dir / "hamtide"
-    hamtide_dir.mkdir(parents=True, exist_ok=True)
-
-    # Create and save a NetCDF for each constituent
-    for constituent in constituents:
-        # Create synthetic HAMTIDE11 dataset with random data
-        shape = (len(lat), len(lon))  # 1441, 2881
-        data = np.random.random(shape).astype(np.float32)
-        ds = xr.Dataset(
-            {
-                "RE": (("LAT", "LON"), data),
-                "IM": (("LAT", "LON"), data),
-                "AMPL": (("LAT", "LON"), data),
-                "PHAS": (("LAT", "LON"), data),
-            },
-            coords={"LON": lon, "LAT": lat},
-            attrs={"title": f"HAMTIDE11a: {constituent} ocean tide"},
-        )
-
-        # Export
-        filename = hamtide_dir / f"{constituent}.hamtide11a.nc"
-        ds.to_netcdf(filename)
-
-
-# Run once per session to generate symethic EOT20 files; autouse=True
-# allows this to run without being specifically called in tests
-@pytest.fixture(scope="session", autouse=True)
-def create_synthetic_eot20(base_dir="tests/data/tide_models_synthetic"):
-    """
-    Generates and exports synthetic EOT20 model data
-    to test clipping functionality.
-    """
-    base_dir = Path(base_dir)  # Ensure base_dir is a Path object
-
-    # Create coordinate arrays
-    lon = np.arange(0, 360.125, 0.125)  # 2881 points
-    lat = np.arange(-90, 90.125, 0.125)  # 1441 points
-
-    # List of EOT20 tidal constituents
-    constituents = [
-        "2N2",
-        "J1",
-        "K1",
-        "K2",
-        "M2",
-        "M4",
-        "MF",
-        "MM",
-        "N2",
-        "O1",
-        "P1",
-        "Q1",
-        "S1",
-        "S2",
-        "SA",
-        "SSA",
-        "T2",
-    ]
-
-    # Create EOT20 output directory
-    eot20_dir = base_dir / "EOT20/ocean_tides"
-    eot20_dir.mkdir(parents=True, exist_ok=True)
-
-    # Create and save a NetCDF for each constituent
-    for constituent in constituents:
-        # Create synthetic EOT20 dataset with random data
-        shape = (len(lat), len(lon))  # 1441, 2881
-        data = np.random.random(shape).astype(np.float64)
-
-        # Add NaN values to match original
-        mask = np.random.random(shape) < 0.2
-        data[mask] = np.nan
-
-        # Create the dataset
-        ds = xr.Dataset(
-            {
-                "amplitude": (("lat", "lon"), data),
-                "phase": (("lat", "lon"), data),
-                "imag": (("lat", "lon"), data),
-                "real": (("lat", "lon"), data),
-            },
-            coords={"lat": lat, "lon": lon},
-            attrs={"title": f"DGFI-TUM global empirical ocean tide model"},
-        )
-
-        # Export
-        filename = eot20_dir / f"{constituent}_ocean_eot20.nc"
-        ds.to_netcdf(filename)
