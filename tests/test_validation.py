@@ -51,8 +51,8 @@ def test_load_gauge_gesla(x, y, site_code, max_distance, correct_mean, expected)
         max_distance=max_distance,
         correct_mean=correct_mean,
         time=("2018-01-01", "2018-01-20"),
-        data_path="tests/data/GESLA3.0_ALL/",
-        metadata_path="tests/data/GESLA3_ALL 2.csv",
+        data_path="tests/data/GESLA4_ALL/",
+        metadata_path="tests/data/GESLA4_ALL.csv",
     )
 
     assert "sea_level" in gauge_df.columns

@@ -198,8 +198,8 @@ def load_gauge_gesla(
     correct_mean=False,
     filter_use_flag=True,
     site_metadata=True,
-    data_path="GESLA3.0_ALL",
-    metadata_path="GESLA3_ALL 2.csv",
+    data_path="GESLA4_ALL",
+    metadata_path="GESLA4_ALL.csv",
 ):
     """Load Global Extreme Sea Level Analysis (GESLA) tide gauge data.
 
@@ -246,13 +246,13 @@ def load_gauge_gesla(
         Whether to add tide gauge station metadata as additional columns
         in the output DataFrame. Defaults to True.
     data_path : str, optional
-        Path to the raw GESLA data files ("GESLA-3 DATA", accessible via:
+        Path to the raw GESLA data files ("GESLA-4 DATA", accessible via:
         https://gesla787883612.wordpress.com/downloads/). Defaults to
-        "GESLA3.0_ALL".
+        "GESLA4_ALL".
     metadata_path : str, optional
-        Path to the GESLA station metadata file ("GESLA-3 CSV META-DATA FILE",
+        Path to the GESLA station metadata file ("GESLA-4 CSV META-DATA FILE",
         accessible via: https://gesla787883612.wordpress.com/downloads/).
-        Defaults to "GESLA3_ALL 2.csv".
+        Defaults to "GESLA4_ALL.csv".
 
     Returns
     -------
@@ -273,16 +273,16 @@ def load_gauge_gesla(
 
     if not data_path.exists():
         err_msg = (
-            f"GESLA raw data directory not found at `data_path={data_path}`\n"
-            "Download 'GESLA-3 DATA' from: "
+            f"GESLA raw data directory not found at `data_path={data_path}`.\n"
+            "Download 'GESLA-4 DATA' from: "
             "https://gesla787883612.wordpress.com/downloads/"
         )
         raise FileNotFoundError(err_msg)
 
     if not metadata_path.exists():
         err_msg = (
-            f"GESLA station metadata file not found at: `metadata_path={metadata_path}`\n"
-            "Download the 'GESLA-3 CSV META-DATA FILE' from: "
+            f"GESLA station metadata file not found at: `metadata_path={metadata_path}`.\n"
+            "Download the 'GESLA-4 CSV META-DATA FILE' from: "
             "https://gesla787883612.wordpress.com/downloads/"
         )
         raise FileNotFoundError(err_msg)
