@@ -22,7 +22,7 @@ from shapely.geometry import Point
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 from .eo import tag_tides
-from .io import load_ndwi_mpc
+from .stac import load_ndwi_mpc
 
 
 def eval_metrics(x, y, round=3, all_regress=False):  # noqa: A002
@@ -363,7 +363,7 @@ def load_gauge_gesla(
     return data_df
 
 
-def model_rankings_ndwi(
+def ndwi_tide_corr(
     x: float,
     y: float,
     time_range: tuple[str, str] = ("2022", "2024"),
@@ -377,6 +377,7 @@ def model_rankings_ndwi(
     corr_min: float = 0.15,
     load_ls: bool = True,
     load_s2: bool = True,
+    **tag_tides_kwargs,
 ):
     """Ranks tide models based on their correlation with satellite-observed NDWI inundation patterns.
 
@@ -436,6 +437,9 @@ def model_rankings_ndwi(
         Whether to load Landsat data in the NDWI computation.
     load_s2 : bool, optional
         Whether to load Sentinel-2 data in the NDWI computation.
+    **tag_tides_kwargs :
+        Optional parameters passed to the `eo_tides.eo.tag_tides`
+        function that is used to model tides.
 
     Returns
     -------
@@ -444,7 +448,7 @@ def model_rankings_ndwi(
         Columns include:
         - 'correlation': mean NDWI-tide height correlation for each model
         - 'rank': model rank based on correlation (1 = highest)
-    corr_clean : xr.DataArray
+    corr_da : xr.DataArray
         Per-pixel correlations for each model, restricted to likely
         intertidal pixels, with dynamic wetness frequency (e.g. not
         always dry or wet), and with a positive correlation with tide
@@ -468,11 +472,11 @@ def model_rankings_ndwi(
     # Threshold NDWI to identify wet pixels, then calculate
     # overall wetness frequency (making sure NaN pixels are
     # correctly masked to ensure correct statistics)
-    wet = (ndwi > ndwi_threshold).where(ndwi.notna())
+    wet = (ndwi > ndwi_threshold).where(ndwi.notnull())
     freq = wet.mean(dim="time")
 
     # Model tides using selected models (all available by default)
-    tides_da = tag_tides(ndwi, model=model, directory=directory)
+    tides_da = tag_tides(ndwi, model=model, directory=directory, **tag_tides_kwargs)
 
     # Calculate correlation between wetness and each tide model
     corr = xr.corr(wet, tides_da, dim="time")
@@ -482,12 +486,12 @@ def model_rankings_ndwi(
     # with a positive correlation with tide heights from at
     # least one tide model
     corr_max = corr.max(dim="tide_model")
-    corr_clean = corr.where((freq >= freq_min) & (freq <= freq_max) & (corr_max >= corr_min))
-    corr_clean.load()
+    corr_da = corr.where((freq >= freq_min) & (freq <= freq_max) & (corr_max >= corr_min))
+    corr_da.load()
 
     # Calculate mean correlation per model and valid data coverage
-    corr_mean = corr_clean.mean(dim=["x", "y"])
-    valid_perc = corr_clean.notna().mean().item()
+    corr_mean = corr_da.mean(dim=["x", "y"])
+    valid_perc = corr_da.notnull().mean().item()
 
     # Create DataFrame with correlation and rank
     corr_df = (
@@ -503,4 +507,4 @@ def model_rankings_ndwi(
         .set_index(["x", "y"], append=True)
     )
 
-    return corr_df, corr_clean
+    return corr_df, corr_da
