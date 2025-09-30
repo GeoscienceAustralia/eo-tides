@@ -4,11 +4,11 @@ from copy import deepcopy
 
 import numpy as np
 
-# import odc.stac
+import odc.stac
 import pandas as pd
 
-# import planetary_computer
-# import pystac_client
+import planetary_computer
+import pystac_client
 import pytest
 
 from eo_tides.stac import stac_load
@@ -100,8 +100,9 @@ def satellite_ds_load(request):
         #     chunks={},
         # )
 
-        ds = stac_load(
+        ds, _ = stac_load(
             product="landsat-c2-l2",
+            bands=["red"],
             time_range=("2020-01", "2020-02"),
             x=(bbox[0], bbox[2]),
             y=(bbox[1], bbox[3]),
