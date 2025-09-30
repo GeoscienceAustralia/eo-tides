@@ -103,7 +103,7 @@ def satellite_ds_load(request):
         ds, _ = stac_load(
             product="landsat-c2-l2",
             bands=["red"],
-            time_range=("2020-01", "2020-02"),
+            time=("2020-01", "2020-02"),
             x=(bbox[0], bbox[2]),
             y=(bbox[1], bbox[3]),
             crs=crs,
