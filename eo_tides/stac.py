@@ -26,7 +26,8 @@ if TYPE_CHECKING:
 
 def stac_load(
     product: str,
-    time_range: tuple[str, str] | None = None,
+    bands: str | list[str] | tuple[str, ...] | None = None,
+    time: tuple[str, str] | None = None,
     x: tuple[float, float] | None = None,
     y: tuple[float, float] | None = None,
     geom: Geometry | None = None,
@@ -46,7 +47,10 @@ def stac_load(
     ----------
     product : str
         The name of the product (i.e. STAC "collection") to load.
-    time_range : tuple, optional
+    bands : str or list, optional
+        List of band names to load, defaults to all. Also accepts a
+        single band name (e.g. "red").
+    time : tuple, optional
         The time range to load data for as a tuple of strings (e.g.
         `("2020", "2021")`. If not provided, data will be loaded for
         all available timesteps.
@@ -81,7 +85,7 @@ def stac_load(
     )
 
     # Set up time for query
-    time_range = "/".join(time_range) if time_range is not None else None
+    time = "/".join(time) if time is not None else None
 
     # Set up bounding box for query
     if geom is not None:
@@ -105,7 +109,7 @@ def stac_load(
     search = catalog.search(
         collections=product,
         bbox=(bbox.left, bbox.bottom, bbox.right, bbox.top),
-        datetime=time_range,
+        datetime=time,
         query=stac_query if stac_query is not None else None,
     )
 
@@ -116,6 +120,7 @@ def stac_load(
     # Load with ODC STAC
     ds = odc.stac.load(
         items=items,
+        bands=bands,
         bbox=(bbox.left, bbox.bottom, bbox.right, bbox.top),
         **load_params,
     )
@@ -127,7 +132,7 @@ def load_ndwi_mpc(
     x: tuple[float, float] | None = None,
     y: tuple[float, float] | None = None,
     geom: Geometry | None = None,
-    time_range: tuple[str, str] = ("2022", "2024"),
+    time: tuple[str, str] = ("2022", "2024"),
     crs: str = "utm",
     resolution: int = 30,
     resampling: str = "cubic",
@@ -152,7 +157,7 @@ def load_ndwi_mpc(
     geom : datacube Geometry, optional
         An optional datacube geometry object representing the spatial extents to
         load data for. If provided, `x` and `y` will be ignored.
-    time_range : tuple, optional
+    time : tuple, optional
         The time range to load data for as a tuple of strings (e.g.
         `("2020", "2021")`. If not provided, data will be loaded for
         a three year epoch from 2022 to 2024.
@@ -189,7 +194,7 @@ def load_ndwi_mpc(
     """
     # Assemble parameters used for querying STAC API
     query_params = {
-        "time_range": time_range,
+        "time": time,
         "geom": geom if geom is not None else None,
         "x": x if geom is None else None,
         "y": y if geom is None else None,

@@ -109,8 +109,10 @@ def satellite_ds_load(request):
             crs=crs,
             resolution=res,
             groupby="solar_day",
+            stac_query={
+                "platform": {"in": ["landsat-8"]},
+            },
             fail_on_error=False,
-            chunks={},
         )
 
         # Rename for compatibility with original DEA tests

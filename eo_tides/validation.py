@@ -366,7 +366,7 @@ def load_gauge_gesla(
 def ndwi_tide_corr(
     x: float,
     y: float,
-    time_range: tuple[str, str] = ("2022", "2024"),
+    time: tuple[str, str] = ("2022", "2024"),
     model: str | list[str] = "all",
     directory: str | os.PathLike | None = None,
     crs: str = "EPSG:4326",
@@ -397,7 +397,7 @@ def ndwi_tide_corr(
         Y coordinate of the coastal point of interest. By default
         this should be in "EPSG:4326" degrees latitude; use
         "crs" for custom coordinate reference systems.
-    time_range : tuple, optional
+    time : tuple, optional
         The time range to load data for as a tuple of strings (e.g.
         `("2020", "2021")`. If not provided, data will be loaded for
         all available timesteps.
@@ -461,7 +461,7 @@ def ndwi_tide_corr(
     # Load time series NDWI for selected time period and location
     ndwi = load_ndwi_mpc(
         geom=geom,
-        time_range=time_range,
+        time=time,
         load_ls=load_ls,
         load_s2=load_s2,
     ).ndwi
