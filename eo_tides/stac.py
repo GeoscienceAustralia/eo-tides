@@ -121,24 +121,6 @@ def stac_load(
     # Set up time for query
     time = "/".join(time) if time is not None else None
 
-    # # Set up bounding box for query
-    # if geom is not None:
-    #     bbox = geom.boundingbox
-    # elif (x is not None) and (y is not None):
-    #     bbox = BoundingBox.from_xy(x, y)
-    # else:
-    #     err_msg = "Must provide either `x` and `y`, or `geom`"
-    #     raise Exception(err_msg)
-
-    # # Ensure longitude is between -180 to 180:
-    # if (bbox.left >= 180) or (bbox.right >= 180):
-    #     bbox = BoundingBox(
-    #         left=bbox.left - 360,
-    #         bottom=bbox.bottom,
-    #         right=bbox.right - 360,
-    #         top=bbox.top,
-    #     )
-
     # Extract degree lat/lon bounding box for STAC query
     bbox_4326 = _get_bbox(bbox=bbox, geopolygon=geopolygon, lon=lon, lat=lat)
 
