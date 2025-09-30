@@ -73,7 +73,6 @@ def test_ndwi_tide_corr():
         x=x,
         y=y,
         time=("2024", "2024"),
-        directory=directory,
         cloud_cover=10,
         load_s2=False,
     )
