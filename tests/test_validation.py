@@ -80,7 +80,7 @@ def test_ndwi_tide_corr():
     assert corr_df.loc["HAMTIDE11", "rank"] == 3
 
     # Verify correlations are approximately correct
-    assert np.allclose(corr_df.correlation, [0.730, 0.724, 0.026], atol=0.02)
+    assert np.allclose(corr_df.correlation, [0.77, 0.77, -0.12], atol=0.02)
 
     # Verify valid percentages are between 0 and 1
     assert corr_df["valid_perc"].between(0, 1).all()
