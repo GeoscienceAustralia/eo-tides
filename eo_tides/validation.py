@@ -375,6 +375,7 @@ def ndwi_tide_corr(
     freq_min: float = 0.01,
     freq_max: float = 0.99,
     corr_min: float = 0.15,
+    cloud_cover: float = 90,
     load_ls: bool = True,
     load_s2: bool = True,
     **tag_tides_kwargs,
@@ -433,6 +434,8 @@ def ndwi_tide_corr(
         a like-for-like comparison, model rankings are based on the
         average correlation across every pixel with a positive
         correlation of at least `corr_min` in any individual input model.
+    cloud_cover : int, optional
+        The maximum threshold of cloud cover to load. Defaults to 90%.
     load_ls : bool, optional
         Whether to load Landsat data in the NDWI computation.
     load_s2 : bool, optional
@@ -462,6 +465,7 @@ def ndwi_tide_corr(
     ndwi = load_ndwi_mpc(
         geom=geom,
         time=time,
+        cloud_cover=cloud_cover,
         load_ls=load_ls,
         load_s2=load_s2,
     ).ndwi
@@ -493,18 +497,18 @@ def ndwi_tide_corr(
     corr_mean = corr_da.mean(dim=["x", "y"])
     valid_perc = corr_da.notnull().mean().item()
 
+    # return corr_mean, valid_perc
+
     # Create DataFrame with correlation and rank
     corr_df = (
         # Convert to dataframe
         corr_mean.to_dataframe(name="correlation")
         .drop("spatial_ref", axis=1)
         # Add rankings
-        .assign(rank=lambda df: df.correlation.rank(ascending=False).astype("float32"))
-        # Transpose to put models as columns and stats as rows
-        .T.rename_axis("statistic")
-        # Add metadata, set point coords as index
+        .assign(rank=lambda df: df.correlation.rank(ascending=False))
+        .astype("float32")
+        # Add metadata
         .assign(x=x, y=y, valid_perc=valid_perc)
-        .set_index(["x", "y"], append=True)
     )
 
     return corr_df, corr_da
