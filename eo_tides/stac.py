@@ -48,18 +48,17 @@ def stac_load(
     product : str
         The name of the product (i.e. STAC "collection") to load.
     bands : str or list, optional
-        List of band names to load, defaults to all. Also accepts a
+        List of band names to load. Defaults to all, also accepts a
         single band name (e.g. "red").
     time : tuple, optional
         The time range to load data for as a tuple of strings (e.g.
         `("2020", "2021")`. If not provided, data will be loaded for
         all available timesteps.
     x, y : tuple, optional
-        Tuples defining the x and y bounding box to load, in WGS 84.
-    geom : datacube Geometry, optional
-        An `odc.geo.geom.Geometry` geometry object representing the
-        spatial extents to load data for. If provided, `x` and `y`
-        will be ignored.
+        Tuples defining the spatial x and y extent to load, in degrees.
+    geom : odc.geo.geom.Geometry, optional
+        An `odc.geo.geom.Geometry` geometry object defining the
+        spatial extent to load. If provided, `x` and `y` will be ignored.
     stac_query : dict, optional
         A query dictionary to further filter the data using STAC metadata.
         If not provided, no additional filtering will be applied. For
@@ -68,7 +67,8 @@ def stac_load(
         The URL of the STAC API endpoint to query and load data from.
         Defaults to "https://planetarycomputer.microsoft.com/api/stac/v1".
     **load_params : dict
-        Additional parameters to be passed to `odc.stac.load()`.
+        Additional parameters to be passed to `odc.stac.load()` to customise
+        how data is loaded.
 
     Returns
     -------
@@ -153,10 +153,10 @@ def load_ndwi_mpc(
     Parameters
     ----------
     x, y : tuple, optional
-        Tuples defining the x and y bounding box to load, in WGS 84.
-    geom : datacube Geometry, optional
-        An optional datacube geometry object representing the spatial extents to
-        load data for. If provided, `x` and `y` will be ignored.
+        Tuples defining the spatial x and y extent to load, in degrees.
+    geom : odc.geo.geom.Geometry, optional
+        An `odc.geo.geom.Geometry` geometry object defining the
+        spatial extent to load. If provided, `x` and `y` will be ignored.
     time : tuple, optional
         The time range to load data for as a tuple of strings (e.g.
         `("2020", "2021")`. If not provided, data will be loaded for
