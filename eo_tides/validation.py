@@ -457,6 +457,14 @@ def ndwi_tide_corr(
         always dry or wet), and with a positive correlation with tide
         heights from at least one tide model.
 
+    Example
+    -------
+    Run NDWI-tide correlation for a specific location.
+
+    >>> from eo_tides import ndwi_tide_corr
+    >>> y, x = -16.99636, 123.61017
+    >>> corr_df, corr_da = ndwi_tide_corr(x=x, y=y, directory="tide_models/", cloud_cover=10)
+
     """
     # Create circular study area around point
     geom = point(x=x, y=y, crs=crs).to_crs("utm").buffer(buffer_radius).to_crs("EPSG:4326")
