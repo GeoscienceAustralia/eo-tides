@@ -17,6 +17,7 @@ Modules
 -------
 model : Core tide modelling functionality
 eo : Tools for integrating satellite EO data with tide modelling
+stac : Tools for loading satellite EO data using STAC
 stats : Tools for analysing local tide dynamics and satellite biases
 utils : General-purpose utilities for tide model setup and data processing
 validation : Validation tools for comparing modelled tides to observed tide gauge data.
@@ -27,9 +28,10 @@ from importlib.metadata import version
 # Import commonly used functions for convenience
 from .eo import pixel_tides, tag_tides
 from .model import ensemble_tides, model_phases, model_tides
+from .stac import load_ndwi_mpc, stac_load
 from .stats import pixel_stats, tide_aliasing, tide_stats
 from .utils import clip_models, idw, list_models
-from .validation import eval_metrics, load_gauge_gesla
+from .validation import eval_metrics, load_gauge_gesla, ndwi_tide_corr
 
 # Define what should be imported with "from eo_tides import *"
 __all__ = [
@@ -39,10 +41,13 @@ __all__ = [
     "idw",
     "list_models",
     "load_gauge_gesla",
+    "load_ndwi_mpc",
     "model_phases",
     "model_tides",
+    "ndwi_tide_corr",
     "pixel_stats",
     "pixel_tides",
+    "stac_load",
     "tag_tides",
     "tide_aliasing",
     "tide_stats",

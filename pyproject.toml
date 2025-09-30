@@ -128,6 +128,7 @@ lint.ignore = [
   "TRY002",   # Allow non-custom exceptions
   "FBT002",   # Allow boolean default positional arguments
   "FBT001",   # Allow boolean default positional arguments
+  "B006",     # Allow mutable default arguments
   "C901",     # Ignore too complex function
   "D211",     # Ignore mutually exclusive one-blank-line-before-class rule
   "D213",     # Ignore mutually exclusive one-blank-line-before-class rule
@@ -135,8 +136,9 @@ lint.ignore = [
   "TD",       # Ignore missing info in TODO
   "ERA001",   # Ignore commented out code (to revert)
   "ANN",      # Allow missing type annotations (to revert)
-  "COM812",   # Ignored as recommended by ruff
-  "D203",     # Ignored as recommended by ruff
+  "COM812",   # Ignore as recommended by ruff
+  "D203",     # Ignore as recommended by ruff
+  "PD004",    # Ignore notnull (confusing xarray with pandas)
 ]
 exclude = ["tests/testing.ipynb"]  # Don't modify testing notebook
 
