@@ -32,7 +32,7 @@ def stac_load(
     y: tuple[float, float] | None = None,
     geom: Geometry | None = None,
     stac_query: dict | None = None,
-    url: str = "https://planetarycomputer.microsoft.com/api/stac/v1",
+    stac_url: str = "https://planetarycomputer.microsoft.com/api/stac/v1",
     **load_params,
 ) -> tuple[Dataset, ItemCollection]:
     """Query satellite data from a STAC API and load it into an xarray.Dataset.
@@ -64,7 +64,7 @@ def stac_load(
         A query dictionary to further filter the data using STAC metadata.
         If not provided, no additional filtering will be applied. For
         example: `stac_query = {"eo:cloud_cover": {"lt": 10}}`.
-    url : str, optional
+    stac_url : str, optional
         The URL of the STAC API endpoint to query and load data from.
         Defaults to "https://planetarycomputer.microsoft.com/api/stac/v1".
     **load_params : dict
@@ -80,8 +80,8 @@ def stac_load(
     """
     # Connect to client
     catalog = pystac_client.Client.open(
-        url,
-        modifier=(planetary_computer.sign_inplace if "planetarycomputer" in url else None),
+        stac_url,
+        modifier=(planetary_computer.sign_inplace if "planetarycomputer" in stac_url else None),
     )
 
     # Set up time for query

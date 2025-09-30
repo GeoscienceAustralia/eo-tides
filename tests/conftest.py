@@ -65,41 +65,11 @@ def satellite_ds_load(request):
     # Bounding box
     bbox = [GAUGE_X - 0.08, GAUGE_Y - 0.08, GAUGE_X + 0.08, GAUGE_Y + 0.08]
 
+    # Set cloud access defaults
+    odc.stac.configure_s3_access(aws_unsigned=True)
+
     try:
-        # # Connect to STAC catalog
-        # catalog = pystac_client.Client.open(
-        #     "https://planetarycomputer.microsoft.com/api/stac/v1",
-        #     modifier=planetary_computer.sign_inplace,
-        # )
-
-        # Set cloud access defaults
-        odc.stac.configure_rio(
-            cloud_defaults=True,
-            aws={"aws_unsigned": True},
-        )
-
-        # # Build a query with the parameters above
-        # query = catalog.search(
-        #     bbox=bbox,
-        #     collections=["landsat-c2-l2"],
-        #     datetime="2020-01/2020-02",
-        #     query={
-        #         "platform": {"in": ["landsat-8"]},
-        #     },
-        # )
-
-        # # Search the STAC catalog for all items matching the query
-        # ds = odc.stac.load(
-        #     list(query.items()),
-        #     bands=["red"],
-        #     crs=crs,
-        #     resolution=res,
-        #     groupby="solar_day",
-        #     bbox=bbox,
-        #     fail_on_error=False,
-        #     chunks={},
-        # )
-
+        # Load STAC data from Microsoft Planetary Computer
         ds, _ = stac_load(
             product="landsat-c2-l2",
             bands=["red"],
@@ -124,33 +94,22 @@ def satellite_ds_load(request):
     except Exception as e:
         print(f"Failed to load data from Microsoft Planetary Computer with error {e}; trying DEA")
 
-        # Connect to stac catalogue
-        catalog = pystac_client.Client.open("https://explorer.dea.ga.gov.au/stac")
-
-        # Set cloud defaults
-        odc.stac.configure_rio(
-            cloud_defaults=True,
-            aws={"aws_unsigned": True},
-        )
-
-        # Build a query with the parameters above
-        query = catalog.search(
-            bbox=bbox,
-            collections=["ga_ls8c_ard_3"],
-            datetime="2020-01/2020-02",
-        )
-
-        # Search the STAC catalog for all items matching the query
-        return odc.stac.load(
-            list(query.items()),
+        # Load STAC data from DEA
+        ds, _ = stac_load(
+            product="ga_ls8c_ard_3",
             bands=["nbart_red"],
+            time=("2020-01", "2020-02"),
+            x=(bbox[0], bbox[2]),
+            y=(bbox[1], bbox[3]),
             crs=crs,
             resolution=res,
             groupby="solar_day",
-            bbox=bbox,
             fail_on_error=False,
             chunks={},
+            stac_url="https://explorer.dea.ga.gov.au/stac",
         )
+
+        return ds
 
 
 @pytest.fixture
