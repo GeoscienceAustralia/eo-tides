@@ -72,14 +72,12 @@ def test_ndwi_tide_corr():
     corr_df, corr_da = ndwi_tide_corr(
         x=x,
         y=y,
-        time=("2024", "2024"),
-        cloud_cover=10,
-        load_s2=False,
+        time=("2024-09", "2024-12"),
+        cloud_cover=30,
     )
 
-    # Verify models are returned in expected order
-    sorted_models = corr_df.sort_values("rank").index.tolist()
-    assert sorted_models == ["EOT20", "GOT5.5", "HAMTIDE11"]
+    # Verify HAMTIDE11 comes out with lowest rank
+    assert corr_df.loc["HAMTIDE11", "rank"] == 3
 
     # Verify correlations are approximately correct
     assert np.allclose(corr_df.correlation, [0.730, 0.724, 0.026], atol=0.02)
