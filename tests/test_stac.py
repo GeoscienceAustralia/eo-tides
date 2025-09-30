@@ -16,6 +16,7 @@ GEOPOLYGON_4326 = polygon(
 )
 
 
+# Test extraction of bounding box for STAC query
 @pytest.mark.parametrize(
     "kwargs",
     [
@@ -40,7 +41,7 @@ def test_get_bbox(kwargs):
     assert isinstance(bbox_4326, BoundingBox)
 
     # Always intersects the reference polygon
-    assert bbox_4326.polygon.intersects(geopolygon_4326)
+    assert bbox_4326.polygon.intersects(GEOPOLYGON_4326)
 
 
 def test_get_bbox_no_inputs():
