@@ -471,7 +471,7 @@ def ndwi_tide_corr(
 
     # Load time series NDWI for selected time period and location
     ndwi = load_ndwi_mpc(
-        geom=geom,
+        geopolygon=geom,
         time=time,
         cloud_cover=cloud_cover,
         load_ls=load_ls,

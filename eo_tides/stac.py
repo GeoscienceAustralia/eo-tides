@@ -8,7 +8,7 @@ those available on platforms like Microsoft Planetary Computer.
 # Used to postpone evaluation of type annotations
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import odc.stac
@@ -16,21 +16,51 @@ import planetary_computer
 import pystac_client
 import xarray as xr
 from odc.geo.geom import BoundingBox
+from odc.stac._mdtools import _normalize_geometry
 
 # Only import if running type checking
 if TYPE_CHECKING:
-    from odc.geo.geom import Geometry
     from pystac import ItemCollection
     from xarray import Dataset
+
+
+def _get_bbox(bbox=None, geopolygon=None, lon=None, lat=None):
+    """Obtain an EPSG:4326 bounding box for STAC querying."""
+    # If provided as a bounding box, either convert to `odc-geo`
+    # bounding box or return as-is
+    if bbox is not None:
+        bbox_extracted = BoundingBox(*bbox, crs="EPSG:4326") if isinstance(bbox, list | tuple) else bbox
+
+    # If data is provided as a geopolygon, normalise to `odc-geo`
+    # geometry and extract bounding box
+    elif geopolygon is not None:
+        geopolygon_normalised = _normalize_geometry(geopolygon)
+        bbox_extracted = geopolygon_normalised.boundingbox
+
+    # If provided as lon/lat ranges, convert to an `odc-geo` bounding box
+    elif (lon is not None) and (lat is not None):
+        bbox_extracted = BoundingBox.from_xy(lon, lat, crs="EPSG:4326")
+
+    # Raise error if no valid inputs are provided
+    else:
+        err_msg = "Must provide both `lon` and `lat`, or `geopolygon`, or `bbox`."
+        raise Exception(err_msg)
+
+    # Convert bounding box to EPSG:4326 if required
+    if not bbox_extracted.crs.geographic:
+        bbox_extracted = bbox_extracted.to_crs("EPSG:4326")
+
+    return bbox_extracted
 
 
 def stac_load(
     product: str,
     bands: str | list[str] | tuple[str, ...] | None = None,
     time: tuple[str, str] | None = None,
-    x: tuple[float, float] | None = None,
-    y: tuple[float, float] | None = None,
-    geom: Geometry | None = None,
+    lon: tuple[float, float] | None = None,
+    lat: tuple[float, float] | None = None,
+    geopolygon: Any | None = None,
+    bbox: tuple[float, float, float, float] | None = None,
     stac_query: dict | None = None,
     stac_url: str = "https://planetarycomputer.microsoft.com/api/stac/v1",
     **load_params,
@@ -48,18 +78,21 @@ def stac_load(
     product : str
         The name of the product (i.e. STAC "collection") to load.
     bands : str or list, optional
-        List of band names to load, defaults to all. Also accepts a
+        List of band names to load. Defaults to all, also accepts a
         single band name (e.g. "red").
     time : tuple, optional
         The time range to load data for as a tuple of strings (e.g.
         `("2020", "2021")`. If not provided, data will be loaded for
         all available timesteps.
-    x, y : tuple, optional
-        Tuples defining the x and y bounding box to load, in WGS 84.
-    geom : datacube Geometry, optional
-        An `odc.geo.geom.Geometry` geometry object representing the
-        spatial extents to load data for. If provided, `x` and `y`
-        will be ignored.
+    lon, lat : tuple, optional
+        Tuples defining the spatial x and y extent to load in degrees.
+    geopolygon : multiple types, optional
+        Load data into the extents of a geometry. This could be an
+        odc.geo Geometry, a GeoJSON dictionary, Shapely geometry, GeoPandas
+        DataFrame or GeoSeries. GeoJSON and Shapely inputs are assumed to
+        be in EPSG:4326 coordinates.
+    bbox : tuple, optional
+        Load data into the extent of a bounding box (left, bottom, right, top).
     stac_query : dict, optional
         A query dictionary to further filter the data using STAC metadata.
         If not provided, no additional filtering will be applied. For
@@ -68,7 +101,8 @@ def stac_load(
         The URL of the STAC API endpoint to query and load data from.
         Defaults to "https://planetarycomputer.microsoft.com/api/stac/v1".
     **load_params : dict
-        Additional parameters to be passed to `odc.stac.load()`.
+        Additional parameters to be passed to `odc.stac.load()` to customise
+        how data is loaded.
 
     Returns
     -------
@@ -87,28 +121,13 @@ def stac_load(
     # Set up time for query
     time = "/".join(time) if time is not None else None
 
-    # Set up bounding box for query
-    if geom is not None:
-        bbox = geom.boundingbox
-    elif (x is not None) and (y is not None):
-        bbox = BoundingBox.from_xy(x, y)
-    else:
-        err_msg = "Must provide either `x` and `y`, or `geom`"
-        raise Exception(err_msg)
-
-    # Ensure longitude is between -180 to 180:
-    if (bbox.left >= 180) or (bbox.right >= 180):
-        bbox = BoundingBox(
-            left=bbox.left - 360,
-            bottom=bbox.bottom,
-            right=bbox.right - 360,
-            top=bbox.top,
-        )
+    # Extract degree lat/lon bounding box for STAC query
+    bbox_4326 = _get_bbox(bbox=bbox, geopolygon=geopolygon, lon=lon, lat=lat)
 
     # Find matching items
     search = catalog.search(
         collections=product,
-        bbox=(bbox.left, bbox.bottom, bbox.right, bbox.top),
+        bbox=(bbox_4326.left, bbox_4326.bottom, bbox_4326.right, bbox_4326.top),
         datetime=time,
         query=stac_query if stac_query is not None else None,
     )
@@ -121,7 +140,10 @@ def stac_load(
     ds = odc.stac.load(
         items=items,
         bands=bands,
-        bbox=(bbox.left, bbox.bottom, bbox.right, bbox.top),
+        bbox=bbox,
+        geopolygon=geopolygon,
+        lon=lon,
+        lat=lat,
         **load_params,
     )
 
@@ -129,9 +151,10 @@ def stac_load(
 
 
 def load_ndwi_mpc(
-    x: tuple[float, float] | None = None,
-    y: tuple[float, float] | None = None,
-    geom: Geometry | None = None,
+    lon: tuple[float, float] | None = None,
+    lat: tuple[float, float] | None = None,
+    geopolygon: Any | None = None,
+    bbox: BoundingBox | tuple | list | None = None,
     time: tuple[str, str] = ("2022", "2024"),
     crs: str = "utm",
     resolution: float = 30,
@@ -152,15 +175,19 @@ def load_ndwi_mpc(
 
     Parameters
     ----------
-    x, y : tuple, optional
-        Tuples defining the x and y bounding box to load, in WGS 84.
-    geom : datacube Geometry, optional
-        An optional datacube geometry object representing the spatial extents to
-        load data for. If provided, `x` and `y` will be ignored.
+    lon, lat : tuple, optional
+        Tuples defining the spatial x and y extent to load in degrees.
+    geopolygon : multiple types, optional
+        Load data into the extents of a geometry. This could be an
+        odc.geo Geometry, a GeoJSON dictionary, Shapely geometry, GeoPandas
+        DataFrame or GeoSeries. GeoJSON and Shapely inputs are assumed to
+        be in EPSG:4326 coordinates.
+    bbox : BoundingBox, tuple or list, optional
+        Load data into the extent of a bounding box (left, bottom, right, top).
     time : tuple, optional
         The time range to load data for as a tuple of strings (e.g.
         `("2020", "2021")`. If not provided, data will be loaded for
-        a three year epoch from 2022 to 2024.
+        all available timesteps.
     crs : str, optional
         The Coordinate Reference System (CRS) to load data into. Defaults
         to "utm", which will attempt to load data into its native UTM
@@ -195,9 +222,10 @@ def load_ndwi_mpc(
     # Assemble parameters used for querying STAC API
     query_params = {
         "time": time,
-        "geom": geom if geom is not None else None,
-        "x": x if geom is None else None,
-        "y": y if geom is None else None,
+        "geopolygon": geopolygon,
+        "bbox": bbox,
+        "lon": lon,
+        "lat": lat,
     }
 
     # Assemble parameters used for loading data into xarray format
