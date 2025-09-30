@@ -231,8 +231,8 @@ def _model_tides(
     )
 
     # If valid minor corrections are returned, add to tide data
-    if not isinstance(minor, float):
-        tide.data[:] += minor.data[:]
+    # if not isinstance(minor, float):
+    tide.data[:] += minor.data[:]
 
     # Replace invalid values with fill value
     tide.data[tide.mask] = tide.fill_value
