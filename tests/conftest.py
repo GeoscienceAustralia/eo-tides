@@ -3,11 +3,15 @@
 from copy import deepcopy
 
 import numpy as np
-import odc.stac
+
+# import odc.stac
 import pandas as pd
-import planetary_computer
-import pystac_client
+
+# import planetary_computer
+# import pystac_client
 import pytest
+
+from eo_tides.stac import stac_load
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
@@ -62,11 +66,11 @@ def satellite_ds_load(request):
     bbox = [GAUGE_X - 0.08, GAUGE_Y - 0.08, GAUGE_X + 0.08, GAUGE_Y + 0.08]
 
     try:
-        # Connect to STAC catalog
-        catalog = pystac_client.Client.open(
-            "https://planetarycomputer.microsoft.com/api/stac/v1",
-            modifier=planetary_computer.sign_inplace,
-        )
+        # # Connect to STAC catalog
+        # catalog = pystac_client.Client.open(
+        #     "https://planetarycomputer.microsoft.com/api/stac/v1",
+        #     modifier=planetary_computer.sign_inplace,
+        # )
 
         # Set cloud access defaults
         odc.stac.configure_rio(
@@ -74,24 +78,36 @@ def satellite_ds_load(request):
             aws={"aws_unsigned": True},
         )
 
-        # Build a query with the parameters above
-        query = catalog.search(
-            bbox=bbox,
-            collections=["landsat-c2-l2"],
-            datetime="2020-01/2020-02",
-            query={
-                "platform": {"in": ["landsat-8"]},
-            },
-        )
+        # # Build a query with the parameters above
+        # query = catalog.search(
+        #     bbox=bbox,
+        #     collections=["landsat-c2-l2"],
+        #     datetime="2020-01/2020-02",
+        #     query={
+        #         "platform": {"in": ["landsat-8"]},
+        #     },
+        # )
 
-        # Search the STAC catalog for all items matching the query
-        ds = odc.stac.load(
-            list(query.items()),
-            bands=["red"],
+        # # Search the STAC catalog for all items matching the query
+        # ds = odc.stac.load(
+        #     list(query.items()),
+        #     bands=["red"],
+        #     crs=crs,
+        #     resolution=res,
+        #     groupby="solar_day",
+        #     bbox=bbox,
+        #     fail_on_error=False,
+        #     chunks={},
+        # )
+
+        ds = stac_load(
+            product="landsat-c2-l2",
+            time_range=("2020-01", "2020-02"),
+            x=(bbox[0], bbox[2]),
+            y=(bbox[1], bbox[3]),
             crs=crs,
             resolution=res,
             groupby="solar_day",
-            bbox=bbox,
             fail_on_error=False,
             chunks={},
         )
