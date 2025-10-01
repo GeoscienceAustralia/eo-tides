@@ -477,6 +477,11 @@ def tide_correlation(
     """
     # Use custom xarray.DataArray if provided
     if data is not None:
+        # Verify is xr.DataArray
+        if not isinstance(data, xr.DataArray):
+            err_msg = "Must provide an xarray.DataArray to `data`."
+            raise Exception(err_msg)
+
         water_index = data
         x, y = data.odc.geobox.geographic_extent.centroid.coords[0]
 
