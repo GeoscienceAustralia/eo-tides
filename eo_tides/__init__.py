@@ -31,7 +31,7 @@ from .model import ensemble_tides, model_phases, model_tides
 from .stac import load_ndwi_mpc, stac_load
 from .stats import pixel_stats, tide_aliasing, tide_stats
 from .utils import clip_models, idw, list_models
-from .validation import eval_metrics, load_gauge_gesla, ndwi_tide_corr
+from .validation import eval_metrics, load_gauge_gesla, tide_correlation
 
 # Define what should be imported with "from eo_tides import *"
 __all__ = [
@@ -44,12 +44,12 @@ __all__ = [
     "load_ndwi_mpc",
     "model_phases",
     "model_tides",
-    "ndwi_tide_corr",
     "pixel_stats",
     "pixel_tides",
     "stac_load",
     "tag_tides",
     "tide_aliasing",
+    "tide_correlation",
     "tide_stats",
 ]
 

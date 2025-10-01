@@ -32,7 +32,7 @@ GEOPOLYGON_4326 = polygon(
     ],
 )
 def test_get_bbox(kwargs):
-    bbox_4326 = _get_bbox(**kwargs)
+    bbox_4326, _ = _get_bbox(**kwargs)
 
     # Always geographic
     assert bbox_4326.crs.geographic

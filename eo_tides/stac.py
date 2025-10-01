@@ -34,8 +34,8 @@ def _get_bbox(bbox=None, geopolygon=None, lon=None, lat=None):
     # If data is provided as a geopolygon, normalise to `odc-geo`
     # geometry and extract bounding box
     elif geopolygon is not None:
-        geopolygon_normalised = _normalize_geometry(geopolygon)
-        bbox_extracted = geopolygon_normalised.boundingbox
+        geopolygon = _normalize_geometry(geopolygon)
+        bbox_extracted = geopolygon.boundingbox
 
     # If provided as lon/lat ranges, convert to an `odc-geo` bounding box
     elif (lon is not None) and (lat is not None):
@@ -50,7 +50,7 @@ def _get_bbox(bbox=None, geopolygon=None, lon=None, lat=None):
     if not bbox_extracted.crs.geographic:
         bbox_extracted = bbox_extracted.to_crs("EPSG:4326")
 
-    return bbox_extracted
+    return bbox_extracted, geopolygon
 
 
 def stac_load(
@@ -59,10 +59,12 @@ def stac_load(
     time: tuple[str, str] | None = None,
     lon: tuple[float, float] | None = None,
     lat: tuple[float, float] | None = None,
-    geopolygon: Any | None = None,
     bbox: tuple[float, float, float, float] | None = None,
+    geopolygon: Any | None = None,
+    mask_geopolygon: bool = False,
     stac_query: dict | None = None,
     stac_url: str = "https://planetarycomputer.microsoft.com/api/stac/v1",
+    dtype: Any | None = None,
     **load_params,
 ) -> tuple[Dataset, ItemCollection]:
     """Query satellite data from a STAC API and load it into an xarray.Dataset.
@@ -86,13 +88,18 @@ def stac_load(
         all available timesteps.
     lon, lat : tuple, optional
         Tuples defining the spatial x and y extent to load in degrees.
+    bbox : tuple, optional
+        Load data into the extent of a bounding box (left, bottom, right, top).
     geopolygon : multiple types, optional
         Load data into the extents of a geometry. This could be an
         odc.geo Geometry, a GeoJSON dictionary, Shapely geometry, GeoPandas
         DataFrame or GeoSeries. GeoJSON and Shapely inputs are assumed to
         be in EPSG:4326 coordinates.
-    bbox : tuple, optional
-        Load data into the extent of a bounding box (left, bottom, right, top).
+    mask_geopolygon : bool, optional
+        Whether to mask pixels as `NaN` if they are outside the extent
+        of a provided geopolygon. Defaults to False; note that this
+        will convert all bands to `float32` dtype, so should be used with
+        caution for any integer or boolean bands (e.g. cloud masks etc).
     stac_query : dict, optional
         A query dictionary to further filter the data using STAC metadata.
         If not provided, no additional filtering will be applied. For
@@ -100,6 +107,10 @@ def stac_load(
     stac_url : str, optional
         The URL of the STAC API endpoint to query and load data from.
         Defaults to "https://planetarycomputer.microsoft.com/api/stac/v1".
+    dtype : optional
+        Data type to load data into. The default will use the dataset's
+        default dtype. If `mask_geopolygon=True`, data will be returned
+        in `float32` with pixels outside the mask set to `NaN`.
     **load_params : dict
         Additional parameters to be passed to `odc.stac.load()` to customise
         how data is loaded.
@@ -118,11 +129,15 @@ def stac_load(
         modifier=(planetary_computer.sign_inplace if "planetarycomputer" in stac_url else None),
     )
 
+    # Set dtype; use provided unless `mask_geopolygon` is provided,
+    # in which case use `float32`.
+    dtype = "float32" if mask_geopolygon else dtype
+
     # Set up time for query
     time = "/".join(time) if time is not None else None
 
     # Extract degree lat/lon bounding box for STAC query
-    bbox_4326 = _get_bbox(bbox=bbox, geopolygon=geopolygon, lon=lon, lat=lat)
+    bbox_4326, geopolygon = _get_bbox(bbox=bbox, geopolygon=geopolygon, lon=lon, lat=lat)
 
     # Find matching items
     search = catalog.search(
@@ -144,18 +159,24 @@ def stac_load(
         geopolygon=geopolygon,
         lon=lon,
         lat=lat,
+        dtype=dtype,
         **load_params,
     )
+
+    # Optionally mask areas outside of supplied geopolygon
+    if mask_geopolygon & (geopolygon is not None):
+        ds = ds.odc.mask(poly=geopolygon)
 
     return ds, items
 
 
 def load_ndwi_mpc(
+    time: tuple[str, str] | None = None,
     lon: tuple[float, float] | None = None,
     lat: tuple[float, float] | None = None,
-    geopolygon: Any | None = None,
     bbox: BoundingBox | tuple | list | None = None,
-    time: tuple[str, str] = ("2022", "2024"),
+    geopolygon: Any | None = None,
+    mask_geopolygon: bool = False,
     crs: str = "utm",
     resolution: float = 30,
     resampling: str = "cubic",
@@ -175,19 +196,22 @@ def load_ndwi_mpc(
 
     Parameters
     ----------
+    time : tuple, optional
+        The time range to load data for as a tuple of strings (e.g.
+        `("2020", "2021")`. If not provided, data will be loaded for
+        all available timesteps.
     lon, lat : tuple, optional
         Tuples defining the spatial x and y extent to load in degrees.
+    bbox : BoundingBox, tuple or list, optional
+        Load data into the extent of a bounding box (left, bottom, right, top).
     geopolygon : multiple types, optional
         Load data into the extents of a geometry. This could be an
         odc.geo Geometry, a GeoJSON dictionary, Shapely geometry, GeoPandas
         DataFrame or GeoSeries. GeoJSON and Shapely inputs are assumed to
         be in EPSG:4326 coordinates.
-    bbox : BoundingBox, tuple or list, optional
-        Load data into the extent of a bounding box (left, bottom, right, top).
-    time : tuple, optional
-        The time range to load data for as a tuple of strings (e.g.
-        `("2020", "2021")`. If not provided, data will be loaded for
-        all available timesteps.
+    mask_geopolygon : bool, optional
+        Whether to mask pixels as nodata if they are outside the extent
+        of a provided geopolygon. Defaults to False.
     crs : str, optional
         The Coordinate Reference System (CRS) to load data into. Defaults
         to "utm", which will attempt to load data into its native UTM
@@ -233,9 +257,9 @@ def load_ndwi_mpc(
         "crs": crs,
         "resolution": resolution,
         "chunks": chunks,
+        "fail_on_error": fail_on_error,
         "groupby": "solar_day",
         "resampling": {"qa_pixel": "nearest", "SCL": "nearest", "*": resampling},
-        "fail_on_error": fail_on_error,
     }
 
     # List to hold outputs for each sensor (Landsat, Sentinel-2)
@@ -303,4 +327,13 @@ def load_ndwi_mpc(
         output_list.append(ndwi_s2)
 
     # Merge into a single dataset
-    return xr.concat(output_list, dim="time").sortby("time").to_dataset(name="ndwi")
+    ndwi = xr.concat(output_list, dim="time").sortby("time").to_dataset(name="ndwi")
+
+    # Optionally mask areas outside of supplied geopolygon (this has to be
+    # applied here because applying it at the `stac_load` level converts
+    # cloud masking bands to "float32".
+    if mask_geopolygon & (geopolygon is not None):
+        geopolygon = _normalize_geometry(geopolygon)
+        ndwi = ndwi.odc.mask(poly=geopolygon)
+
+    return ndwi
