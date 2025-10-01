@@ -67,9 +67,9 @@ def stac_load(
     dtype: Any | None = None,
     **load_params,
 ) -> tuple[Dataset, ItemCollection]:
-    """Query satellite data from a STAC API and load it into an xarray.Dataset.
+    """Query and load satellite data from a STAC API.
 
-    Use `pystac_client` to query a SpatioTemporal Asset Catalogue (STAC),
+    Uses `pystac_client` to query a SpatioTemporal Asset Catalogue (STAC),
     then load the results as a multi-temporal `xarray.Dataset` using
     `odc-stac`.
 
