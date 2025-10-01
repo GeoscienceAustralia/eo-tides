@@ -50,10 +50,14 @@ def _set_directory(
 
     If no custom path is provided, try global `EO_TIDES_TIDE_MODELS`
     environmental variable instead.
+
+    For backwards compatibility, also check legacy `DEA_TOOLS_TIDE_MODELS`.
     """
     if directory is None:
         if "EO_TIDES_TIDE_MODELS" in os.environ:
             directory = os.environ["EO_TIDES_TIDE_MODELS"]
+        elif "DEA_TOOLS_TIDE_MODELS" in os.environ:
+            directory = os.environ["DEA_TOOLS_TIDE_MODELS"]
         else:
             err_msg = (
                 "No tide model directory provided via `directory`, and/or no "
