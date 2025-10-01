@@ -512,7 +512,7 @@ def tide_correlation(
     freq = wet.mean(dim="time")
 
     # Model tides using selected models (all available by default)
-    tides_da = tag_tides(water_index, model=model, directory=directory, **tag_tides_kwargs)
+    tides_da: xr.DataArray = tag_tides(water_index, model=model, directory=directory, **tag_tides_kwargs)
 
     # Calculate correlation between wetness and each tide model
     corr = xr.corr(wet, tides_da, dim="time")
