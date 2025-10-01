@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.9.0 - 2025-10-01
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+This release adds new functionality for loading satellite data using STAC metadata, and for ranking tide model performance based on their correlation with satell-observed patterns of inundation. For more information, see:
+
+* https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.validation.tide_correlation
+* https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.stac.stac_load
+* https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.stac.load_ndwi_mpc
+
+Jupyter Notebook example: https://geoscienceaustralia.github.io/eo-tides/notebooks/Validating_tides/#tide-correlation-model-rankings
+
+#### New features
+
+* Add NDWI-tide correlation function and STAC data loading tools in https://github.com/GeoscienceAustralia/eo-tides/pull/87
+* Support STAC loading data by bounding box, geopolygon, Shapely, GeoPandas, GeoJSON in https://github.com/GeoscienceAustralia/eo-tides/pull/126
+* Update tide correlation code, add support for masking to STAC functions by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/128
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.8.3...0.9.0
+
 ## 0.8.3 - 2025-09-16
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
@@ -105,6 +126,7 @@ model_tides(
     extra_databases=custom_db_dict,
     output_format="wide",
 )
+
 
 
 
