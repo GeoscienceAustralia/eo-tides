@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from odc.geo.geom import point
 
+from eo_tides.stac import load_ndwi_mpc
 from eo_tides.validation import load_gauge_gesla, tide_correlation
 
 GAUGE_X = 122.2183
@@ -64,17 +65,128 @@ def test_load_gauge_gesla(x, y, site_code, max_distance, correct_mean, expected)
         assert np.isclose(gauge_df.sea_level.mean().item(), 0.0, atol=0.01)
 
 
-def test_tide_correlation():
-    # Sample point in King Sound with variable model performance
-    y, x = -16.99636, 123.61017
+# def test_tide_correlation():
+#     # Sample point in King Sound with variable model performance
+#     y, x = -16.99636, 123.61017
 
-    # Calculate NDWI-tide correlations
-    corr_df, corr_da = tide_correlation(
-        x=x,
-        y=y,
+#     # Calculate NDWI-tide correlations
+#     corr_df, corr_da = tide_correlation(
+#         x=x,
+#         y=y,
+#         time=("2024-09", "2024-12"),
+#         cloud_cover=30,
+#     )
+
+#     # Verify HAMTIDE11 comes out with lowest rank
+#     assert corr_df.loc["HAMTIDE11", "rank"] == 3
+
+#     # Verify correlations are approximately correct
+#     assert np.allclose(corr_df.correlation, [0.77, 0.77, -0.12], atol=0.02)
+
+#     # Verify valid percentages are between 0 and 1
+#     assert corr_df["valid_perc"].between(0, 1).all()
+
+#     # Verify data array contains expected dimensions and values
+#     assert "tide_model" in corr_da.dims
+#     assert "time" not in corr_da.dims
+#     assert set(corr_da.tide_model.values) == set(["EOT20", "GOT5.5", "HAMTIDE11"])
+
+#     # Assert that data envelops original point
+#     corr_da.odc.geobox.extent.intersects(point(x, y, crs="EPSG:4326").to_crs(corr_da.odc.crs))
+
+
+# def test_tide_correlation_data():
+#     # Pre-load NDWI data
+#     geom = {
+#         "type": "Feature",
+#         "geometry": {
+#             "type": "Polygon",
+#             "coordinates": (
+#                 (
+#                     (123.63365484733187, -17.018957566435393),
+#                     (123.58668504081261, -16.97376238319456),
+#                     (123.63365484733187, -16.97376238319456),
+#                     (123.63365484733187, -17.018957566435393),
+#                 ),
+#             ),
+#         },
+#         "properties": {},
+#     }
+
+#     # Load time series water_index (e.g. NDWI) for selected time period and location
+#     water_index = load_ndwi_mpc(
+#         time=("2024-09", "2024-12"),
+#         geopolygon=geom,
+#         mask_geopolygon=True,
+#         cloud_cover=30,
+#     ).ndwi
+
+#     # Calculate NDWI-tide correlations
+#     corr_df, corr_da = tide_correlation(
+#         data=water_index,
+#     )
+
+#     # Verify HAMTIDE11 comes out with lowest rank
+#     assert corr_df.loc["HAMTIDE11", "rank"] == 3
+
+#     # Verify correlations are approximately correct
+#     assert np.allclose(corr_df.correlation, [0.77, 0.77, -0.12], atol=0.02)
+
+#     # Verify valid percentages are between 0 and 1
+#     assert corr_df["valid_perc"].between(0, 1).all()
+
+#     # Verify data array contains expected dimensions and values
+#     assert "tide_model" in corr_da.dims
+#     assert "time" not in corr_da.dims
+#     assert set(corr_da.tide_model.values) == set(["EOT20", "GOT5.5", "HAMTIDE11"])
+
+#     # Assert that data envelops original point
+#     # corr_da.odc.geobox.extent.intersects(point(x, y, crs="EPSG:4326").to_crs(corr_da.odc.crs))
+
+
+@pytest.fixture(scope="module")
+def preloaded_water_index():
+    geom = {
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": (
+                (
+                    (123.63365484733187, -17.018957566435393),
+                    (123.58668504081261, -16.97376238319456),
+                    (123.63365484733187, -16.97376238319456),
+                    (123.63365484733187, -17.018957566435393),
+                ),
+            ),
+        },
+        "properties": {},
+    }
+    return load_ndwi_mpc(
         time=("2024-09", "2024-12"),
+        geopolygon=geom,
+        mask_geopolygon=True,
         cloud_cover=30,
-    )
+    ).ndwi
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        dict(
+            x=123.61017,
+            y=-16.99636,
+            time=("2024-09", "2024-12"),
+            cloud_cover=30,
+        ),
+        dict(data="preloaded_data"),  # placeholder, resolved in test
+    ],
+    ids=["xy_point", "preloaded_data"],
+)
+def test_tide_correlation(kwargs, preloaded_water_index):
+    if kwargs.get("data") == "preloaded_data":
+        kwargs["data"] = preloaded_water_index
+
+    corr_df, corr_da = tide_correlation(**kwargs)
 
     # Verify HAMTIDE11 comes out with lowest rank
     assert corr_df.loc["HAMTIDE11", "rank"] == 3
@@ -88,7 +200,10 @@ def test_tide_correlation():
     # Verify data array contains expected dimensions and values
     assert "tide_model" in corr_da.dims
     assert "time" not in corr_da.dims
-    assert set(corr_da.tide_model.values) == set(["EOT20", "GOT5.5", "HAMTIDE11"])
+    assert set(corr_da.tide_model.values) == {"EOT20", "GOT5.5", "HAMTIDE11"}
 
-    # Assert that data envelops original point
-    corr_da.odc.geobox.extent.intersects(point(x, y, crs="EPSG:4326").to_crs(corr_da.odc.crs))
+    # Extra check only for xy_point case
+    if "x" in kwargs and "y" in kwargs:
+        assert corr_da.odc.geobox.extent.intersects(
+            point(kwargs["x"], kwargs["y"], crs="EPSG:4326").to_crs(corr_da.odc.crs)
+        )

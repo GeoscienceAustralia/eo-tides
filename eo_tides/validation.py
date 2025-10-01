@@ -364,17 +364,18 @@ def load_gauge_gesla(
 
 
 def tide_correlation(
-    x: float,
-    y: float,
+    x: float | None = None,
+    y: float | None = None,
     time: tuple[str, str] = ("2022", "2024"),
+    crs: str = "EPSG:4326",
+    data: xr.DataArray | None = None,
     model: str | list[str] = "all",
     directory: str | os.PathLike | None = None,
-    crs: str = "EPSG:4326",
-    buffer_radius: float = 2500,
     index_threshold: float = 0.0,
     freq_min: float = 0.01,
     freq_max: float = 0.99,
     corr_min: float = 0.15,
+    buffer: float = 2500,
     cloud_cover: float = 90,
     load_ls: bool = True,
     load_s2: bool = True,
@@ -389,15 +390,29 @@ def tide_correlation(
     tide height, with high tide observations being consistently wet,
     and low tide observations being consistently dry.
 
+    By default Microsoft Planetary Computer is used for loading data;
+    for advance use, a pre-loaded water index xarray.DataArray from any
+    satellite data source can be provided via `data`.
+
     Parameters
     ----------
-    x, y : float
-        X and Y coordinates of the coastal point of interest. Assumed
+    x, y : float, optional
+        X and Y coordinates of a coastal point of interest. Assumed
         to be "EPSG:4326" degrees lat/lon; use "crs" for custom CRSs.
     time : tuple, optional
         The time range to load data for as a tuple of strings (e.g.
-        `("2020", "2021")`. If not provided, data will be loaded for
-        all available timesteps.
+        `("2022", "2024")`. We recommend using a long enough time
+        period (e.g. 3+ years) to ensure that results are not affected
+        by tide aliasing; see `eo_tides.stats.tide_aliasing` for more
+        information.
+    crs : str, optional
+        Input coordinate reference system for x and y coordinates.
+        Defaults to "EPSG:4326" (WGS84; degrees latitude, longitude).
+    data : xr.DataArray, optional
+        For advanced use, an xarray.DataArray of water index (e.g. NDWI)
+        data can be supplied. If so, all data loading parameters (`x`,
+        `y`, `time`, `crs`, `buffer` `cloud_cover`, `load_ls`, `load_s2`)
+        will be ignored.
     model : str or list of str, optional
         The tide model (or list of models) to compare. Defaults to
         "all", which will compare all models available in `directory`.
@@ -410,12 +425,6 @@ def tide_correlation(
         Tide modelling files should be stored in sub-folders for each
         model that match the structure required by `pyTMD`
         (<https://geoscienceaustralia.github.io/eo-tides/setup/>).
-    crs : str, optional
-        Input coordinate reference system for x and y coordinates.
-        Defaults to "EPSG:4326" (WGS84; degrees latitude, longitude).
-    buffer_radius : float, optional
-        Radius in meters for generating circular buffer around the
-        input point.
     index_threshold : float, optional
         Water index (e.g. NDWI) threshold above which a pixel is
         considered wet.
@@ -431,6 +440,9 @@ def tide_correlation(
         To ensure a like-for-like comparison, model rankings are based on
         the average correlation across every pixel with a positive
         correlation of at least `corr_min` in any individual input model.
+    buffer : float, optional
+        Radius in meters for generating circular buffer around the
+        input point.
     cloud_cover : int, optional
         The maximum threshold of cloud cover to load. Defaults to 90%.
     load_ls : bool, optional
@@ -463,18 +475,30 @@ def tide_correlation(
     >>> corr_df, corr_da = tide_correlation(x=x, y=y, directory="tide_models/", cloud_cover=10)
 
     """
-    # Create circular study area around point
-    geom = point(x=x, y=y, crs=crs).to_crs("utm").buffer(buffer_radius).to_crs("EPSG:4326")
+    # Use custom xarray.DataArray if provided
+    if data is not None:
+        water_index = data
+        x, y = data.odc.geobox.geographic_extent.centroid.coords[0]
 
-    # Load time series water_index (e.g. NDWI) for selected time period and location
-    water_index = load_ndwi_mpc(
-        time=time,
-        geopolygon=geom,
-        mask_geopolygon=True,
-        cloud_cover=cloud_cover,
-        load_ls=load_ls,
-        load_s2=load_s2,
-    ).ndwi
+    # Otherwise load data for point using MPC
+    elif (x is not None) and (y is not None):
+        # Create circular study area around point
+        geom = point(x=x, y=y, crs=crs).to_crs("utm").buffer(buffer).to_crs("EPSG:4326")
+
+        # Load time series water_index (e.g. NDWI) for selected time period and location
+        water_index = load_ndwi_mpc(
+            time=time,
+            geopolygon=geom,
+            mask_geopolygon=True,
+            cloud_cover=cloud_cover,
+            load_ls=load_ls,
+            load_s2=load_s2,
+        ).ndwi
+
+    # Raise error if no valid inputs are provided
+    else:
+        err_msg = "Must provide both `x` and `y`, or `data`."
+        raise Exception(err_msg)
 
     # Threshold water_index to identify wet pixels, then calculate
     # overall wetness frequency (making sure NaN pixels are
