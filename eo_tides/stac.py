@@ -64,6 +64,7 @@ def stac_load(
     mask_geopolygon: bool = False,
     stac_query: dict | None = None,
     stac_url: str = "https://planetarycomputer.microsoft.com/api/stac/v1",
+    dtype: Any | None = None,
     **load_params,
 ) -> tuple[Dataset, ItemCollection]:
     """Query satellite data from a STAC API and load it into an xarray.Dataset.
@@ -95,7 +96,7 @@ def stac_load(
         DataFrame or GeoSeries. GeoJSON and Shapely inputs are assumed to
         be in EPSG:4326 coordinates.
     mask_geopolygon : bool, optional
-        Whether to mask pixels as nodata if they are outside the extent
+        Whether to mask pixels as `NaN` if they are outside the extent
         of a provided geopolygon. Defaults to False.
     stac_query : dict, optional
         A query dictionary to further filter the data using STAC metadata.
@@ -104,6 +105,10 @@ def stac_load(
     stac_url : str, optional
         The URL of the STAC API endpoint to query and load data from.
         Defaults to "https://planetarycomputer.microsoft.com/api/stac/v1".
+    dtype : optional
+        Data type to load data into. The default will use the dataset's
+        default dtype. If `mask_geopolygon=True`, data will be returned
+        in `float32` with pixels outside the mask set to `NaN`.
     **load_params : dict
         Additional parameters to be passed to `odc.stac.load()` to customise
         how data is loaded.
@@ -121,6 +126,10 @@ def stac_load(
         stac_url,
         modifier=(planetary_computer.sign_inplace if "planetarycomputer" in stac_url else None),
     )
+
+    # Set dtype; use provided unless `mask_geopolygon` is provided,
+    # in which case use `float32`.
+    dtype = "float32" if mask_geopolygon else dtype
 
     # Set up time for query
     time = "/".join(time) if time is not None else None
@@ -148,6 +157,7 @@ def stac_load(
         geopolygon=geopolygon,
         lon=lon,
         lat=lat,
+        dtype=dtype,
         **load_params,
     )
 
@@ -245,7 +255,6 @@ def load_ndwi_mpc(
         "crs": crs,
         "resolution": resolution,
         "chunks": chunks,
-        "mask_geopolygon": mask_geopolygon,
         "fail_on_error": fail_on_error,
         "groupby": "solar_day",
         "resampling": {"qa_pixel": "nearest", "SCL": "nearest", "*": resampling},
@@ -316,4 +325,11 @@ def load_ndwi_mpc(
         output_list.append(ndwi_s2)
 
     # Merge into a single dataset
-    return xr.concat(output_list, dim="time").sortby("time").to_dataset(name="ndwi")
+    ndwi = xr.concat(output_list, dim="time").sortby("time").to_dataset(name="ndwi")
+
+    # Optionally mask areas outside of supplied geopolygon
+    if mask_geopolygon & (geopolygon is not None):
+        geopolygon = _normalize_geometry(geopolygon)
+        ndwi = ndwi.odc.mask(poly=geopolygon)
+
+    return ndwi
