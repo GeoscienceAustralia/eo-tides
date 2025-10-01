@@ -256,6 +256,10 @@ def tag_tides(
         Outputs will contain values for every timestep in `data`, or for
         every time in `times` if provided.
 
+    See Also
+    --------
+    pixel_tides : A somewhat long description of the function.
+
     """
     # Standardise data inputs, time and models
     gbox, time_coords = _standardise_inputs(data, time)

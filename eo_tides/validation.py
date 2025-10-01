@@ -363,7 +363,7 @@ def load_gauge_gesla(
     return data_df
 
 
-def ndwi_tide_corr(
+def tide_correlation(
     x: float,
     y: float,
     time: tuple[str, str] = ("2022", "2024"),
@@ -371,7 +371,7 @@ def ndwi_tide_corr(
     directory: str | os.PathLike | None = None,
     crs: str = "EPSG:4326",
     buffer_radius: float = 2500,
-    ndwi_threshold: float = 0.0,
+    index_threshold: float = 0.0,
     freq_min: float = 0.01,
     freq_max: float = 0.99,
     corr_min: float = 0.15,
@@ -380,24 +380,20 @@ def ndwi_tide_corr(
     load_s2: bool = True,
     **tag_tides_kwargs,
 ):
-    """Ranks tide models based on their correlation with satellite-observed NDWI inundation patterns.
+    """Ranks tide models based on their correlation with satellite-observed inundation patterns.
 
-    Correlations are calculated across a buffered region around
-    an input point. High correlations indicate that a tide model
-    correctly sorted satellite imagery by tide height, with
-    high tide observations being consistently wet, and low tide
-    observations being consistently dry.
+    Correlations are calculated between satellite-derived water index
+    (e.g. Normalised Difference Water Index, NDWI) and tide heights
+    across a buffered region around an input point. High correlations
+    indicate that a tide model correctly sorted satellite imagery by
+    tide height, with high tide observations being consistently wet,
+    and low tide observations being consistently dry.
 
     Parameters
     ----------
-    x : float
-        X coordinate of the coastal point of interest. By default
-        this should be in "EPSG:4326" degrees longitude; use "crs"
-        for custom coordinate reference systems.
-    y : float
-        Y coordinate of the coastal point of interest. By default
-        this should be in "EPSG:4326" degrees latitude; use
-        "crs" for custom coordinate reference systems.
+    x, y : float
+        X and Y coordinates of the coastal point of interest. Assumed
+        to be "EPSG:4326" degrees lat/lon; use "crs" for custom CRSs.
     time : tuple, optional
         The time range to load data for as a tuple of strings (e.g.
         `("2020", "2021")`. If not provided, data will be loaded for
@@ -420,8 +416,9 @@ def ndwi_tide_corr(
     buffer_radius : float, optional
         Radius in meters for generating circular buffer around the
         input point.
-    ndwi_threshold : float, optional
-        NDWI threshold above which a pixel is considered wet.
+    index_threshold : float, optional
+        Water index (e.g. NDWI) threshold above which a pixel is
+        considered wet.
     freq_min : float, optional
         Minimum fraction of time a pixel must be wet to be considered
         intertidal and included in the analysis.
@@ -429,27 +426,29 @@ def ndwi_tide_corr(
         Maximum fraction of time a pixel can be wet to be considered
         intertidal and included in the analysis.
     corr_min : float, optional
-        Minimum correlation between NDWI and tide heights to be
-        considered intertidal and included in the analysis. To ensure
-        a like-for-like comparison, model rankings are based on the
-        average correlation across every pixel with a positive
+        Minimum correlation between water index (e.g. NDWI) and tide
+        heights to be considered intertidal and included in the analysis.
+        To ensure a like-for-like comparison, model rankings are based on
+        the average correlation across every pixel with a positive
         correlation of at least `corr_min` in any individual input model.
     cloud_cover : int, optional
         The maximum threshold of cloud cover to load. Defaults to 90%.
     load_ls : bool, optional
-        Whether to load Landsat data in the NDWI computation.
+        Whether to load Landsat water index (e.g. NDWI) data.
     load_s2 : bool, optional
-        Whether to load Sentinel-2 data in the NDWI computation.
+        Whether to load Sentinel-2 water index (e.g. NDWI) data.
     **tag_tides_kwargs :
         Optional parameters passed to the `eo_tides.eo.tag_tides`
-        function that is used to model tides.
+        function used to model tides.
 
     Returns
     -------
     corr_df : pandas.DataFrame
         DataFrame with correlation and ranking per tide model.
         Columns include:
-        - 'correlation': mean NDWI-tide height correlation for each model
+
+        - 'correlation': mean correlation between water index
+        (e.g. NDWI and tide heights each model
         - 'rank': model rank based on correlation (1 = highest)
     corr_da : xr.DataArray
         Per-pixel correlations for each model, restricted to likely
@@ -457,38 +456,34 @@ def ndwi_tide_corr(
         always dry or wet), and with a positive correlation with tide
         heights from at least one tide model.
 
-    Example
-    -------
-    Run NDWI-tide correlation for a specific location.
-
-    >>> from eo_tides import ndwi_tide_corr
+    Examples
+    --------
+    >>> from eo_tides import tide_correlation
     >>> y, x = -16.99636, 123.61017
-    >>> corr_df, corr_da = ndwi_tide_corr(x=x, y=y, directory="tide_models/", cloud_cover=10)
+    >>> corr_df, corr_da = tide_correlation(x=x, y=y, directory="tide_models/", cloud_cover=10)
 
     """
     # Create circular study area around point
     geom = point(x=x, y=y, crs=crs).to_crs("utm").buffer(buffer_radius).to_crs("EPSG:4326")
 
-    # Load time series NDWI for selected time period and location
-    ndwi = load_ndwi_mpc(
-        geopolygon=geom,
+    # Load time series water_index (e.g. NDWI) for selected time period and location
+    water_index = load_ndwi_mpc(
         time=time,
+        geopolygon=geom,
+        mask_geopolygon=True,
         cloud_cover=cloud_cover,
         load_ls=load_ls,
         load_s2=load_s2,
     ).ndwi
 
-    # Set pixels outside of input polygon to NaN
-    ndwi = ndwi.odc.mask(poly=geom)
-
-    # Threshold NDWI to identify wet pixels, then calculate
+    # Threshold water_index to identify wet pixels, then calculate
     # overall wetness frequency (making sure NaN pixels are
     # correctly masked to ensure correct statistics)
-    wet = (ndwi > ndwi_threshold).where(ndwi.notnull())
+    wet = (water_index > index_threshold).where(water_index.notnull())
     freq = wet.mean(dim="time")
 
     # Model tides using selected models (all available by default)
-    tides_da = tag_tides(ndwi, model=model, directory=directory, **tag_tides_kwargs)
+    tides_da = tag_tides(water_index, model=model, directory=directory, **tag_tides_kwargs)
 
     # Calculate correlation between wetness and each tide model
     corr = xr.corr(wet, tides_da, dim="time")
@@ -504,8 +499,6 @@ def ndwi_tide_corr(
     # Calculate mean correlation per model and valid data coverage
     corr_mean = corr_da.mean(dim=["x", "y"])
     valid_perc = corr_da.notnull().mean().item()
-
-    # return corr_mean, valid_perc
 
     # Create DataFrame with correlation and rank
     corr_df = (

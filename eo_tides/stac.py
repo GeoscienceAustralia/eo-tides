@@ -34,8 +34,8 @@ def _get_bbox(bbox=None, geopolygon=None, lon=None, lat=None):
     # If data is provided as a geopolygon, normalise to `odc-geo`
     # geometry and extract bounding box
     elif geopolygon is not None:
-        geopolygon_normalised = _normalize_geometry(geopolygon)
-        bbox_extracted = geopolygon_normalised.boundingbox
+        geopolygon = _normalize_geometry(geopolygon)
+        bbox_extracted = geopolygon.boundingbox
 
     # If provided as lon/lat ranges, convert to an `odc-geo` bounding box
     elif (lon is not None) and (lat is not None):
@@ -50,7 +50,7 @@ def _get_bbox(bbox=None, geopolygon=None, lon=None, lat=None):
     if not bbox_extracted.crs.geographic:
         bbox_extracted = bbox_extracted.to_crs("EPSG:4326")
 
-    return bbox_extracted
+    return bbox_extracted, geopolygon
 
 
 def stac_load(
@@ -59,8 +59,9 @@ def stac_load(
     time: tuple[str, str] | None = None,
     lon: tuple[float, float] | None = None,
     lat: tuple[float, float] | None = None,
-    geopolygon: Any | None = None,
     bbox: tuple[float, float, float, float] | None = None,
+    geopolygon: Any | None = None,
+    mask_geopolygon: bool = False,
     stac_query: dict | None = None,
     stac_url: str = "https://planetarycomputer.microsoft.com/api/stac/v1",
     **load_params,
@@ -86,13 +87,16 @@ def stac_load(
         all available timesteps.
     lon, lat : tuple, optional
         Tuples defining the spatial x and y extent to load in degrees.
+    bbox : tuple, optional
+        Load data into the extent of a bounding box (left, bottom, right, top).
     geopolygon : multiple types, optional
         Load data into the extents of a geometry. This could be an
         odc.geo Geometry, a GeoJSON dictionary, Shapely geometry, GeoPandas
         DataFrame or GeoSeries. GeoJSON and Shapely inputs are assumed to
         be in EPSG:4326 coordinates.
-    bbox : tuple, optional
-        Load data into the extent of a bounding box (left, bottom, right, top).
+    mask_geopolygon : bool, optional
+        Whether to mask pixels as nodata if they are outside the extent
+        of a provided geopolygon. Defaults to False.
     stac_query : dict, optional
         A query dictionary to further filter the data using STAC metadata.
         If not provided, no additional filtering will be applied. For
@@ -122,7 +126,7 @@ def stac_load(
     time = "/".join(time) if time is not None else None
 
     # Extract degree lat/lon bounding box for STAC query
-    bbox_4326 = _get_bbox(bbox=bbox, geopolygon=geopolygon, lon=lon, lat=lat)
+    bbox_4326, geopolygon = _get_bbox(bbox=bbox, geopolygon=geopolygon, lon=lon, lat=lat)
 
     # Find matching items
     search = catalog.search(
@@ -147,15 +151,20 @@ def stac_load(
         **load_params,
     )
 
+    # Optionally mask areas outside of supplied geopolygon
+    if mask_geopolygon & (geopolygon is not None):
+        ds = ds.odc.mask(poly=geopolygon)
+
     return ds, items
 
 
 def load_ndwi_mpc(
+    time: tuple[str, str] | None = None,
     lon: tuple[float, float] | None = None,
     lat: tuple[float, float] | None = None,
-    geopolygon: Any | None = None,
     bbox: BoundingBox | tuple | list | None = None,
-    time: tuple[str, str] = ("2022", "2024"),
+    geopolygon: Any | None = None,
+    mask_geopolygon: bool = False,
     crs: str = "utm",
     resolution: float = 30,
     resampling: str = "cubic",
@@ -175,19 +184,22 @@ def load_ndwi_mpc(
 
     Parameters
     ----------
+    time : tuple, optional
+        The time range to load data for as a tuple of strings (e.g.
+        `("2020", "2021")`. If not provided, data will be loaded for
+        all available timesteps.
     lon, lat : tuple, optional
         Tuples defining the spatial x and y extent to load in degrees.
+    bbox : BoundingBox, tuple or list, optional
+        Load data into the extent of a bounding box (left, bottom, right, top).
     geopolygon : multiple types, optional
         Load data into the extents of a geometry. This could be an
         odc.geo Geometry, a GeoJSON dictionary, Shapely geometry, GeoPandas
         DataFrame or GeoSeries. GeoJSON and Shapely inputs are assumed to
         be in EPSG:4326 coordinates.
-    bbox : BoundingBox, tuple or list, optional
-        Load data into the extent of a bounding box (left, bottom, right, top).
-    time : tuple, optional
-        The time range to load data for as a tuple of strings (e.g.
-        `("2020", "2021")`. If not provided, data will be loaded for
-        all available timesteps.
+    mask_geopolygon : bool, optional
+        Whether to mask pixels as nodata if they are outside the extent
+        of a provided geopolygon. Defaults to False.
     crs : str, optional
         The Coordinate Reference System (CRS) to load data into. Defaults
         to "utm", which will attempt to load data into its native UTM
@@ -233,9 +245,10 @@ def load_ndwi_mpc(
         "crs": crs,
         "resolution": resolution,
         "chunks": chunks,
+        "mask_geopolygon": mask_geopolygon,
+        "fail_on_error": fail_on_error,
         "groupby": "solar_day",
         "resampling": {"qa_pixel": "nearest", "SCL": "nearest", "*": resampling},
-        "fail_on_error": fail_on_error,
     }
 
     # List to hold outputs for each sensor (Landsat, Sentinel-2)

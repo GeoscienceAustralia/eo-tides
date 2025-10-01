@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from odc.geo.geom import point
 
-from eo_tides.validation import load_gauge_gesla, ndwi_tide_corr
+from eo_tides.validation import load_gauge_gesla, tide_correlation
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
@@ -64,12 +64,12 @@ def test_load_gauge_gesla(x, y, site_code, max_distance, correct_mean, expected)
         assert np.isclose(gauge_df.sea_level.mean().item(), 0.0, atol=0.01)
 
 
-def test_ndwi_tide_corr():
+def test_tide_correlation():
     # Sample point in King Sound with variable model performance
     y, x = -16.99636, 123.61017
 
     # Calculate NDWI-tide correlations
-    corr_df, corr_da = ndwi_tide_corr(
+    corr_df, corr_da = tide_correlation(
         x=x,
         y=y,
         time=("2024-09", "2024-12"),
