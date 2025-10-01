@@ -97,7 +97,9 @@ def stac_load(
         be in EPSG:4326 coordinates.
     mask_geopolygon : bool, optional
         Whether to mask pixels as `NaN` if they are outside the extent
-        of a provided geopolygon. Defaults to False.
+        of a provided geopolygon. Defaults to False; note that this
+        will convert all bands to `float32` dtype, so should be used with
+        caution for any integer or boolean bands (e.g. cloud masks etc).
     stac_query : dict, optional
         A query dictionary to further filter the data using STAC metadata.
         If not provided, no additional filtering will be applied. For
@@ -327,7 +329,9 @@ def load_ndwi_mpc(
     # Merge into a single dataset
     ndwi = xr.concat(output_list, dim="time").sortby("time").to_dataset(name="ndwi")
 
-    # Optionally mask areas outside of supplied geopolygon
+    # Optionally mask areas outside of supplied geopolygon (this has to be
+    # applied here because applying it at the `stac_load` level converts
+    # cloud masking bands to "float32".
     if mask_geopolygon & (geopolygon is not None):
         geopolygon = _normalize_geometry(geopolygon)
         ndwi = ndwi.odc.mask(poly=geopolygon)
