@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.2 - 2025-10-07
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+* Update validation code and notebook examples in https://github.com/GeoscienceAustralia/eo-tides/pull/132
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.9.1...0.9.2
+
 ## 0.9.1 - 2025-10-02
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
@@ -135,6 +144,7 @@ model_tides(
     extra_databases=custom_db_dict,
     output_format="wide",
 )
+
 
 
 
