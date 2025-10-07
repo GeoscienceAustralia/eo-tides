@@ -67,6 +67,8 @@ test-utils: ## Test utils module with pytest
 .PHONY: test-validation
 test-validation: ## Test validation module with pytest
 	@echo "🚀 Testing validation module: Running pytest"
+	@tar --skip-old-files -xzf ./tests/data/tide_models.tar.gz -C ./tests/data
+	@export EO_TIDES_TIDE_MODELS=./tests/data/tide_models && \
 	uv run python -m pytest tests/test_validation.py --verbose
 
 .PHONY: test-notebooks
