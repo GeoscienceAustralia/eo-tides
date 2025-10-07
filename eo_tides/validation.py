@@ -194,7 +194,7 @@ def load_gauge_gesla(
     x=None,
     y=None,
     site_code=None,
-    time=("2018", "2020"),
+    time=None,
     max_distance=None,
     correct_mean=False,
     filter_use_flag=True,
@@ -347,18 +347,30 @@ def load_gauge_gesla(
 
     # Optionally insert metadata into dataframe
     if site_metadata:
-        data_df[metadata_df.columns] = metadata_df.loc[site_code]
+        if data_df.empty:
+            data_df = data_df.reindex(columns=[*data_df.columns, *metadata_df.columns])
+        else:
+            data_df[metadata_df.columns] = metadata_df.loc[site_code]
 
     # Add time to index and remove duplicates
     data_df = data_df.set_index("time", append=True)
     duplicates = data_df.index.duplicated()
     if duplicates.sum() > 0:
-        warnings.warn("Duplicate timestamps were removed.", stacklevel=2)
+        warnings.warn("Duplicate timestamps were removed.", UserWarning, stacklevel=2)
         data_df = data_df.loc[~duplicates]
 
     # Remove observed mean sea level if requested
     if correct_mean:
         data_df["sea_level"] = data_df["sea_level"].sub(data_df.groupby("site_code")["sea_level"].transform("mean"))
+
+    # If no rows are returned, raise a warning
+    if data_df.empty:
+        warnings.warn(
+            f"No data found for site '{site_code}'. "
+            "Are you trying to load data using `time` for a period that does not have tide gauge measurements?",
+            UserWarning,
+            stacklevel=2,
+        )
 
     # Return data
     return data_df
