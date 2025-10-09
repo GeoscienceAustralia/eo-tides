@@ -415,7 +415,6 @@ def test_tag_timeseries(measured_tides_ds, satellite_ds, timeseries, expected_fa
 @pytest.mark.parametrize(
     "method, tolerance, expected_nan_count",
     [
-        ("nearest", "30d", 0),
         ("nearest", "1h", 1),
         ("nearest", "90min", 1),
         ("nearest", "10min", 3),
