@@ -26,7 +26,7 @@ validation : Validation tools for comparing modelled tides to observed tide gaug
 from importlib.metadata import version
 
 # Import commonly used functions for convenience
-from .eo import pixel_tides, tag_tides
+from .eo import pixel_tides, tag_tides, tag_timeseries
 from .model import ensemble_tides, model_phases, model_tides
 from .stac import load_ndwi_mpc, stac_load
 from .stats import pixel_stats, tide_aliasing, tide_stats
@@ -48,6 +48,7 @@ __all__ = [
     "pixel_tides",
     "stac_load",
     "tag_tides",
+    "tag_timeseries",
     "tide_aliasing",
     "tide_correlation",
     "tide_stats",

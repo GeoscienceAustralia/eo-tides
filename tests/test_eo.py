@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from eo_tides.eo import pixel_tides, tag_tides
+from eo_tides.eo import pixel_tides, tag_tides, tag_timeseries
 from eo_tides.validation import eval_metrics
 
 GAUGE_X = 122.2183
@@ -370,3 +370,75 @@ def test_pixel_tides_ensemble(satellite_ds):
         "ensemble-mean-weighted",
         "ensemble-mean",
     }
+
+
+@pytest.mark.parametrize(
+    "timeseries, expected_fail",
+    [
+        (lambda ts: ts.tide_height, False),  # Expected pass: xarray.DataArray
+        (lambda ts: ts.tide_height.to_series(), False),  # Expected pass: pandas.Series
+        (lambda ts: ts.tide_height.to_series().rename_axis(None), False),  # Expected pass: pandas.Series, no index name
+        (lambda ts: ts.tide_height.to_dataframe(), True),  # Expected fail: pandas.DataFrame
+        (lambda ts: ts, True),  # Expected fail: xarray.Dataset
+    ],
+)
+def test_tag_timeseries(measured_tides_ds, satellite_ds, timeseries, expected_fail):
+    ts = timeseries(measured_tides_ds)
+
+    if not expected_fail:
+        result = tag_timeseries(
+            timeseries=ts,
+            data=satellite_ds,
+            method="nearest",
+            tolerance="5min",
+        )
+
+        # Should return an xarray.DataArray
+        assert isinstance(result, xr.DataArray)
+
+        # Output should have same number of timesteps as data
+        assert len(result.time) == len(satellite_ds.time)
+
+        # Output name should default to "tide_height"
+        assert result.name == "tide_height"
+
+    else:
+        with pytest.raises(ValueError):
+            tag_timeseries(
+                timeseries=ts,
+                data=satellite_ds,
+                method="nearest",
+                tolerance="5min",
+            )
+
+
+@pytest.mark.parametrize(
+    "method, tolerance, expected_nan_count",
+    [
+        ("nearest", "30d", 0),
+        ("nearest", "1h", 1),
+        ("nearest", "90min", 1),
+        ("nearest", "10min", 3),
+        ("nearest", "1min", 7),
+        ("ffill", "30min", 7),
+        ("ffill", "1h", 1),
+        ("bfill", "1h", 1),
+    ],
+)
+def test_tag_timeseries_method_tolerance(measured_tides_ds, satellite_ds, method, tolerance, expected_nan_count):
+    result = tag_timeseries(
+        timeseries=measured_tides_ds.tide_height,
+        data=satellite_ds,
+        method=method,
+        tolerance=tolerance,
+    )
+
+    # Output should have same number of timesteps as data
+    assert len(result.time) == len(satellite_ds.time)
+
+    # Count NaNs
+    nan_count = result.isnull().sum().item()
+
+    assert nan_count == expected_nan_count, (
+        f"Method={method}, tolerance={tolerance} returned {nan_count} NaNs, expected {expected_nan_count}"
+    )
