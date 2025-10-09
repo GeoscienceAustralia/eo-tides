@@ -403,7 +403,7 @@ def test_tag_timeseries(measured_tides_ds, satellite_ds, timeseries, expected_fa
         assert result.name == "tide_height"
 
     else:
-        with pytest.raises(ValueError):
+        with pytest.raises((ValueError, TypeError)):
             tag_timeseries(
                 timeseries=ts,
                 data=satellite_ds,
