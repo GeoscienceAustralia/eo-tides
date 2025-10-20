@@ -134,7 +134,9 @@ lint.ignore = [
   "ANN",      # Allow missing type annotations (to revert)
   "COM812",   # Ignore as recommended by ruff
   "D203",     # Ignore as recommended by ruff
+  "PD003",    # Ignore notnull (confusing xarray with pandas)
   "PD004",    # Ignore notnull (confusing xarray with pandas)
+  "PD013",    # Ignore stack vs. melt (confusing xarray with pandas)
 ]
 exclude = ["tests/testing.ipynb"]  # Don't modify testing notebook
 

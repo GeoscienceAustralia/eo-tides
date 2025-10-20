@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import odc.geo.xr
+import pandas as pd
 import xarray as xr
 from odc.geo.geobox import GeoBox
 
@@ -316,6 +317,112 @@ def tag_tides(
         tides_da = tides_da.squeeze("tide_model")
 
     return tides_da
+
+
+def tag_timeseries(
+    timeseries: xr.DataArray | pd.Series,
+    data: xr.Dataset | xr.DataArray | GeoBox,
+    time: DatetimeLike | None = None,
+    method: str = "nearest",
+    tolerance: str = "1h",
+    output_name: str = "tide_height",
+):
+    """Match time series observations to the time steps of a dataset.
+
+    This function aligns external time series data (for example, sea level
+    or tide gauge measurements) to the timestamps of an `xarray` dataset
+    (e.g. multi-dimensional satellite data). It is similar to `tag_tides`,
+    but uses observed time series data instead of modelled tides.
+
+    Parameters
+    ----------
+    timeseries : xr.DataArray or pd.Series
+        A one-dimensional time series of values (e.g. sea level measurements)
+        with a time dimension or index.
+    data : xarray.Dataset or xarray.DataArray
+        The multi-dimensional dataset (e.g. satellite data) to align the time
+        series to. If this is an xarray object, it should include a "time"
+        dimension. If `data` has no time dimension, you must
+        provide times manually using the `time` argument.
+    time : DatetimeLike, optional
+        Custom times to align to, used only if `data` has no "time" dimension.
+        Can be any format that `pandas.to_datetime()` can interpret, e.g.
+        `time=pd.date_range(start="2000", end="2001", freq="5h")`
+    method : str, optional
+        How to match time points from `timeseries` to `data`. The default
+        ("nearest") finds the closest time; "ffill" and "bfill" can be used to
+        match using forward or backward filling instead. Use `tolerance` to set
+        the maximum allowed time gap.
+    tolerance : str, optional
+        The maximum time difference allowed when matching. Matches that are
+        farther apart than this will return `NaN`.
+    output_name : str, optional
+        Name used for the output `xr.DataArray`. Defaults to "tide_height"
+        to match the name used by other `eo-tides` functions.
+
+    Returns
+    -------
+    xr.DataArray
+        The input time series data matched to the time steps of `data`.
+        Each time step in `data` will have a corresponding value from
+        `timeseries`, or `NaN` if no match was found.
+
+    """
+    # Standardise data inputs, time
+    _, time_coords = _standardise_inputs(data, time)
+
+    # Convert to xarray if required
+    if isinstance(timeseries, pd.Series):
+        timeseries_da = timeseries.to_xarray()
+    elif isinstance(timeseries, xr.DataArray):
+        timeseries_da = timeseries
+    else:
+        err_msg = "Only `pandas.Series` and `xarray.DataArray` inputs are supported for `timeseries`."
+        raise TypeError(err_msg)
+
+    # Squeeze out dimensions with only one unique value
+    timeseries_da = timeseries_da.squeeze(drop=True)
+
+    # Handle missing "time" dimension
+    if "time" not in timeseries_da.dims:
+        # If multiple dimensions with none named 'time', raise an error
+        if len(timeseries_da.dims) > 1:
+            err_msg = (
+                "`timeseries` includes multiple dimensions/indexes, but "
+                "could not automatically determine which represents time. "
+                "Ensure that `timeseries` contains at least one dimension/index "
+                "named 'time'."
+            )
+            raise ValueError(err_msg)
+
+        # If just one dimension, rename that to 'time'
+        old_dim = timeseries_da.dims[0]
+        timeseries_da = timeseries_da.rename({old_dim: "time"})
+
+    # Verify that the time dimension contains datetime values
+    if not np.issubdtype(timeseries_da.get_index("time").dtype, np.datetime64):
+        err_msg = (
+            "The `time` index in `timeseries` is not a datetime type. Please "
+            "provide data with a datetime-based time index (e.g. using "
+            "`pd.to_datetime()`)."
+        )
+        raise ValueError(err_msg)
+
+    # Extract times to match time dimension of `satellite_ds` and rename
+    timeseries_aligned_da = timeseries_da.reindex(time=time_coords, method=method, tolerance=tolerance).rename(
+        output_name
+    )
+
+    # Raise warning if no valid data is returned
+    if timeseries_aligned_da.isnull().all():
+        warning_msg = (
+            "The output array contains no valid values (i.e. all NaN). "
+            "Ensure that `timeseries` covers the same time period as "
+            "`data`, or provide a more relaxed `tolerance`."
+        )
+        warnings.warn(warning_msg, stacklevel=2)
+
+    return timeseries_aligned_da
 
 
 def pixel_tides(
