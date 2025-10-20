@@ -380,6 +380,8 @@ def test_pixel_tides_ensemble(satellite_ds):
         (lambda ts: ts.tide_height.to_series().rename_axis(None), False),  # Expected pass: pandas.Series, no index name
         (lambda ts: ts.tide_height.to_dataframe(), True),  # Expected fail: pandas.DataFrame
         (lambda ts: ts, True),  # Expected fail: xarray.Dataset
+        (lambda ts: xr.DataArray(np.random.rand(3, 4), dims=("x", "y")), True),  # Expected fail: multiple dims, no 'time'
+        (lambda ts: xr.DataArray([1, 2, 3], dims=["time"], coords={"time": [1, 2, 3]}), True),  # Expected fail: non-datetime index
     ],
 )
 def test_tag_timeseries(measured_tides_ds, satellite_ds, timeseries, expected_fail):
