@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.0 - 2025-10-20
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+* Add new `tag_timeseries` function for tagging satellite data with external timeseries data. This function is designed to take a 1D timeseries of tide heights or water levels, and map these back to each satellite observation timestep. This can be used to tag satellite data with observed tides, instead of tides modelled using global tide models. https://github.com/GeoscienceAustralia/eo-tides/pull/134
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.9.2...0.10.0
+
 ## 0.9.2 - 2025-10-07
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
@@ -144,6 +153,7 @@ model_tides(
     extra_databases=custom_db_dict,
     output_format="wide",
 )
+
 
 
 
