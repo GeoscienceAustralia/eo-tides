@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.1 - 2025-10-22
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+* Only include Python code in build to reduce package size by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/137
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.10.0...0.10.1
+
 ## 0.10.0 - 2025-10-20
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
@@ -153,6 +162,7 @@ model_tides(
     extra_databases=custom_db_dict,
     output_format="wide",
 )
+
 
 
 
