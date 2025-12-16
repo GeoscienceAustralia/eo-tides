@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.2 - 2025-12-16
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other changes
+
+* Pin pyTMD to <3.0.0 by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/141
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.10.1...0.10.2
+
 ## 0.10.1 - 2025-10-22
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
@@ -162,6 +173,7 @@ model_tides(
     extra_databases=custom_db_dict,
     output_format="wide",
 )
+
 
 
 
