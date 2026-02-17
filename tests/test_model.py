@@ -212,7 +212,7 @@ def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
 # Run tests for each unit, providing expected outputs
 @pytest.mark.parametrize(
     "units, expected_range, expected_dtype",
-    [("m", 10, "float32"), ("cm", 1000, "int16"), ("mm", 10000, "int16")],
+    [("m", 10, "float32"), ("cm", 1000, "Int16"), ("mm", 10000, "Int16")],
     ids=["metres", "centimetres", "millimetres"],
 )
 def test_model_tides_units(measured_tides_ds, units, expected_range, expected_dtype):
@@ -230,6 +230,41 @@ def test_model_tides_units(measured_tides_ds, units, expected_range, expected_dt
     # Verify tide range and dtypes are as expected for unit
     assert np.isclose(tide_range, expected_range, rtol=0.01)
     assert modelled_tides_df.tide_height.dtype == expected_dtype
+
+
+# Test for GitHub Issue #15: integer output units with NaN values
+# https://github.com/GeoscienceAustralia/eo-tides/issues/15
+@pytest.mark.parametrize("units", ["cm", "mm"], ids=["centimetres", "millimetres"])
+def test_model_tides_units_with_nan(units):
+    """Test that integer output units handle NaN values correctly.
+
+    When cutoff is finite, points beyond the extrapolation distance
+    receive NaN values. These should be converted to pd.NA in the
+    nullable Int16 output, not raise an IntCastingNaNError.
+    """
+    # Use an inland point that will be beyond cutoff distance
+    x_inland = [122.0]
+    y_inland = [-22.0]
+    time = pd.date_range("2020-01-01", periods=3, freq="6h")
+
+    # This should not raise an error (was failing before fix)
+    result = model_tides(
+        x=x_inland,
+        y=y_inland,
+        time=time,
+        model="EOT20",
+        output_units=units,
+        cutoff=10,  # 10km cutoff, inland point is beyond this
+    )
+
+    # Verify dtype is nullable Int16
+    assert result.tide_height.dtype == "Int16"
+
+    # Verify NaN values are represented as pd.NA
+    assert result.tide_height.isna().all()
+
+    # Verify statistical operations work correctly (don't include NA)
+    assert pd.isna(result.tide_height.mean())
 
 
 # Run test for each combination of mode, output format, and one or

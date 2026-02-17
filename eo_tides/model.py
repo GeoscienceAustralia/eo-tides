@@ -80,6 +80,29 @@ def _parallel_splits(
     return int(max(1, optimal_splits))
 
 
+def _to_nullable_int16(series: pd.Series) -> pd.arrays.IntegerArray:
+    """Convert a float Series to nullable Int16, preserving NaN as pd.NA.
+
+    This allows integer output units ("cm", "mm") to handle NaN values
+    that occur when points are beyond the tide model extrapolation cutoff.
+
+    Parameters
+    ----------
+    series : pd.Series
+        A pandas Series of float values, potentially containing NaN.
+
+    Returns
+    -------
+    pd.arrays.IntegerArray
+        A nullable Int16 array where NaN values become pd.NA.
+
+    """
+    values = series.to_numpy()
+    mask = np.isnan(values)
+    int_values = np.where(mask, 0, values).astype(np.int16)
+    return pd.arrays.IntegerArray(int_values, mask=mask)
+
+
 def _model_tides(
     model,
     x,
@@ -250,9 +273,9 @@ def _model_tides(
     if output_units == "m":
         tide_df["tide_height"] = tide_df.tide_height.astype(np.float32)
     elif output_units == "cm":
-        tide_df["tide_height"] = (tide_df.tide_height * 100).astype(np.int16)
+        tide_df["tide_height"] = _to_nullable_int16(tide_df.tide_height * 100)
     elif output_units == "mm":
-        tide_df["tide_height"] = (tide_df.tide_height * 1000).astype(np.int16)
+        tide_df["tide_height"] = _to_nullable_int16(tide_df.tide_height * 1000)
 
     return tide_df
 
