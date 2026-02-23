@@ -20,6 +20,7 @@ from odc.stac._mdtools import _normalize_geometry
 
 # Only import if running type checking
 if TYPE_CHECKING:
+    from odc.loader.types import Band_DType
     from pystac import ItemCollection
     from xarray import Dataset
 
@@ -64,7 +65,7 @@ def stac_load(
     mask_geopolygon: bool = False,
     stac_query: dict | None = None,
     stac_url: str = "https://planetarycomputer.microsoft.com/api/stac/v1",
-    dtype: Any | None = None,
+    dtype: Band_DType | None = None,
     **load_params,
 ) -> tuple[Dataset, ItemCollection]:
     """Query and load satellite data from a STAC API.
@@ -129,9 +130,12 @@ def stac_load(
         modifier=(planetary_computer.sign_inplace if "planetarycomputer" in stac_url else None),
     )
 
-    # Set dtype; use provided unless `mask_geopolygon` is provided,
-    # in which case use `float32`.
+    # Use provided dtype if exists, or "float32" if `mask_geopolygon` is provided
     dtype = "float32" if mask_geopolygon else dtype
+
+    # Add dtype to load parameters if required
+    if dtype is not None:
+        load_params["dtype"] = dtype
 
     # Set up time for query
     time = "/".join(time) if time is not None else None
@@ -159,7 +163,6 @@ def stac_load(
         geopolygon=geopolygon,
         lon=lon,
         lat=lat,
-        dtype=dtype,
         **load_params,
     )
 
