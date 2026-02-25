@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.10.3 - 2026-02-25
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Bug fixes
+
+* Fix output_units="cm" failing when cutoff is not inf by @obj809 in https://github.com/GeoscienceAustralia/eo-tides/pull/144
+* Fix mypy typing issue with odc.stac.load dtype by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/145
+
+### New Contributors
+
+* @obj809 made their first contribution in https://github.com/GeoscienceAustralia/eo-tides/pull/144
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.10.2...0.10.3
+
 ## 0.10.2 - 2025-12-16
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
@@ -173,6 +189,7 @@ model_tides(
     extra_databases=custom_db_dict,
     output_format="wide",
 )
+
 
 
 
