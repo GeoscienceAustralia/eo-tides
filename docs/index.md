@@ -49,7 +49,7 @@ To cite `eo-tides` in your work, please use the following [Journal of Open Sourc
     Bishop-Taylor, R., Phillips, C., Sagar, S., Newey, V., & Sutterley, T., (2025). eo-tides: Tide modelling tools for large-scale satellite Earth observation analysis. Journal of Open Source Software, 10(109), 7786, https://doi.org/10.21105/joss.07786
     ```
 
-=== "BibTeX"
+=== "BibTex"
 
     ```
     @article{Bishop-Taylor2025,
@@ -68,9 +68,28 @@ To cite `eo-tides` in your work, please use the following [Journal of Open Sourc
 
 In addition, please consider also citing the underlying [`pyTMD` Python package](https://pytmd.readthedocs.io/en/latest/) which powers the tide modelling functionality behind `eo-tides`:
 
-```
-Sutterley, T. C., Alley, K., Brunt, K., Howard, S., Padman, L., Siegfried, M. (2017) pyTMD: Python-based tidal prediction software. 10.5281/zenodo.5555395
-```
+=== "Plain text"
+
+    ```
+    Sutterley, T. C., Howard, S. L., Padman, L., & Siegfried, M. R., (2025). pyTMD: Python-based tidal prediction software. Journal of Open Source Software, 10(116), 8566, https://doi.org/10.21105/joss.08566
+    ```
+
+=== "BibTeX"
+
+    ```
+    @article{Sutterley2025,
+    doi       = {10.21105/joss.08566},
+    url       = {https://doi.org/10.21105/joss.08566},
+    year      = {2025},
+    publisher = {The Open Journal},
+    volume    = {10},
+    number    = {116},
+    pages     = {8566},
+    author    = {Sutterley, Tyler C. and Howard, Susan L. and Padman, Laurie and Siegfried, Matthew R.},
+    title     = {pyTMD: Python-based tidal prediction software},
+    journal   = {Journal of Open Source Software}
+    }
+    ```
 
 ## Contributing
 
