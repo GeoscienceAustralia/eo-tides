@@ -49,7 +49,7 @@ To cite `eo-tides` in your work, please use the following [Journal of Open Sourc
     Bishop-Taylor, R., Phillips, C., Sagar, S., Newey, V., & Sutterley, T., (2025). eo-tides: Tide modelling tools for large-scale satellite Earth observation analysis. Journal of Open Source Software, 10(109), 7786, https://doi.org/10.21105/joss.07786
     ```
 
-=== "BibTex"
+=== "BibTeX"
 
     ```
     @article{Bishop-Taylor2025,
