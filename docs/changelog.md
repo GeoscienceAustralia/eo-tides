@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.10.4 - 2026-03-18
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other changes
+
+* Update PyTMD reference to use JOSS by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/147
+* Downgrade odc-stac version by @robbibt in https://github.com/GeoscienceAustralia/eo-tides/pull/148
+
+**Full Changelog**: https://github.com/GeoscienceAustralia/eo-tides/compare/0.10.3...0.10.4
+
 ## 0.10.3 - 2026-02-25
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
@@ -189,6 +201,7 @@ model_tides(
     extra_databases=custom_db_dict,
     output_format="wide",
 )
+
 
 
 
