@@ -149,7 +149,7 @@ def _load_gauge_metadata(metadata_path):
         .str.replace("/", "_", regex=False)
         .str.lower()
     )
-    metadata_df = metadata_df.set_index("site_code")
+    metadata_df = metadata_df.set_index("file_name")
 
     # Convert metadata to GeoDataFrame
     metadata_gdf = gpd.GeoDataFrame(
@@ -175,7 +175,7 @@ def _load_gesla_dataset(site, path, na_value):
     return (
         gesla_df.assign(
             time=pd.to_datetime(gesla_df["date"] + " " + gesla_df["time"]),
-            site_code=site,
+            file_name=site,
         )
         .drop(columns=["date"])
         .set_index("time")
@@ -193,6 +193,7 @@ def _nearest_row(gdf, x, y, max_distance=None):
 def load_gauge_gesla(
     x=None,
     y=None,
+    file_name=None,
     site_code=None,
     time=None,
     max_distance=None,
@@ -220,10 +221,13 @@ def load_gauge_gesla(
         If provided as a list or tuple (e.g. `x=(150, 152), y=(-32, -30)`),
         then all gauges within the provided bounding box will be loaded.
         Leave as `None` to return all available gauges, or if providing a
-        list of site codes using `site_code`.
+        list of sites using `file_name`.
+    file_name : str or list of str, optional
+        Unique GESLA site file name(s) for which to load data, for example:
+        `file_name=['sydney_fort_denison-60370-aus-bom', 'sydney_port_jackson-213470-aus-bom']`.
+        If `file_name` is provided, `x` and `y` will be ignored.
     site_code : str or list of str, optional
-        GESLA site code(s) for which to load data (e.g. `site_code="62650"`).
-        If `site_code` is provided, `x` and `y` will be ignored.
+        Deprecated; please use `file_name` instead.
     time : tuple or list of str, optional
         Time range to consider, given as a tuple of start and end dates,
         e.g. `time=("2020", "2021")`. The default of None will return all
@@ -268,6 +272,15 @@ def load_gauge_gesla(
         ...and additional columns from station metadata.
 
     """
+    # Raise error if site_code is used instead of file_name
+    if site_code is not None:
+        err_msg = (
+            "The `site_code` parameter has been deprecated due to the GESLA 'site_code' field "
+            "not being unique. Please use `file_name` to provide a list of sites instead, e.g. "
+            "`file_name=['sydney_fort_denison-60370-aus-bom', 'sydney_port_jackson-213470-aus-bom']`"
+        )
+        raise Exception(err_msg)
+
     # Expand and validate data and metadata paths
     data_path = Path(data_path).expanduser()
     metadata_path = Path(metadata_path).expanduser()
@@ -291,31 +304,31 @@ def load_gauge_gesla(
     # Load tide gauge metadata
     metadata_df, metadata_gdf = _load_gauge_metadata(metadata_path)
 
-    # Use supplied site codes if available
-    if site_code is not None:
-        site_code = [site_code] if not isinstance(site_code, list) else site_code
+    # Use supplied sites if available
+    if file_name is not None:
+        file_name = [file_name] if not isinstance(file_name, list) else file_name
 
     # If x and y are tuples, use xy bounds to identify sites
     elif isinstance(x, tuple | list) & isinstance(y, tuple | list):
         bbox = BoundingBox.from_xy(x, y)
-        site_code = metadata_gdf.cx[bbox.left : bbox.right, bbox.top : bbox.bottom].index
+        file_name = metadata_gdf.cx[bbox.left : bbox.right, bbox.top : bbox.bottom].index
 
     # If x and y are single numbers, select nearest row
     elif isinstance(x, Number) & isinstance(y, Number):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            site_code = (
-                _nearest_row(metadata_gdf, x, y, max_distance).rename({"index_right": "site_code"}, axis=1).site_code
+            file_name = (
+                _nearest_row(metadata_gdf, x, y, max_distance).rename({"index_right": "file_name"}, axis=1).file_name
             )
 
         # Raise exception if no valid tide gauges are found
-        if site_code.isna().all():
+        if file_name.isna().all():
             err_msg = f"No tide gauge found within {max_distance} degrees of {x}, {y}."
             raise Exception(err_msg)
 
     # Otherwise if all are None, return all available site codes
-    elif (site_code is None) & (x is None) & (y is None):
-        site_code = metadata_df.index.to_list()
+    elif (file_name is None) & (x is None) & (y is None):
+        file_name = metadata_df.index.to_list()
 
     else:
         err_msg = (
@@ -331,15 +344,15 @@ def load_gauge_gesla(
     end_time = _round_date_strings(time[-1], round_type="end")
 
     # Identify paths to load and nodata values for each site
-    metadata_df["file_name"] = data_path / metadata_df["file_name"]
-    paths_na = metadata_df.loc[site_code, ["file_name", "null_value"]]
+    metadata_df["file_path"] = data_path / metadata_df.index
+    paths_na = metadata_df.loc[file_name, ["file_path", "null_value"]]
 
     # Load and combine into a single dataframe
     gauge_list = [
         _load_gesla_dataset(s, p, na_value=na)
         for s, p, na in tqdm.tqdm(paths_na.itertuples(), total=len(paths_na), desc="Loading GESLA gauges")
     ]
-    data_df = pd.concat(gauge_list).sort_index().loc[slice(start_time, end_time)].reset_index().set_index("site_code")
+    data_df = pd.concat(gauge_list).sort_index().loc[slice(start_time, end_time)].reset_index().set_index("file_name")
 
     # Optionally filter by use flag column
     if filter_use_flag:
@@ -350,7 +363,7 @@ def load_gauge_gesla(
         if data_df.empty:
             data_df = data_df.reindex(columns=[*data_df.columns, *metadata_df.columns])
         else:
-            data_df[metadata_df.columns] = metadata_df.loc[site_code]
+            data_df[metadata_df.columns] = metadata_df.loc[file_name]
 
     # Add time to index and remove duplicates
     data_df = data_df.set_index("time", append=True)
@@ -361,12 +374,12 @@ def load_gauge_gesla(
 
     # Remove observed mean sea level if requested
     if correct_mean:
-        data_df["sea_level"] = data_df["sea_level"].sub(data_df.groupby("site_code")["sea_level"].transform("mean"))
+        data_df["sea_level"] = data_df["sea_level"].sub(data_df.groupby("file_name")["sea_level"].transform("mean"))
 
     # If no rows are returned, raise a warning
     if data_df.empty:
         warnings.warn(
-            f"No data found for site '{site_code}'. "
+            f"No data found for site '{file_name}'. "
             "Are you trying to load data using `time` for a period that does not have tide gauge measurements?",
             UserWarning,
             stacklevel=2,
