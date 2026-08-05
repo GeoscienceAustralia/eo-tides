@@ -56,7 +56,7 @@ def test_load_gauge_gesla(x, y, file_name, max_distance, correct_mean, expected)
     gauge_df = load_gauge_gesla(
         x=x,
         y=y,
-        file_namee=file_name,
+        file_name=file_name,
         max_distance=max_distance,
         correct_mean=correct_mean,
         time=("2018-01-01", "2018-01-20"),
