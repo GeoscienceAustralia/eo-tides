@@ -397,25 +397,31 @@ def ensemble_tides(
         """
         raise Exception(textwrap.dedent(error_msg).strip()) from None
 
+    # x/y repeat once per timestep and tide model since they come from tide_df's full
+    # index, but rankings only depend on location. Interpolating the full, repeated
+    # coordinates re-runs the same IDW computation for no benefit, and can raise a
+    # MemoryError for large study areas or long time series. Interpolating only the
+    # unique locations avoids this. The join back onto tide_df by (tide_model, x, y)
+    # below already broadcasts each location's ranking to every matching row.
+    unique_xy = pd.DataFrame({"x": x, "y": y}).drop_duplicates()
+
     # Use points to interpolate model rankings into requested x and y
     id_kwargs_str = "" if idw_kwargs == {} else idw_kwargs
     print(f"Interpolating model rankings using IDW interpolation {id_kwargs_str}")
     ensemble_ranks_df = (
-        # Run IDW interpolation on subset of ranking columns
+        # Run IDW interpolation on subset of ranking columns, once per unique location
         pd.DataFrame(
             idw(
                 input_z=model_ranks_gdf[model_ranking_cols],
                 input_x=model_ranks_gdf.geometry.x,
                 input_y=model_ranks_gdf.geometry.y,
-                output_x=x,
-                output_y=y,
+                output_x=unique_xy.x,
+                output_y=unique_xy.y,
                 **idw_kwargs,
             ),
             columns=model_ranking_cols,
         )
-        .assign(x=x, y=y)
-        # Drop any duplicates then melt columns into long format
-        .drop_duplicates()
+        .assign(x=unique_xy.x.to_numpy(), y=unique_xy.y.to_numpy())
         .melt(id_vars=["x", "y"], var_name="tide_model", value_name="rank")
         # Remove "rank_" prefix to get plain model names
         .replace({"^rank_": ""}, regex=True)
