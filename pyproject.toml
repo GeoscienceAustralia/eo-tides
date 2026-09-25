@@ -144,6 +144,8 @@ lint.ignore = [
   "PD003",    # Ignore notnull (confusing xarray with pandas)
   "PD004",    # Ignore notnull (confusing xarray with pandas)
   "PD013",    # Ignore stack vs. melt (confusing xarray with pandas)
+  "PD010",    # Ignore pivot_table vs. unstack (confusing xarray with pandas)
+  "ARG005",   # Ignore unused lambda argument
 ]
 exclude = ["tests/testing.ipynb"]  # Don't modify testing notebook
 

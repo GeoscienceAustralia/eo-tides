@@ -33,7 +33,29 @@ from pyTMD.io.model import load_database
 from scipy.spatial import cKDTree as KDTree
 from tqdm import tqdm
 
-from eo_tides.model import DEFAULT_ENSEMBLE_FUNCS, DEFAULT_ENSEMBLE_MODELS
+# Default input models for ensemble modelling
+DEFAULT_ENSEMBLE_MODELS = [
+    "EOT20",
+    "FES2012",
+    "FES2014_extrapolated",
+    "FES2022_extrapolated",
+    "GOT4.10",
+    "GOT5.6_extrapolated",
+    "TPXO10-atlas-v2-nc",
+    "TPXO8-atlas-nc",
+    "TPXO9-atlas-v5-nc",
+]
+
+# Default pre-made ensemble functions, including flexible "ensemble" option
+DEFAULT_ENSEMBLE_FUNCS = {
+    "ensemble": lambda x, ranks, top_n=3, stat="mean", **kw: getattr(x.where(ranks <= top_n), stat)(dim="tide_model"),
+    "ensemble-mean": lambda x, ranks=None, **kw: x.mean(dim="tide_model"),
+    "ensemble-median": lambda x, ranks=None, **kw: x.median(dim="tide_model"),
+    "ensemble-top": lambda x, ranks, **kw: x.where(ranks == 1).mean(dim="tide_model"),
+    "ensemble-bottom": lambda x, ranks, **kw: x.where(ranks == ranks.max(dim="tide_model")).mean(dim="tide_model"),
+    "ensemble-mean-top3": lambda x, ranks, **kw: x.where(ranks <= 3).mean(dim="tide_model"),
+    "ensemble-median-top3": lambda x, ranks, **kw: x.where(ranks <= 3).median(dim="tide_model"),
+}
 
 # Type alias for all possible inputs to "time" params
 DatetimeLike: TypeAlias = np.ndarray | pd.DatetimeIndex | pd.Timestamp | datetime.datetime | str | list[str]
