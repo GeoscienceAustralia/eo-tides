@@ -210,8 +210,6 @@ def _standardise_models(
 
     # Handle "ensemble" modelling
     if ensemble_requested:
-        print("Running ensemble tide modelling")
-
         # If no ensemble input models are defined, use defaults
         ensemble_models = set(ensemble_models or DEFAULT_ENSEMBLE_MODELS)
 
@@ -225,7 +223,14 @@ def _standardise_models(
             raise ValueError(error_text)
 
         # Return set of ensemble input models plus requested standard models
-        models_to_process = ensemble_models | standard_requested
+        models_to_process = standard_requested | ensemble_models
+        ensemble_models_extra = models_to_process - standard_requested
+
+        if ensemble_models_extra:
+            print(
+                f"Loading additional models required for ensemble modelling ({sorted(ensemble_requested)}):\n"
+                f"{sorted(ensemble_models_extra)}",
+            )
 
     # Otherwise, models to process are the same as those requested
     else:
