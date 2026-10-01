@@ -13,7 +13,6 @@ import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
-import odc.geo.xr
 import pandas as pd
 import xarray as xr
 from odc.geo.geobox import GeoBox
@@ -24,7 +23,7 @@ if TYPE_CHECKING:
 
     from odc.geo import Shape2d
 
-from .model import model_phases, model_tides
+from .model import model_tides
 from .utils import DatetimeLike, _standardise_time
 
 
@@ -182,27 +181,29 @@ def tag_tides(
     directory: str | os.PathLike | None = None,
     tidepost_lat: float | None = None,
     tidepost_lon: float | None = None,
+    tide_stage: bool = False,
     return_phases: bool = False,
     **model_tides_kwargs,
 ) -> xr.DataArray | xr.Dataset:
-    """Model tide heights and phases for every dataset timestep using multiple ocean tide models.
+    """Model tide heights and tide stages for every dataset timestep using multiple ocean tide models.
 
     Tides are modelled using the centroid of the dataset by
     default; use `tidepost_lat` and `tidepost_lon` to specify
     a custom tidal modelling location.
 
-    The function supports all tidal models supported by `pyTMD`,
-    including:
+    Supports all ocean tide models supported by `pyTMD`, including:
 
     - Empirical Ocean Tide model (EOT20)
-    - Finite Element Solution tide models (FES2022, FES2014, FES2012)
-    - TOPEX/POSEIDON global tide models (TPXO10, TPXO9, TPXO8)
+    - Finite Element Solution models (FES2022, FES2014, FES2012)
+    - TOPEX/POSEIDON global models (TPXO10, TPXO9, TPXO8)
     - Global Ocean Tide models (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
-    - Hamburg direct data Assimilation Methods for Tides models (HAMTIDE11)
-    - Technical University of Denmark tide models (DTU23)
+    - Hamburg Assimilation Methods for Tides (HAMTIDE11)
+    - Technical University of Denmark models (DTU23)
 
-    This function requires access to tide model data files.
-    For tide model setup instructions, refer to the guide:
+    Additional custom "ensemble" models are also supported; see:
+    https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.model.ensemble_tides
+
+    Requires local tide model data. For setup instructions, see:
     https://geoscienceaustralia.github.io/eo-tides/setup/
 
     Parameters
@@ -221,11 +222,12 @@ def tag_tides(
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
         The tide model (or list of models) to use to model tides.
-        If a list is provided, a new "tide_model" dimension will be
-        added to the `xarray.DataArray` outputs. Defaults to "EOT20";
-        specify "all" to use all models available in `directory`.
-        For a full list of available and supported models, run
-        `from eo_tides.utils import list_models; list_models()`.
+        Defaults to "EOT20"; specify "all" to use all models available
+        in `directory`. For a full list of available and supported models,
+        run `from eo_tides.utils import list_models; list_models()`.
+        Ensemble tide modelling can also be requested by passing either
+        "ensemble", or any of the ensemble options supported by
+        `from eo_tides.model import ensemble_tides`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -237,10 +239,12 @@ def tag_tides(
         Optional coordinates used to model tides. The default is None,
         which uses the centroid of the dataset as the tide modelling
         location.
-    return_phases : bool, optional
+    tide_stage : bool, optional
         Whether to model and return tide phases in addition to tide heights.
         If True, outputs will be returned as an xr.Dataset containing both
-        "tide_height" and "tide_phase" variables.
+        "tide_height" and "tide_stage" variables.
+    return_phases : bool, optional
+        Deprecated; use `tide_stage` instead.
     **model_tides_kwargs :
         Optional parameters passed to the `eo_tides.model.model_tides`
         function. Important parameters include `cutoff` (used to
@@ -250,14 +254,25 @@ def tag_tides(
 
     Returns
     -------
-    tides_da : xr.DataArray or xr.Dataset
-        If `return_phases=False`: a one-dimensional "tide_height" xr.DataArray.
-        If `return_phases=True`: a one-dimensional xr.Dataset containing
-        "tide_height" and "tide_phase" variables.
+    tides_ds : xr.DataArray or xr.Dataset
+        If `tide_stage=False`: a time-series "tide_height" xr.DataArray.
+        If `tide_stage=True`: a time-series xr.Dataset containing
+        "tide_height" and "tide_stage" variables.
         Outputs will contain values for every timestep in `data`, or for
         every time in `times` if provided.
 
     """
+    # Raise deprecation warning for `return_phases`
+    if return_phases:
+        warnings.warn(
+            "The `return_phases` parameter is deprecated and will be removed "
+            "in a future release. Use `tide_stage` instead.",
+            category=FutureWarning,
+            stacklevel=2,
+        )
+        # Map old param to new behavior if needed
+        tide_stage = return_phases
+
     # Standardise data inputs, time and models
     gbox, time_coords = _standardise_inputs(data, time)
     model = [model] if isinstance(model, str) else model
@@ -265,58 +280,43 @@ def tag_tides(
     # If custom tide posts are not provided, use dataset centroid
     if tidepost_lat is None or tidepost_lon is None:
         lon, lat = gbox.geographic_extent.centroid.coords[0]
-        print(f"Setting tide modelling location from dataset centroid: {lon:.2f}, {lat:.2f}")
+        print(f"Setting tide modelling location from data centroid: {lon:.2f}, {lat:.2f}")
     else:
         lon, lat = tidepost_lon, tidepost_lat
         print(f"Using tide modelling location: {lon:.2f}, {lat:.2f}")
 
-    # Either model both tides and phases, or model only tides
-    if return_phases:
-        # Model tide phases and heights for each observation
-        tide_df = model_phases(
-            x=lon,
-            y=lat,
-            time=time_coords,
-            model=model,
-            directory=directory,
-            crs="EPSG:4326",
-            return_tides=True,
-            **model_tides_kwargs,
-        )
-
-    else:
-        # Model tide heights for each observation
-        tide_df = model_tides(
-            x=lon,
-            y=lat,
-            time=time_coords,
-            model=model,
-            directory=directory,
-            crs="EPSG:4326",
-            **model_tides_kwargs,
-        )
+    # Model tide heights for each observation
+    tide_ds = model_tides(
+        x=lon,
+        y=lat,
+        time=time_coords,
+        model=model,
+        directory=directory,
+        crs="EPSG:4326",
+        tide_stage=tide_stage,
+        mode="one-to-many",
+        output_format="xarray",
+        **model_tides_kwargs,
+    ).squeeze()
 
     # If tides cannot be successfully modeled (e.g. if the centre of the
     # xarray dataset is located is over land), raise an exception
-    if tide_df.tide_height.isna().all():
+    if tide_ds.tide_height.isnull().all():
         err_msg = (
             f"Tides could not be modelled for dataset centroid located "
-            f"at {tidepost_lon:.2f}, {tidepost_lat:.2f}. This can occur if "
+            f"at {lon:.2f}, {lat:.2f}. This can occur if "
             f"this coordinate occurs over land. Please manually specify "
             f"a tide modelling location located over water using the "
             f"`tidepost_lat` and `tidepost_lon` parameters.",
         )
         raise ValueError(err_msg)
 
-    # Convert to xarray format, squeezing to return an xr.DataArray if
-    # dataframe contains only one "tide_height" column
-    tides_da = tide_df.reset_index().set_index(["time", "tide_model"]).drop(["x", "y"], axis=1).squeeze().to_xarray()
+    # If tide stage was not required, return tide heights as a DataArray
+    if not tide_stage:
+        return tide_ds["tide_height"]
 
-    # If only one tidal model exists, squeeze out "tide_model" dim
-    if len(tides_da.tide_model) == 1:
-        tides_da = tides_da.squeeze("tide_model")
-
-    return tides_da
+    # Otherwise return as a Dataset
+    return tide_ds
 
 
 def tag_timeseries(
@@ -439,7 +439,7 @@ def pixel_tides(
     dask_compute: bool = True,
     **model_tides_kwargs,
 ) -> xr.DataArray:
-    """Model tide heights for every dataset pixel using multiple ocean tide models.
+    """Model tide heights for every dataset pixel and timestep using multiple ocean tide models.
 
     This function models tides into a low-resolution tide
     modelling grid covering the spatial extent of the input
@@ -448,19 +448,19 @@ def pixel_tides(
     higher resolution dataset's extent and resolution to
     produce a modelled tide height for every pixel through time.
 
-    This function uses the parallelised `model_tides` function
-    under the hood. It supports all tidal models supported by
-    `pyTMD`, including:
+    Supports all ocean tide models supported by `pyTMD`, including:
 
     - Empirical Ocean Tide model (EOT20)
-    - Finite Element Solution tide models (FES2022, FES2014, FES2012)
-    - TOPEX/POSEIDON global tide models (TPXO10, TPXO9, TPXO8)
+    - Finite Element Solution models (FES2022, FES2014, FES2012)
+    - TOPEX/POSEIDON global models (TPXO10, TPXO9, TPXO8)
     - Global Ocean Tide models (GOT5.6, GOT5.5, GOT4.10, GOT4.8, GOT4.7)
-    - Hamburg direct data Assimilation Methods for Tides models (HAMTIDE11)
-    - Technical University of Denmark tide models (DTU23)
+    - Hamburg Assimilation Methods for Tides (HAMTIDE11)
+    - Technical University of Denmark models (DTU23)
 
-    This function requires access to tide model data files.
-    For tide model setup instructions, refer to the guide:
+    Additional custom "ensemble" models are also supported; see:
+    https://geoscienceaustralia.github.io/eo-tides/api/#eo_tides.model.ensemble_tides
+
+    Requires local tide model data. For setup instructions, see:
     https://geoscienceaustralia.github.io/eo-tides/setup/
 
     Parameters
@@ -479,11 +479,12 @@ def pixel_tides(
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
     model : str or list of str, optional
         The tide model (or list of models) to use to model tides.
-        If a list is provided, a new "tide_model" dimension will be
-        added to the `xarray.DataArray` outputs. Defaults to "EOT20";
-        specify "all" to use all models available in `directory`.
-        For a full list of available and supported models, run
-        `from eo_tides.utils import list_models; list_models()`.
+        Defaults to "EOT20"; specify "all" to use all models available
+        in `directory`. For a full list of available and supported models,
+        run `from eo_tides.utils import list_models; list_models()`.
+        Ensemble tide modelling can also be requested by passing either
+        "ensemble", or any of the ensemble options supported by
+        `from eo_tides.model import ensemble_tides`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -537,7 +538,7 @@ def pixel_tides(
         Whether to compute results of the resampling step using Dask.
         If False, `tides_highres` will be returned as a Dask-enabled array.
     **model_tides_kwargs :
-        Optional parameters passed to the `eo_tides.model.model_tides`
+        Optional parameters passed to the underlying `eo_tides.model.model_tides`
         function. Important parameters include `cutoff` (used to
         extrapolate modelled tides away from the coast; defaults to
         `np.inf`), `crop` (whether to crop tide model constituent files
@@ -552,14 +553,13 @@ def pixel_tides(
         and extents of `data`. This will contain either tide heights for
         every timestep in `data` (or in `times` if provided), or tide height
         quantiles for every quantile provided by `calculate_quantiles`.
-        If `resample=False`, results for the intermediate low-resolution
-        tide modelling grid will be returned instead.
+        If `resample=False`, the intermediate low-resolution tide
+        modelling grid will be returned instead.
 
     """
     # Standardise data inputs, time and models
     gbox, time_coords = _standardise_inputs(data, time)
     dask_chunks = _resample_chunks(data, dask_chunks)
-    model = [model] if isinstance(model, str) else model
 
     # Determine spatial dimensions
     y_dim, x_dim = gbox.dimensions
@@ -616,41 +616,22 @@ def pixel_tides(
     print(f"Creating reduced resolution {resolution} x {resolution} {crs_units} tide modelling array")
     buffered_geobox = gbox.buffered(buffer)
     rescaled_geobox = GeoBox.from_bbox(bbox=buffered_geobox.boundingbox, resolution=resolution)
-    rescaled_ds = odc.geo.xr.xr_zeros(rescaled_geobox)
 
-    # Flatten grid to 1D, then add time dimension
-    flattened_ds = rescaled_ds.stack(z=(x_dim, y_dim))
-    flattened_ds = flattened_ds.expand_dims(dim={"time": time_coords})
-
-    # Model tides in parallel, returning a pandas.DataFrame
-    tide_df = model_tides(
-        x=flattened_ds[x_dim],
-        y=flattened_ds[y_dim],
-        time=flattened_ds.time,
+    # Model tides in parallel, returning a low-res tide height cube
+    tides_lowres = model_tides(
+        x=rescaled_geobox.coords[x_dim].values,
+        y=rescaled_geobox.coords[y_dim].values,
+        time=time_coords,
         crs=f"EPSG:{gbox.crs.epsg}",
         model=model,
         directory=directory,
+        mode="grid",
+        output_format="xarray",
         **model_tides_kwargs,
-    )
+    ).tide_height
 
-    # Convert our pandas.DataFrame tide modelling outputs to xarray
-    tides_lowres = (
-        # Rename x and y dataframe indexes to match x and y xarray dims
-        tide_df.rename_axis(["time", x_dim, y_dim])
-        # Add tide model column to dataframe indexes so we can convert
-        # our dataframe to a multidimensional xarray
-        .set_index("tide_model", append=True)
-        # Convert to xarray and select our tide modelling xr.DataArray
-        .to_xarray()
-        .tide_height
-        # Re-index and transpose into our input coordinates and dim order
-        .reindex_like(rescaled_ds)
-        .transpose("tide_model", "time", y_dim, x_dim)
-    )
-
-    # Optionally calculate and return quantiles rather than raw data.
-    # Set dtype to dtype of the input data as quantile always returns
-    # float64 (memory intensive)
+    # Optionally calculate quantiles rather than raw data. Set dtype
+    # to match input data to avoid expensive quantile float64 default
     if calculate_quantiles is not None:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -662,6 +643,7 @@ def pixel_tides(
         tides_lowres = tides_lowres.squeeze("tide_model")
 
     # Ensure CRS is present before we apply any resampling
+    # (can be drop by quantile)
     tides_lowres = tides_lowres.odc.assign_crs(gbox.crs)
 
     # Reproject into original high resolution grid
