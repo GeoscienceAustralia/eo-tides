@@ -166,6 +166,7 @@ DEP002 = [
     "pyogrio",
     "dask",
     "jupyter",
+    "h5py",
 ]
 
 [tool.coverage.report]
