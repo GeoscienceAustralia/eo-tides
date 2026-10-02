@@ -38,6 +38,7 @@ dependencies = [
     "colorama>=0.4.3",
     "dask[complete]>=2023.1.0",
     "geopandas>=0.10.0",
+    "h5py>=3.10.0",
     "matplotlib>=3.8.0",
     "numpy>=1.26.0",
     "odc-geo>=0.4.7",
@@ -46,9 +47,8 @@ dependencies = [
     "planetary_computer>=1.0.0",
     "psutil>=6.0.0",
     "pyogrio>=0.10.0",
-    "pyproj>=3.7.0",
     "pystac-client>=0.8.3",
-    "pyTMD>=2.2.8,<3.0.0",
+    "pyTMD>=3.0.9",
     "scikit-learn>=1.4.0",
     "scipy>=1.14.1",
     "shapely>=2.0.6",
@@ -144,6 +144,8 @@ lint.ignore = [
   "PD003",    # Ignore notnull (confusing xarray with pandas)
   "PD004",    # Ignore notnull (confusing xarray with pandas)
   "PD013",    # Ignore stack vs. melt (confusing xarray with pandas)
+  "PD010",    # Ignore pivot_table vs. unstack (confusing xarray with pandas)
+  "ARG005",   # Ignore unused lambda argument
 ]
 exclude = ["tests/testing.ipynb"]  # Don't modify testing notebook
 
@@ -164,6 +166,7 @@ DEP002 = [
     "pyogrio",
     "dask",
     "jupyter",
+    "h5py",
 ]
 
 [tool.coverage.report]

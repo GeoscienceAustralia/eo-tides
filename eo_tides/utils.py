@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 
 # Only import if running type checking
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
     from typing import Any, TypeAlias
 
     from odc.geo.geom import BoundingBox
@@ -32,6 +32,30 @@ from colorama import Style, init
 from pyTMD.io.model import load_database
 from scipy.spatial import cKDTree as KDTree
 from tqdm import tqdm
+
+# Default input models for ensemble modelling
+DEFAULT_ENSEMBLE_MODELS = [
+    "EOT20",
+    "FES2012",
+    "FES2014_extrapolated",
+    "FES2022_extrapolated",
+    "GOT4.10",
+    "GOT5.6_extrapolated",
+    "TPXO10-atlas-v2-nc",
+    "TPXO8-atlas-nc",
+    "TPXO9-atlas-v5-nc",
+]
+
+# Default pre-made ensemble functions, including flexible "ensemble" option
+DEFAULT_ENSEMBLE_FUNCS = {
+    "ensemble": lambda x, ranks, top_n=3, stat="mean", **kw: getattr(x.where(ranks <= top_n), stat)(dim="tide_model"),
+    "ensemble-mean": lambda x, ranks=None, **kw: x.mean(dim="tide_model"),
+    "ensemble-median": lambda x, ranks=None, **kw: x.median(dim="tide_model"),
+    "ensemble-top": lambda x, ranks, **kw: x.where(ranks == 1).mean(dim="tide_model"),
+    "ensemble-bottom": lambda x, ranks, **kw: x.where(ranks == ranks.max(dim="tide_model")).mean(dim="tide_model"),
+    "ensemble-mean-top3": lambda x, ranks, **kw: x.where(ranks <= 3).mean(dim="tide_model"),
+    "ensemble-median-top3": lambda x, ranks, **kw: x.where(ranks <= 3).median(dim="tide_model"),
+}
 
 # Type alias for all possible inputs to "time" params
 DatetimeLike: TypeAlias = np.ndarray | pd.DatetimeIndex | pd.Timestamp | datetime.datetime | str | list[str]
@@ -94,102 +118,132 @@ def _standardise_time(
 
 
 def _standardise_models(
-    model: str | list[str],
+    model: str | Iterable[str],
     directory: str | os.PathLike,
-    ensemble_models: list[str] | None = None,
+    ensemble_models: Iterable[str] | None = None,
+    ensemble_func: dict | None = None,
     extra_databases: str | os.PathLike | list | None = None,
-) -> tuple[list[str], list[str], list[str] | None]:
+) -> tuple[list[str], list[str], list[str], list[str]]:
     """Standardise lists of models for analysis.
 
-    Take an input model name or list of names, and return a list
-    of models to process, requested models, and ensemble models,
-    as required by the `model_tides` function.
+    Take an input model name or list of names, and return lists
+    of requested models, models to process, requested ensembles,
+    and ensemble models, as required by the `model_tides` function.
 
-    Handles two special values passed to `model`: "all", which
-    will model tides for all models available in `directory`, and
-    "ensemble", which will model tides for all models in a list
-    of ensemble models.
+    Parameters
+    ----------
+    model : str or iterable of str
+        Name(s) of tide model(s) to process.
+    directory : str or path
+        Directory containing tide model data.
+    ensemble_models : iterable of str, optional
+        Input models to include in ensemble modelling (e.g.
+        models to be combined to create multi-model ensembles).
+    ensemble_func : dict, optional
+        An optional dictionary containing additional custom ensemble
+        function definitions. Dictionary keys will be used to
+        name the ensemble outputs.
+    extra_databases : str, path, or list, optional
+        Additional custom tide model database configuration.
+
+    Returns
+    -------
+    models_requested : list of str
+        List of output model names requested by the user, supplemented
+        by additional options if "all" was included.
+    models_to_process : list of str
+        List of all standard tide models to compute tides for, including
+        any additional models temporarily required for ensemble modelling.
+    ensemble_requested : list of str
+        List of all ensembles requested by the user.
+    ensemble_models : list of str
+        List of additional input models required for ensemble processing.
+
     """
-    # Turn inputs into arrays for consistent handling
-    models_requested = [str(m) for m in np.atleast_1d(model)]
-
-    # Raise error if list contains duplications
-    duplicates = _get_duplicates(models_requested)
-    if len(duplicates) > 0:
-        err_msg = f"The model parameter contains duplicate values: {duplicates}"
-        raise ValueError(err_msg)
-
-    # Load supported models from pyTMD database
-    available_models, valid_models = list_models(
+    # Load supported models from pyTMD database, and convert to sets
+    standard_available, standard_valid = list_models(
         directory,
         show_available=False,
         show_supported=False,
         raise_error=True,
         extra_databases=extra_databases,
     )
-    custom_options = ["ensemble", "all"]
+    standard_available = set(standard_available)
+    standard_valid = set(standard_valid)
 
-    # Error if any models are not supported
-    if not all(m in valid_models + custom_options for m in models_requested):
-        error_text = (
-            f"One or more of the requested models are not valid.\n"
-            f"Requested models: {models_requested}\n"
-            f"Valid models: {valid_models}\n"
-            "For tide model setup instructions, refer to the guide: https://geoscienceaustralia.github.io/eo-tides/setup/"
-        )
-        raise ValueError(error_text) from None
+    # Cast requested models to set of strings for consistent handling
+    models_requested = {model} if isinstance(model, str) else {str(m) for m in model}
 
-    # Error if any models are not available in `directory`
-    if not all(m in available_models + custom_options for m in models_requested):
-        error_text = (
-            f"One or more of the requested tide models are not available in `{directory}`.\n"
-            f"Requested models: {models_requested}\n"
-            f"Available models: {available_models}\n"
-            "For tide model setup instructions, refer to the guide: https://geoscienceaustralia.github.io/eo-tides/setup/"
-        )
-        raise ValueError(error_text) from None
-
-    # If "all" models are requested, update requested list to include available models
+    # If "all" in requested models, replace with all available
     if "all" in models_requested:
-        models_requested = available_models + [m for m in models_requested if m != "all"]
+        models_requested.discard("all")
+        models_requested.update(standard_available)
 
-    # If "ensemble" modeling is requested, use custom list of ensemble models
-    if "ensemble" in models_requested:
-        print("Running ensemble tide modelling")
-        ensemble_models = (
-            ensemble_models
-            if ensemble_models is not None
-            else [
-                "EOT20",
-                "FES2012",
-                "FES2014_extrapolated",
-                "FES2022_extrapolated",
-                "GOT4.10",
-                "GOT5.6_extrapolated",
-                "TPXO10-atlas-v2-nc",
-                "TPXO8-atlas-nc",
-                "TPXO9-atlas-v5-nc",
-            ]
+    # Join any custom ensemble functions with defaults to get full valid list
+    ensemble_func = {} if ensemble_func is None else ensemble_func
+    ensemble_func = ensemble_func | DEFAULT_ENSEMBLE_FUNCS
+    ensemble_valid = set(ensemble_func)
+
+    # Split requested models into standard and ensemble
+    standard_requested = models_requested - ensemble_valid
+    ensemble_requested = models_requested & ensemble_valid
+
+    # Validate model names against supported database
+    standard_invalid = standard_requested - standard_valid
+    if standard_invalid:
+        error_text = (
+            f"The following requested model(s) are not valid: {sorted(standard_invalid)}\n"
+            f"Supported models: {sorted(standard_valid)}\n"
+            "For tide model setup instructions, refer to: https://geoscienceaustralia.github.io/eo-tides/setup/"
         )
+        raise ValueError(error_text)
 
-        # Error if any ensemble models are not available in `directory`
-        if not all(m in available_models for m in ensemble_models):
+    # Validate that supported models are available in `directory`
+    standard_missing = standard_requested - standard_available
+    if standard_missing:
+        error_text = (
+            f"The following requested model(s) are supported but not available in `{directory}`: {sorted(standard_missing)}\n"
+            f"Available models: {sorted(standard_available)}\n"
+            "For tide model setup instructions, refer to: https://geoscienceaustralia.github.io/eo-tides/setup/"
+        )
+        raise ValueError(error_text)
+
+    # Handle "ensemble" modelling
+    if ensemble_requested:
+        # If no ensemble input models are defined, use defaults
+        ensemble_models_set = set(ensemble_models or DEFAULT_ENSEMBLE_MODELS)
+
+        # Check if underlying ensemble model inputs are available
+        ensemble_missing = ensemble_models_set - standard_available
+        if ensemble_missing:
             error_text = (
-                f"One or more of the requested ensemble models are not available in `{directory}`:\n"
-                f"{ensemble_models}\n\n"
-                f"The following models are available in `{directory}`:\n"
-                f"{available_models}"
+                f"The following required ensemble model inputs are not available in `{directory}`: {sorted(ensemble_missing)}\n"
+                f"Available models: {sorted(standard_available)}"
             )
             raise ValueError(error_text)
 
-        # Return set of all ensemble plus any other requested models
-        models_to_process = sorted(set(ensemble_models + [m for m in models_requested if m != "ensemble"]))
+        # Return set of ensemble input models plus requested standard models
+        models_to_process = standard_requested | ensemble_models_set
+        ensemble_models_extra = models_to_process - standard_requested
+
+        if ensemble_models_extra:
+            print(
+                f"Loading additional models required for ensemble modelling ({sorted(ensemble_requested)}):\n"
+                f"{sorted(ensemble_models_extra)}",
+            )
 
     # Otherwise, models to process are the same as those requested
     else:
         models_to_process = models_requested
+        ensemble_models_set = set()
 
-    return models_to_process, models_requested, ensemble_models
+    # Cast all final sets to sorted lists
+    return (
+        sorted(models_requested),
+        sorted(models_to_process),
+        sorted(ensemble_requested),
+        sorted(ensemble_models_set),
+    )
 
 
 def _clip_model_file(
@@ -413,7 +467,7 @@ def clip_models(
                     xcoord="longitude",
                 )
 
-            elif m in ("HAMTIDE11",):
+            elif m == "HAMTIDE11":
                 nc_clipped = _clip_model_file(nc, bbox, xdim="LON", ydim="LAT", ycoord="LAT", xcoord="LON")
 
             elif m in (
@@ -519,62 +573,59 @@ def list_models(
     # provided, try global environment variable.
     directory = _set_directory(directory)
 
-    # Load supported models from pyTMD database, adding extras if required
+    # Load supported elevation models from pyTMD database plus extra
     extra_databases = [] if extra_databases is None else extra_databases
-    model_database = load_database(extra_databases=extra_databases)["elevation"]
+    supported_models = pyTMD.io.model.ocean_elevation(extra_databases=extra_databases)
 
-    # Get full list of supported models
-    supported_models = list(model_database.keys())
-
-    # Extract expected model paths
+    # Pre-evaluate models and extract resolved paths using pyTMD
+    available_models = []
     expected_paths = {}
+
     for m in supported_models:
-        model_file = model_database[m]["model_file"]
+        try:
+            # Let pyTMD verify if constituents exist
+            mod = pyTMD.io.model(directory=directory, extra_databases=extra_databases).from_database(m, group="z")
+            available_models.append(m)
+        except FileNotFoundError:
+            # Load without verification to safely extract the expected path
+            mod = pyTMD.io.model(directory=directory, extra_databases=extra_databases, verify=False).from_database(
+                m, group="z"
+            )
 
-        # Handle GOT5.6 differently to ensure we test for presence of GOT5.6 constituents
+        # Extract the resolved path directly from the pyTMD elevation (z) model object
+        m_files = mod.z.model_file if isinstance(mod.z.model_file, list) else [mod.z.model_file]
+
+        # Handle GOT5.6 to ensure we test for presence of GOT5.6 constituents specifically
+        m_file = m_files[0]
         if m in ("GOT5.6", "GOT5.6_extrapolated"):
-            model_file = next(file for file in model_file if "GOT5.6" in file)
-        else:
-            model_file = model_file[0] if isinstance(model_file, list) else model_file
+            m_file = next((f for f in m_files if "GOT5.6" in str(f)), m_files[0])
 
-        # Add expected path to dict, adding directory prefix
-        expected_paths[m] = str(directory / pathlib.Path(model_file).expanduser().parent)
+        expected_paths[m] = str(pathlib.Path(m_file).parent)
 
     # Define column widths
     status_width = 4  # Width for emoji
     name_width = max(len(name) for name in supported_models)
     path_width = max(len(path) for path in expected_paths.values())
 
-    # Print list of supported models, marking available and
-    # unavailable models and appending available to list
+    # Print list of supported models and their statuses
     if show_available or show_supported:
         total_width = min(status_width + name_width + path_width + 6, 80)
         print("─" * total_width)
         print(f"{'󠀠🌊':^{status_width}} | {'Model':<{name_width}} | {'Expected path':<{path_width}}")
         print("─" * total_width)
 
-    available_models = []
-    for m in supported_models:
-        try:
-            # Load model
-            model_file = pyTMD.io.model(directory=directory, extra_databases=extra_databases).elevation(m=m)
+        for m in supported_models:
+            is_available = m in available_models
 
-            # Append model to list of available model
-            available_models.append(m)
-
-            if show_available:
-                # Mark available models with a green tick
+            if is_available and show_available:
                 status = "✅"
                 print(f"{status:^{status_width}}│ {m:<{name_width}} │ {expected_paths[m]:<{path_width}}")
-        except FileNotFoundError:  # noqa: PERF203
-            if show_supported:
-                # Mark unavailable models with a red cross
+            elif not is_available and show_supported:
                 status = "❌"
                 print(
                     f"{status:^{status_width}}│ {Style.DIM}{m:<{name_width}} │ {expected_paths[m]:<{path_width}}{Style.RESET_ALL}",
                 )
 
-    if show_available or show_supported:
         print("─" * total_width)
 
         # Print summary

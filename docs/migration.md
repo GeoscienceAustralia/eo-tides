@@ -1,3 +1,33 @@
+# Migrating from version `0.10` to `0.11`
+
+Version `0.11` of `eo-tides` is a major refactor to support `pyTMD >= 3.0.0`.
+It includes a number of breaking changes compared to `eo-tides <= 0.10`:
+
+## Breaking changes
+
+### `model_phases` function deprecated
+
+The `model_phases` functionality (e.g. classifying each tide observation by tidal stage; "high-ebb", "high-flow", "low-ebb", "low-flow") has been relocated into the main `model_tides` function via a new `tide_stage` parameter. The `model_phases` function will be removed in a future release.
+
+!!! tip "Action required"
+
+    Update:
+    ```
+    model_phases(...)
+    ```
+    To:
+    ```
+    model_tides(..., tide_stage=True)
+    ```
+
+### "tide_model" is now an index level on long Pandas outputs
+
+If long-format `pandas.DataFrame` outputs are requested via `model_tides(..., output_format="long")`, the `"tide_model"` column will now be returned as an index level rather than a data column (matching `"x"`, `"y"`, and `"time"`).
+
+!!! tip "Action required"
+
+    To access tide model information, use `tide_df.index.get_level_values("tide_model")` instead of `tide_df["tide_model"]`.
+
 # Migrating from `dea_tools`
 
 The `eo-tides` package contains functions that were previously available in the [`Digital Earth Australia Notebooks and Tools` repository](https://github.com/GeoscienceAustralia/dea-notebooks/).
