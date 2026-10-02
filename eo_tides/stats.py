@@ -15,13 +15,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-from pyTMD.arguments import aliasing_period, frequency
+from pyTMD.constituents import aliasing_period, frequency
 
 from .eo import _pixel_tides_resample, _resample_chunks, _standardise_inputs, pixel_tides, tag_tides
 
 # Only import if running type checking
 if TYPE_CHECKING:
     import os
+    from collections.abc import Iterable
 
     from odc.geo.geobox import GeoBox
 
@@ -313,7 +314,7 @@ def _stats_figure(
 def tide_stats(
     data: xr.Dataset | xr.DataArray | GeoBox,
     time: DatetimeLike | None = None,
-    model: str = "EOT20",
+    model: str | Iterable[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     tidepost_lat: float | None = None,
     tidepost_lon: float | None = None,
@@ -525,7 +526,7 @@ def tide_stats(
 def pixel_stats(
     data: xr.Dataset | xr.DataArray | GeoBox,
     time: DatetimeLike | None = None,
-    model: str | list[str] = "EOT20",
+    model: str | Iterable[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     resample: bool = True,
     modelled_freq: str = "3h",
@@ -572,13 +573,14 @@ def pixel_stats(
         be used to provide a custom set of times. Accepts any format
         that can be converted by `pandas.to_datetime()`. For example:
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
-    model : str or list of str, optional
+    model : str or iterable of str, optional
         The tide model (or list of models) to use to model tides.
-        If a list is provided, a new "tide_model" dimension will be
-        added to the `xarray.Dataset` output. Defaults to "EOT20";
-        specify "all" to use all models available in `directory`.
-        For a full list of available and supported models, run
-        `from eo_tides.utils import list_models; list_models()`.
+        Defaults to "EOT20"; specify "all" to use all models available
+        in `directory`. For a full list of available and supported models,
+        run `from eo_tides.utils import list_models; list_models()`.
+        Ensemble tide modelling can also be requested by passing either
+        "ensemble", or any of the ensemble options supported by
+        `from eo_tides.model import ensemble_tides`.
     directory : str, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
