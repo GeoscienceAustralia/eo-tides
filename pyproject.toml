@@ -46,7 +46,6 @@ dependencies = [
     "planetary_computer>=1.0.0",
     "psutil>=6.0.0",
     "pyogrio>=0.10.0",
-    "pyproj>=3.7.0",
     "pystac-client>=0.8.3",
     "pyTMD>=3.0.9",
     "scikit-learn>=1.4.0",
