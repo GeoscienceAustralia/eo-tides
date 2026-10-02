@@ -38,6 +38,7 @@ dependencies = [
     "colorama>=0.4.3",
     "dask[complete]>=2023.1.0",
     "geopandas>=0.10.0",
+    "h5py>=3.10.0",
     "matplotlib>=3.8.0",
     "numpy>=1.26.0",
     "odc-geo>=0.4.7",
