@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 
 # Only import if running type checking
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
     from typing import Any, TypeAlias
 
     from odc.geo.geom import BoundingBox
@@ -118,9 +118,9 @@ def _standardise_time(
 
 
 def _standardise_models(
-    model: str | list[str],
+    model: str | Iterable[str],
     directory: str | os.PathLike,
-    ensemble_models: list[str] | None = None,
+    ensemble_models: Iterable[str] | None = None,
     ensemble_func: dict | None = None,
     extra_databases: str | os.PathLike | list | None = None,
 ) -> tuple[list[str], list[str], list[str], list[str]]:
@@ -132,13 +132,13 @@ def _standardise_models(
 
     Parameters
     ----------
-    model : str or list of str
+    model : str or iterable of str
         Name(s) of tide model(s) to process.
     directory : str or path
         Directory containing tide model data.
-    ensemble_models : list of str, optional
-        A list of input models to include in ensemble modelling
-        (e.g. models to be combined to create multi-model ensembles).
+    ensemble_models : iterable of str, optional
+        Input models to include in ensemble modelling (e.g.
+        models to be combined to create multi-model ensembles).
     ensemble_func : dict, optional
         An optional dictionary containing additional custom ensemble
         function definitions. Dictionary keys will be used to
@@ -172,7 +172,7 @@ def _standardise_models(
     standard_valid = set(standard_valid)
 
     # Cast requested models to set of strings for consistent handling
-    models_requested = {str(m) for m in np.atleast_1d(model)}
+    models_requested = {model} if isinstance(model, str) else {str(m) for m in model}
 
     # If "all" in requested models, replace with all available
     if "all" in models_requested:
@@ -211,10 +211,10 @@ def _standardise_models(
     # Handle "ensemble" modelling
     if ensemble_requested:
         # If no ensemble input models are defined, use defaults
-        ensemble_models = set(ensemble_models or DEFAULT_ENSEMBLE_MODELS)
+        ensemble_models_set = set(ensemble_models or DEFAULT_ENSEMBLE_MODELS)
 
         # Check if underlying ensemble model inputs are available
-        ensemble_missing = ensemble_models - standard_available
+        ensemble_missing = ensemble_models_set - standard_available
         if ensemble_missing:
             error_text = (
                 f"The following required ensemble model inputs are not available in `{directory}`: {sorted(ensemble_missing)}\n"
@@ -223,7 +223,7 @@ def _standardise_models(
             raise ValueError(error_text)
 
         # Return set of ensemble input models plus requested standard models
-        models_to_process = standard_requested | ensemble_models
+        models_to_process = standard_requested | ensemble_models_set
         ensemble_models_extra = models_to_process - standard_requested
 
         if ensemble_models_extra:
@@ -235,14 +235,14 @@ def _standardise_models(
     # Otherwise, models to process are the same as those requested
     else:
         models_to_process = models_requested
-        ensemble_models = set()
+        ensemble_models_set = set()
 
     # Cast all final sets to sorted lists
     return (
         sorted(models_requested),
         sorted(models_to_process),
         sorted(ensemble_requested),
-        sorted(ensemble_models),
+        sorted(ensemble_models_set),
     )
 
 

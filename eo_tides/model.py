@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 # Only import if running type checking
 if TYPE_CHECKING:
     import os
+    from collections.abc import Iterable, Sequence
 
 
 import geopandas as gpd
@@ -452,10 +453,10 @@ def ensemble_tides(
 # TODO: Sort out "crop" param functionality
 # TODO: Restore parallel flag for dask processing?
 def model_tides(
-    x: float | list[float] | xr.DataArray,
-    y: float | list[float] | xr.DataArray,
+    x: float | Sequence[float] | xr.DataArray,
+    y: float | Sequence[float] | xr.DataArray,
     time: DatetimeLike,
-    model: str | list[str] = "EOT20",
+    model: str | Iterable[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     crs: str = "EPSG:4326",
     mode: str = "one-to-many",
@@ -504,11 +505,11 @@ def model_tides(
 
     Parameters
     ----------
-    x : float or list of floats
+    x : float or sequence of floats
         One or more x coordinates at which to model tides. Assumes
         degrees longitude (EPSG:4326) by default; use `crs` to specify
         a different coordinate reference system.
-    y : float or list of floats
+    y : float or sequence of floats
         One or more y coordinates at which to model tides. Assumes
         degrees latitude (EPSG:4326) by default; use `crs` to specify
         a different coordinate reference system.
@@ -518,7 +519,7 @@ def model_tides(
         datetime.datetime, pd.Timestamp, pd.DatetimeIndex, numpy.datetime64,
         or date/time strings (e.g. "2020-01-01 23:00"). For example:
         `time = pd.date_range(start="2000", end="2001", freq="5h")`.
-    model : str or list of str, optional
+    model : str or iterable of str, optional
         The tide model (or list of models) to use to model tides.
         Defaults to "EOT20"; specify "all" to use all models available
         in `directory`. For a full list of available and supported models,
@@ -567,7 +568,7 @@ def model_tides(
     output_units : str, optional
         Units for the returned tide heights. Options are:
 
-        - `"m"`: Metres as "float32" floating-point values.
+        - `"m"`: Metres as "float32" floating-point values (default).
         - `"cm"`: Centimetres as "int16" integers (scaled by 100).
         - `"mm"`: Millimetres as "int16" integers (scaled by 1000).
 
@@ -648,7 +649,6 @@ def model_tides(
     x = np.atleast_1d(x)
     y = np.atleast_1d(y)
     time = _standardise_time(time)
-    time_n = len(time)
 
     # Warn and remove deprecated execution arguments
     deprecated_args = ["parallel", "parallel_splits", "parallel_max"]
@@ -732,6 +732,7 @@ def model_tides(
     # to determine if tides are rising or falling at each observation;
     # they are discarded before any data is returned.
     if tide_stage:
+        time_n = len(time)
         time = np.concatenate([time, time - pd.Timedelta("15min")])
 
         # Also repeat x and y coords in one-to-one mode

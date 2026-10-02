@@ -20,6 +20,7 @@ from odc.geo.geobox import GeoBox
 # Only import if running type checking
 if TYPE_CHECKING:
     import os
+    from collections.abc import Iterable
 
     from odc.geo import Shape2d
 
@@ -177,7 +178,7 @@ def _pixel_tides_resample(
 def tag_tides(
     data: xr.Dataset | xr.DataArray | GeoBox,
     time: DatetimeLike | None = None,
-    model: str | list[str] = "EOT20",
+    model: str | Iterable[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     tidepost_lat: float | None = None,
     tidepost_lon: float | None = None,
@@ -220,7 +221,7 @@ def tag_tides(
         be used to provide a custom set of times. Accepts any format
         that can be converted by `pandas.to_datetime()`. For example:
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
-    model : str or list of str, optional
+    model : str or iterable of str, optional
         The tide model (or list of models) to use to model tides.
         Defaults to "EOT20"; specify "all" to use all models available
         in `directory`. For a full list of available and supported models,
@@ -428,7 +429,7 @@ def tag_timeseries(
 def pixel_tides(
     data: xr.Dataset | xr.DataArray | GeoBox,
     time: DatetimeLike | None = None,
-    model: str | list[str] = "EOT20",
+    model: str | Iterable[str] = "EOT20",
     directory: str | os.PathLike | None = None,
     resample: bool = True,
     calculate_quantiles: np.ndarray | tuple[float, float] | None = None,
@@ -477,7 +478,7 @@ def pixel_tides(
         be used to provide a custom set of times. Accepts any format
         that can be converted by `pandas.to_datetime()`. For example:
         `time=pd.date_range(start="2000", end="2001", freq="5h")`
-    model : str or list of str, optional
+    model : str or iterable of str, optional
         The tide model (or list of models) to use to model tides.
         Defaults to "EOT20"; specify "all" to use all models available
         in `directory`. For a full list of available and supported models,
@@ -643,7 +644,7 @@ def pixel_tides(
         tides_lowres = tides_lowres.squeeze("tide_model")
 
     # Ensure CRS is present before we apply any resampling
-    # (can be drop by quantile)
+    # (can be dropped by quantile calculation)
     tides_lowres = tides_lowres.odc.assign_crs(gbox.crs)
 
     # Reproject into original high resolution grid
