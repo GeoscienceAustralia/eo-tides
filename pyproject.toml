@@ -165,6 +165,7 @@ DEP002 = [
     "pyogrio",
     "dask",
     "jupyter",
+    "certifi",
 ]
 
 [tool.coverage.report]
