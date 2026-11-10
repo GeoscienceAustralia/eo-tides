@@ -90,7 +90,7 @@ def _standardise_time(
     time = pd.to_datetime(time).to_numpy().astype("datetime64[ns]")
 
     # Ensure that data has at least one dimension
-    return np.atleast_1d(time)
+    return np.atleast_1d(time)  # type: ignore[arg-type]
 
 
 def _standardise_models(

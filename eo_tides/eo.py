@@ -409,9 +409,11 @@ def tag_timeseries(
         raise ValueError(err_msg)
 
     # Extract times to match time dimension of `satellite_ds` and rename
-    timeseries_aligned_da = timeseries_da.reindex(time=time_coords, method=method, tolerance=tolerance).rename(
-        output_name
-    )
+    timeseries_aligned_da = timeseries_da.reindex(
+        time=time_coords,
+        method=method,  # type: ignore[arg-type]
+        tolerance=tolerance,
+    ).rename(output_name)
 
     # Raise warning if no valid data is returned
     if timeseries_aligned_da.isnull().all():
