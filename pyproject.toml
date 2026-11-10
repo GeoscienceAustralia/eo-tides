@@ -35,6 +35,7 @@ classifiers = [
 ]
 requires-python = ">=3.10,<4.0"
 dependencies = [
+    "certifi>=2026.10.19",
     "colorama>=0.4.3",
     "dask[complete]>=2023.1.0",
     "geopandas>=0.10.0",
@@ -79,7 +80,8 @@ dev = [
     "mkdocs>=1.2",
     "mkdocs-material>=9.5.0",
     "mkdocs-jupyter>=0.24.0",
-    "mkdocstrings[python]>=0.20.0",
+    "mkdocstrings[python]>=0.20.0,<1.0.0",
+    "pymdown-extensions<12.0",
     "black>=22.1.0",
     "nbval>=0.10.0",
 ]
@@ -164,6 +166,7 @@ DEP002 = [
     "pyogrio",
     "dask",
     "jupyter",
+    "certifi",
 ]
 
 [tool.coverage.report]
