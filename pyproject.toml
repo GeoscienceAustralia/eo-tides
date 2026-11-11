@@ -114,7 +114,7 @@ allow_redefinition = true
 [tool.pytest.ini_options]
 testpaths = [
     # "tests",
-    "tests/test_utils.py",
+    "tests/test_model.py",
 ]
 
 [tool.uv]
