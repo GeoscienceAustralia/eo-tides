@@ -1283,7 +1283,7 @@ dev = [
     { name = "pre-commit", specifier = ">=0.2.0" },
     { name = "pytest", specifier = ">=6.0.0" },
     { name = "pytest-cov", specifier = ">=0.6" },
-    { name = "ruff", specifier = ">=0.0.200" },
+    { name = "ruff", specifier = ">=0.15.0" },
 ]
 
 [[package]]

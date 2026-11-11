@@ -76,7 +76,7 @@ dev = [
     "deptry>=0.20.0",
     "mypy>=0.900",
     "pytest-cov>=0.6",
-    "ruff>=0.0.200",
+    "ruff>=0.15.0",
     "mkdocs>=1.2",
     "mkdocs-material>=9.5.0",
     "mkdocs-jupyter>=0.24.0",
@@ -174,7 +174,6 @@ DEP002 = [
     "dask",
     "jupyter",
     "h5py",
-    "certifi",
 ]
 
 [tool.coverage.report]
