@@ -346,7 +346,7 @@ def _clip_model_file(
         for i in ["lat_z", "lat_v", "lat_u", "con"]:
             try:
                 nc_clipped[i] = nc_clipped[i].isel(nx=0)
-            except KeyError:  # noqa: PERF203
+            except KeyError:
                 pass
 
     return nc_clipped

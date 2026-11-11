@@ -21,6 +21,7 @@ from odc.geo.geobox import GeoBox
 if TYPE_CHECKING:
     import os
     from collections.abc import Iterable
+    from typing import Literal
 
     from odc.geo import Shape2d
 
@@ -324,7 +325,7 @@ def tag_timeseries(
     timeseries: xr.DataArray | pd.Series,
     data: xr.Dataset | xr.DataArray | GeoBox,
     time: DatetimeLike | None = None,
-    method: str = "nearest",
+    method: Literal["nearest", "pad", "ffill", "backfill", "bfill"] | None = "nearest",
     tolerance: str = "1h",
     output_name: str = "tide_height",
 ):
@@ -410,9 +411,11 @@ def tag_timeseries(
         raise ValueError(err_msg)
 
     # Extract times to match time dimension of `satellite_ds` and rename
-    timeseries_aligned_da = timeseries_da.reindex(time=time_coords, method=method, tolerance=tolerance).rename(
-        output_name
-    )
+    timeseries_aligned_da = timeseries_da.reindex(
+        time=time_coords,
+        method=method,
+        tolerance=tolerance,
+    ).rename(output_name)
 
     # Raise warning if no valid data is returned
     if timeseries_aligned_da.isnull().all():
