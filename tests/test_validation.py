@@ -11,27 +11,34 @@ GAUGE_Y = -18.0008
 
 # Run test for different spatial searches
 @pytest.mark.parametrize(
-    ("x", "y", "site_code", "max_distance", "correct_mean", "expected"),
+    ("x", "y", "file_name", "max_distance", "correct_mean", "expected"),
     [
         # Test nearest gauge lookup
-        (GAUGE_X, GAUGE_Y, None, None, False, ["62650"]),
-        (-117.4, 32.6, None, None, False, ["569A"]),
-        (152.0, -33.0, None, None, True, ["60370"]),
+        (GAUGE_X, GAUGE_Y, None, None, False, ["broome-62650-aus-bom"]),
+        (-117.4, 32.6, None, None, False, ["san_diego_ca-569a-usa-uhslc_rq"]),
+        (152.0, -33.0, None, None, True, ["sydney_fort_denison-60370-aus-bom"]),
         pytest.param(
             GAUGE_X + 1,
             GAUGE_Y,
             None,
             0.1,
             False,
-            ["62650"],
+            ["broome-62650-aus-bom"],
             marks=pytest.mark.xfail(reason="No nearest gauge"),
         ),
         # Test bounding box lookup
-        ((GAUGE_X - 0.2, GAUGE_X + 0.2), (GAUGE_Y - 0.2, GAUGE_Y + 0.2), None, None, False, ["62650"]),
-        ((100, 160), (-5, -45), None, None, False, ["60370", "62650"]),
-        # Test site_code lookup
-        (None, None, "62650", None, False, ["62650"]),
-        (None, None, ["60370", "62650"], None, False, ["60370", "62650"]),
+        ((GAUGE_X - 0.2, GAUGE_X + 0.2), (GAUGE_Y - 0.2, GAUGE_Y + 0.2), None, None, False, ["broome-62650-aus-bom"]),
+        ((100, 160), (-5, -45), None, None, False, ["sydney_fort_denison-60370-aus-bom", "broome-62650-aus-bom"]),
+        # Test file_name lookup
+        (None, None, "broome-62650-aus-bom", None, False, ["broome-62650-aus-bom"]),
+        (
+            None,
+            None,
+            ["sydney_fort_denison-60370-aus-bom", "broome-62650-aus-bom"],
+            None,
+            False,
+            ["sydney_fort_denison-60370-aus-bom", "broome-62650-aus-bom"],
+        ),
     ],
     ids=[
         "broome_xy",
@@ -44,12 +51,12 @@ GAUGE_Y = -18.0008
         "aus_code",
     ],
 )
-def test_load_gauge_gesla(x, y, site_code, max_distance, correct_mean, expected):
+def test_load_gauge_gesla(x, y, file_name, max_distance, correct_mean, expected):
     # Load gauge data
     gauge_df = load_gauge_gesla(
         x=x,
         y=y,
-        site_code=site_code,
+        file_name=file_name,
         max_distance=max_distance,
         correct_mean=correct_mean,
         time=("2018-01-01", "2018-01-20"),
@@ -58,7 +65,7 @@ def test_load_gauge_gesla(x, y, site_code, max_distance, correct_mean, expected)
     )
 
     assert "sea_level" in gauge_df.columns
-    assert set(gauge_df.index.unique(level="site_code")) == set(expected)
+    assert set(gauge_df.index.unique(level="file_name")) == set(expected)
 
     # Verify that mean is near 0 after subtracting mean from time series
     if correct_mean:
