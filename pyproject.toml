@@ -36,7 +36,6 @@ classifiers = [
 ]
 requires-python = ">=3.11,<4.0"
 dependencies = [
-    "certifi>=2026.10.19",
     "colorama>=0.4.3",
     "dask[complete]>=2023.1.0",
     "geopandas>=0.10.0",
@@ -114,6 +113,12 @@ allow_redefinition = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.uv]
+constraint-dependencies = [
+    "pillow>=13.0.0",
+    "certifi>=2026.10.19",
+]
 
 [tool.ruff]
 target-version = "py311"     # Target Python 3.11 syntax
