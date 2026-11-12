@@ -718,7 +718,7 @@ def model_tides(
     )
 
     # Calculate cropping bounds from x and y coords
-    mpt = multipoint(list(zip(x, y, strict=False)), crs=crs)
+    mpt = multipoint(np.column_stack([x, y]).tolist(), crs=crs)
     bbox = mpt.boundingbox.to_crs("EPSG:4326")
     bounds = bbox.range_x + bbox.range_y
     bounds_str = f"({', '.join(f'{v:.2f}' for v in bounds)})"
@@ -870,7 +870,7 @@ def model_tides(
             return models_combined.rename_dims({"station": "site"})
         return models_combined.odc.assign_crs(crs)
 
-    # Convert to DataFrame, raising performance warning if large size
+    # Raise performance warning for dataframe conversion if large size
     size = models_combined.tide_height.size
 
     if size > 1_000_000:
@@ -878,7 +878,14 @@ def model_tides(
     else:
         print("Converting to dataframe")
 
+    # Convert to DataFrame
     tide_df = models_combined.to_dataframe()
+
+    # Set dataframe nodata values to pd.nan
+    if output_units in ("cm", "mm"):
+        tide_df["tide_height"] = (
+            tide_df["tide_height"].replace(models_combined.tide_height.attrs["_FillValue"], pd.NA).astype("Int16")
+        )
 
     # Move x and y to the index if they are data columns (one-to-one and one-to-many modes)
     index_cols = [col for col in ["x", "y"] if col in tide_df.columns]

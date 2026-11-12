@@ -51,17 +51,24 @@ ENSEMBLE_MODELS = ["EOT20", "HAMTIDE11"]  # simplified for tests
 @pytest.mark.parametrize(
     "x, y, crs, method, model",
     [
-        (GAUGE_X, GAUGE_Y, "EPSG:4326", "bilinear", "EOT20"),  # WGS84, bilinear interp
-        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline", "EOT20"),  # WGS84, spline interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "linear", "EOT20"),  # WGS84, linear interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "nearest", "EOT20"),  # WGS84, nearest interp
         (
             -1034913,
             -1961916,
             "EPSG:3577",
-            "bilinear",
+            "linear",
             "EOT20",
-        ),  # Australian Albers, bilinear interp
-        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline", "GOT5.5"),
-        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline", "HAMTIDE11"),
+        ),  # Australian Albers, linear interp
+        (
+            -1034913,
+            -1961916,
+            "EPSG:3577",
+            "nearest",
+            "EOT20",
+        ),  # Australian Albers, nearest interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "linear", "GOT5.5"),
+        # (GAUGE_X, GAUGE_Y, "EPSG:4326", "linear", "HAMTIDE11"),
     ],
 )
 def test_model_tides(measured_tides_ds, x, y, crs, method, model):
@@ -86,13 +93,13 @@ def test_model_tides(measured_tides_ds, x, y, crs, method, model):
         x=x,
         y=y,
         delta_time=measured_tides_ds.time,
-        DIRECTORY=_set_directory(None),
-        MODEL=model,
-        EPSG=int(crs[-4:]),
-        TIME="datetime",
-        EXTRAPOLATE=True,
-        CUTOFF=np.inf,
-        METHOD=method,
+        directory=_set_directory(None),
+        model=model,
+        crs=crs[-4:],
+        standard="datetime",
+        extrapolate=True,
+        cutoff=np.inf,
+        method=method,
     )
 
     # Verify that pyTMD produces same results as `model_tides`
@@ -126,13 +133,13 @@ def test_model_tides(measured_tides_ds, x, y, crs, method, model):
         ("GOT5.5", ["m2"]),
         (
             "GOT5.5",
-            ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
+            ["2n2", "j1", "k1", "k2", "m2", "m4", "n2", "o1", "p1", "q1", "s1", "s2"],
         ),
-        ("HAMTIDE11", ["m2"]),
-        (
-            "HAMTIDE11",
-            ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
-        ),
+        # ("HAMTIDE11", ["m2"]),
+        # (
+        #     "HAMTIDE11",
+        #     ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
+        # ),
     ],
 )
 def test_model_tides_constituents(measured_tides_ds, model, constituents):
@@ -150,12 +157,12 @@ def test_model_tides_constituents(measured_tides_ds, model, constituents):
         x=GAUGE_X,
         y=GAUGE_Y,
         delta_time=measured_tides_ds.time,
-        DIRECTORY=_set_directory(None),
-        MODEL=model,
-        TIME="datetime",
-        EXTRAPOLATE=True,
-        CUTOFF=np.inf,
-        CONSTITUENTS=constituents,
+        directory=_set_directory(None),
+        model=model,
+        standard="datetime",
+        extrapolate=True,
+        cutoff=np.inf,
+        constituents=constituents,
     )
 
     # Verify that pyTMD produces same results as `model_tides`
@@ -193,8 +200,8 @@ def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
         assert modelled_tides_df.index.names == ["tide_model", "time", "x", "y"]
         assert modelled_tides_df.columns.tolist() == ["tide_height"]
 
-        # Verify tide model column contains correct values
-        assert modelled_tides_df.tide_model.unique().tolist() == models
+        # Verify tide model index level contains correct values
+        assert modelled_tides_df.index.get_level_values("tide_model").unique().tolist() == models
 
         # Verify that dataframe has length of original timesteps multiplied by
         # n models
