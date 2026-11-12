@@ -436,13 +436,15 @@ def ensemble_tides(
         # Get ensemble function from function dictionary
         ensemble_f = ensemble_func[ensemble_i]
 
-        # Apply function with runtime variables
+        # Apply function with runtime variables.
+        # Set output dtype to object to avoid Pandas 3.0
+        # compatibility issues.
         ensemble_model_ds = ensemble_f(
             ds,
             ranks=ranks,
             top_n=ensemble_top_n,
             stat=ensemble_stat,
-        ).expand_dims({"tide_model": [ensemble_i]})
+        ).expand_dims({"tide_model": pd.Index([ensemble_i], dtype=object)})
 
         ensemble_list.append(ensemble_model_ds)
 
@@ -801,7 +803,7 @@ def model_tides(
     # Combine data tree nodes into a dataset
     models_combined = xr.concat(
         [child.ds for child in tides.children.values()],
-        dim=pd.Index(tides.children.keys(), name="tide_model"),
+        dim=pd.Index(tides.children.keys(), name="tide_model", dtype=object),
         coords="minimal",
         compat="override",
     )
