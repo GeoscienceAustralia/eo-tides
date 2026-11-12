@@ -629,7 +629,7 @@ def model_tides(
     **ensemble_kwargs :
         Keyword arguments used to customise the generation of optional
         ensemble tide models if ensemble tide modelling is requested.
-        These are passed to the underlying `_ensemble_model` function.
+        These are passed to the underlying `ensemble_tides` function.
         Useful parameters include `ensemble_models` (what input tide
         models to use for ensemble generation), `ensemble_func` (custom
         ensemble functions), `ranking_points` (path to model
@@ -813,8 +813,6 @@ def model_tides(
             ds=models_combined,
             crs=crs,
             ensemble=ensemble_requested,
-            ensemble_models=ensemble_models,
-            ensemble_func=ensemble_func,
             **ensemble_kwargs,
         )
 

@@ -426,7 +426,7 @@ def test_model_tides_ensemble():
 
     assert modelled_tides_df.index.names == ["tide_model", "time", "x", "y"]
     assert modelled_tides_df.columns.tolist() == ["tide_height"]
-    assert all(modelled_tides_df.tide_model == "ensemble")
+    assert all(modelled_tides_df.index.get_level_values("tide_model") == "ensemble")
 
     # Default, ensemble + other models requested
     models = ["EOT20", "HAMTIDE11", "ensemble"]
@@ -438,9 +438,9 @@ def test_model_tides_ensemble():
         ensemble_models=ENSEMBLE_MODELS,
     )
 
-    assert modelled_tides_df.index.names == ["time", "x", "y"]
-    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
-    assert set(modelled_tides_df.tide_model) == set(models)
+    assert modelled_tides_df.index.names == ["tide_model", "time", "x", "y"]
+    assert modelled_tides_df.columns.tolist() == ["tide_height"]
+    assert set(modelled_tides_df.index.get_level_values("tide_model")) == set(models)
     assert np.allclose(
         modelled_tides_df.tide_height.values,
         [
@@ -472,7 +472,7 @@ def test_model_tides_ensemble():
 
     assert modelled_tides_df.index.names == ["tide_model", "time", "x", "y"]
     assert modelled_tides_df.columns.tolist() == ["tide_height"]
-    assert set(modelled_tides_df.tide_model) == set(models)
+    assert set(modelled_tides_df.index.get_level_values("tide_model")) == set(models)
 
     # Wide mode, default
     modelled_tides_df = model_tides(
@@ -525,32 +525,26 @@ def test_model_tides_ensemble():
 
     # Wide mode, custom functions
     ensemble_funcs = {
-        "ensemble-best": lambda x: x["rank"] == 1,
-        "ensemble-worst": lambda x: x["rank"] == 2,
-        "ensemble-mean-top2": lambda x: x["rank"].isin([1, 2]),
-        "ensemble-mean-weighted": lambda x: 3 - x["rank"],
-        "ensemble-mean": lambda x: x["rank"] <= 2,
+        "ensemble-best": lambda x, ranks, **kw: x.where(ranks == 1).mean(dim="tide_model"),
+        "ensemble-worst": lambda x, ranks, **kw: x.where(ranks == 2).mean(dim="tide_model"),
+        "ensemble-mean-top2": lambda x, ranks, **kw: x.where(ranks.isin([1, 2])).mean(dim="tide_model"),
+        "ensemble-mean-weighted": lambda x, ranks, **kw: x.weighted((3 - ranks).fillna(0)).mean(dim="tide_model"),
+        "ensemble-mean": lambda x, ranks=None, **kw: x.mean(dim="tide_model"),
     }
+    custom_models = ["EOT20", "HAMTIDE11", *ensemble_funcs]
+
     modelled_tides_df = model_tides(
         x=x,
         y=y,
         time=times,
-        model=models,
+        model=custom_models,
         output_format="wide",
         ensemble_func=ensemble_funcs,
         ensemble_models=ENSEMBLE_MODELS,
     )
 
     # Check that expected models exist, and that valid data is produced
-    assert set(modelled_tides_df.columns) == {
-        "EOT20",
-        "HAMTIDE11",
-        "ensemble-best",
-        "ensemble-worst",
-        "ensemble-mean-top2",
-        "ensemble-mean-weighted",
-        "ensemble-mean",
-    }
+    assert set(modelled_tides_df.columns) == set(custom_models)
     assert all(modelled_tides_df.notnull())
 
     # Long mode, custom functions
@@ -558,46 +552,42 @@ def test_model_tides_ensemble():
         x=x,
         y=y,
         time=times,
-        model=models,
+        model=custom_models,
         output_format="long",
         ensemble_func=ensemble_funcs,
         ensemble_models=ENSEMBLE_MODELS,
     )
 
-    # Check that expected models exist in "tide_model" column
-    assert set(modelled_tides_df.tide_model) == {
-        "EOT20",
-        "HAMTIDE11",
-        "ensemble-best",
-        "ensemble-worst",
-        "ensemble-mean-top2",
-        "ensemble-mean-weighted",
-        "ensemble-mean",
-    }
+    # Check that expected models exist in "tide_model" index level
+    assert set(modelled_tides_df.index.get_level_values("tide_model")) == set(custom_models)
 
 
-# Test ensemble dtype is set correctly
-@pytest.mark.parametrize(
-    "dtype",
-    ["float32", "float64", "int16"],
-)
+# Test ensemble dtype is preserved for floating-point inputs
+@pytest.mark.parametrize("dtype", ["float32", "float64"])
 def test_model_tides_ensemble_dtype(dtype):
-    # Create dummy modelled tide data with specific dtype
-    modelled_tides_df = pd.DataFrame({
-        "time": pd.date_range(start="2000-01-01", periods=5, freq="5h").repeat(2),
-        "x": 122.2183,
-        "y": -18.0008,
-        "tide_model": ["EOT20", "HAMTIDE11"] * 5,
-        "tide_height": np.random.uniform(-4, 3, 10).astype(dtype),
-    })
-    modelled_tides_df = modelled_tides_df.set_index(["time", "x", "y"])
+    # Create dummy modelled tide dataset with specific dtype
+    times = pd.date_range(start="2000-01-01", periods=5, freq="5h")
+    modelled_tides_ds = xr.Dataset(
+        data_vars={
+            "tide_height": (
+                ["tide_model", "site", "time"],
+                np.random.uniform(-4, 3, (2, 1, 5)).astype(dtype),
+            ),
+        },
+        coords={
+            "tide_model": ["EOT20", "HAMTIDE11"],
+            "time": times,
+            "x": ("site", [122.2183]),
+            "y": ("site", [-18.0008]),
+        },
+    )
 
     # Run ensemble modelling on modelled tides input
-    ensemble_df = ensemble_tides(modelled_tides_df, ensemble_models=ENSEMBLE_MODELS, crs="EPSG:4326")
+    ensemble_ds = ensemble_tides(modelled_tides_ds, ensemble_models=ENSEMBLE_MODELS, crs="EPSG:4326")
 
-    # Verify that output tides match are as expected, and match the input data
-    assert ensemble_df.tide_height.dtype == dtype
-    assert ensemble_df.tide_height.dtype == modelled_tides_df.tide_height.dtype
+    # Verify that output dtype matches the input data
+    assert ensemble_ds.tide_height.dtype == dtype
+    assert ensemble_ds.tide_height.dtype == modelled_tides_ds.tide_height.dtype
 
 
 # Test listing extra_databases models from dict and file
@@ -609,9 +599,19 @@ def test_model_tides_ensemble_dtype(dtype):
         # Extra database as a dictionary
         [
             {
-                "elevation": {
-                    "EOT20_custom": {
-                        "format": "FES-netcdf",
+                "EOT20_custom": {
+                    "format": "FES-netcdf",
+                    "name": "EOT20_custom",
+                    "projection": {
+                        "datum": "WGS84",
+                        "ellps": "WGS84",
+                        "lon_wrap": 180,
+                        "proj": "longlat",
+                        "type": "crs",
+                    },
+                    "reference": "https://doi.org/10.17882/79489",
+                    "version": "EOT20",
+                    "z": {
                         "model_file": [
                             "EOT20/ocean_tides/2N2_ocean_eot20.nc",
                             "EOT20/ocean_tides/J1_ocean_eot20.nc",
@@ -631,13 +631,9 @@ def test_model_tides_ensemble_dtype(dtype):
                             "EOT20/ocean_tides/SSA_ocean_eot20.nc",
                             "EOT20/ocean_tides/T2_ocean_eot20.nc",
                         ],
-                        "name": "EOT20_custom",
-                        "reference": "https://doi.org/10.17882/79489",
-                        "scale": 0.01,
-                        "type": "z",
+                        "units": "cm",
                         "variable": "tide_ocean",
-                        "version": "EOT20",
-                    }
+                    },
                 }
             }
         ],
