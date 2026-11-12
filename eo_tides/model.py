@@ -574,10 +574,11 @@ def model_tides(
 
         Using integer units can help reduce memory usage.
     output_nodata : int, optional
-        Nodata fill value used when integer units ("cm" or "mm") are
-        selected. Because integer data types cannot store `NaN`, `NaN`
-        values are replaced with this value prior to casting to `int16`.
-        Ignored when `output_units="m"`.
+        Nodata fill value used to replace `NaN` values when `output_units`
+        is `"cm"` or `"mm"` and `output_format="xarray"`. Ignored for
+        `output_units="m"` (which returns floating point data that can
+        handle `NaN` values), and for `pandas.DataFrame` outputs `"long"`
+        or `"wide"` (which use `pd.NA` instead). Defaults to `-32768`.
     method : str, optional
         Method used to interpolate tide model constituents to the requested
         x/y coordinates. Supports "linear" (default) and "nearest".
@@ -717,15 +718,15 @@ def model_tides(
         extra_databases=extra_databases,
     )
 
-    # Calculate cropping bounds from x and y coords
-    mpt = multipoint(np.column_stack([x, y]).tolist(), crs=crs)
-    bbox = mpt.boundingbox.to_crs("EPSG:4326")
-    bounds = bbox.range_x + bbox.range_y
-    bounds_str = f"({', '.join(f'{v:.2f}' for v in bounds)})"
-
     # Restructure x and y coords into 2D if in grid mode
     if mode == "grid":
         x, y = np.meshgrid(x, y)
+
+    # Calculate cropping bounds from x and y coords
+    mpt = multipoint(np.column_stack([x.ravel(), y.ravel()]).tolist(), crs=crs)
+    bbox = mpt.boundingbox.to_crs("EPSG:4326")
+    bounds = bbox.range_x + bbox.range_y
+    bounds_str = f"({', '.join(f'{v:.2f}' for v in bounds)})"
 
     # Optionally calculate tide_stage by adding additional timesteps
     # after subtracting a 15 min time offset. These timesteps are used
@@ -895,6 +896,9 @@ def model_tides(
     # Drop internal spatial dimension from index as x and y uniquely identify locations
     if "station" in tide_df.index.names:
         tide_df = tide_df.droplevel("station")
+
+    # Standardise index level order across all analysis modes
+    tide_df = tide_df.reorder_levels(["tide_model", "time", "x", "y"])
 
     # Return long format pandas dataframe directly
     if output_format == "long":

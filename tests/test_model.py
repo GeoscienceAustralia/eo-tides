@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from pyTMD.compute import tide_elevations
+import xarray as xr
 
 from eo_tides.model import (
     # _parallel_splits,
@@ -276,27 +277,22 @@ def test_model_tides_units_with_nan(units):
 
 # Run test for each combination of mode, output format, and one or
 # multiple tide models
-@pytest.mark.parametrize(
-    "mode, models, output_format",
-    [
-        ("one-to-many", ["EOT20"], "long"),
-        ("one-to-one", ["EOT20"], "long"),
-        ("one-to-many", ["EOT20"], "wide"),
-        ("one-to-one", ["EOT20"], "wide"),
-        ("one-to-many", ["EOT20", "HAMTIDE11"], "long"),
-        ("one-to-one", ["EOT20", "HAMTIDE11"], "long"),
-        ("one-to-many", ["EOT20", "HAMTIDE11"], "wide"),
-        ("one-to-one", ["EOT20", "HAMTIDE11"], "wide"),
-    ],
-)
+@pytest.mark.parametrize("models", [["EOT20"], ["EOT20", "HAMTIDE11"]])
+@pytest.mark.parametrize("output_format", ["long", "wide", "xarray"])
+@pytest.mark.parametrize("mode", ["one-to-many", "one-to-one", "grid"])
 def test_model_tides_mode(mode, models, output_format):
-    # Input params
-    x = [122.14, 122.30, 122.12]
-    y = [-17.91, -17.92, -18.07]
+    """Verify output shapes, dimensions, and index structure across modes and formats."""
+    # Use distinct x and y lengths in grid mode to catch axis transpositions
+    if mode == "grid":
+        x = [122.14, 122.30, 122.12]
+        y = [-17.91, -18.07]
+    else:
+        x = [122.14, 122.30, 122.12]
+        y = [-17.91, -17.92, -18.07]
     times = pd.date_range("2020", "2021", periods=3)
 
-    # Model tides
-    modelled_tides_df = model_tides(
+    # Model tides across requested mode, models, and output format
+    result = model_tides(
         x=x,
         y=y,
         time=times,
@@ -305,54 +301,108 @@ def test_model_tides_mode(mode, models, output_format):
         model=models,
     )
 
+    # Validate xarray Dataset structure and dimensions when output_format='xarray'
+    if output_format == "xarray":
+        assert isinstance(result, xr.Dataset)
+        assert list(result.tide_model.values) == models
+        assert not result.tide_height.isnull().any()
+
+        # Verify expected dimension names and sizes for each analysis mode
+        if mode == "one-to-one":
+            assert result.tide_height.dims == ("tide_model", "time")
+            assert result.sizes["time"] == len(times)
+        elif mode == "one-to-many":
+            assert result.tide_height.dims == ("tide_model", "site", "time")
+            assert result.sizes["site"] == len(x)
+            assert result.sizes["time"] == len(times)
+        elif mode == "grid":
+            assert result.tide_height.dims == ("tide_model", "y", "x", "time")
+            assert result.sizes["x"] == len(x)
+            assert result.sizes["y"] == len(y)
+            assert result.sizes["time"] == len(times)
+        return
+
+    # Verify DataFrame type and ensure no unexpected NaN values were produced
+    assert isinstance(result, pd.DataFrame)
+    assert not result.isna().any().any()
+
+    # Verify column layout and tide_model placement for long vs wide dataframe formats
+    if output_format == "long":
+        assert list(result.columns) == ["tide_height"]
+        assert list(result.index.names) == ["tide_model", "time", "x", "y"]
+        assert list(result.index.get_level_values("tide_model").unique()) == models
+    elif output_format == "wide":
+        assert list(result.columns) == models
+        assert list(result.index.names) == ["time", "x", "y"]
+
+    # Multiplier accounting for vertical stacking of models in long format
+    n_models = len(models) if output_format == "long" else 1
+
     if mode == "one-to-one":
-        if output_format == "wide":
-            # Should have the same number of rows as input x, y, times
-            assert len(modelled_tides_df.index) == len(x)
-            assert len(modelled_tides_df.index) == len(times)
+        # In one-to-one mode, rows should equal the number of input point/time pairs
+        assert len(result) == len(x) * n_models
 
-            # Output indexes should match order of input x, y, times
-            assert all(modelled_tides_df.index.get_level_values("time") == times)
-            assert all(modelled_tides_df.index.get_level_values("x") == x)
-            assert all(modelled_tides_df.index.get_level_values("y") == y)
+        # Verify index values preserve exact input x, y, and time ordering
+        np.testing.assert_array_equal(result.index.get_level_values("time"), np.tile(times, n_models))
+        np.testing.assert_array_equal(result.index.get_level_values("x"), np.tile(x, n_models))
+        np.testing.assert_array_equal(result.index.get_level_values("y"), np.tile(y, n_models))
 
-        elif output_format == "long":
-            # In "long" format, the number of x, y points multiplied by
-            # the number of tide models
-            assert len(modelled_tides_df.index) == len(x) * len(models)
+    elif mode == "one-to-many":
+        # In one-to-many mode, rows should equal points multiplied by timesteps
+        assert len(result) == len(x) * len(times) * n_models
 
-            # Verify index values match expected x, y, time order
-            assert all(modelled_tides_df.index.get_level_values("time") == np.tile(times, len(models)))
-            assert all(modelled_tides_df.index.get_level_values("x") == np.tile(x, len(models)))
-            assert all(modelled_tides_df.index.get_level_values("y") == np.tile(y, len(models)))
+        # Verify index values follow expected repeating x, y, and time order in long format
+        if output_format == "long":
+            np.testing.assert_array_equal(
+                result.index.get_level_values("time"),
+                np.tile(times, len(x) * len(models)),
+            )
+            np.testing.assert_array_equal(
+                result.index.get_level_values("x"),
+                np.tile(np.repeat(x, len(times)), len(models)),
+            )
+            np.testing.assert_array_equal(
+                result.index.get_level_values("y"),
+                np.tile(np.repeat(y, len(times)), len(models)),
+            )
 
-            # Verify correct models exist in column
-            assert "tide_model" in modelled_tides_df.columns
-            assert all(modelled_tides_df.tide_model.unique() == models)
+    elif mode == "grid":
+        # In grid mode, rows should equal the full x * y spatial grid across all timesteps
+        assert len(result) == len(x) * len(y) * len(times) * n_models
 
-    if mode == "one-to-many":
-        if output_format == "wide":
-            # In "wide" output format, the number of rows should equal
-            # the number of x, y points multiplied by timesteps
-            assert len(modelled_tides_df.index) == len(x) * len(times)
+        # Verify all input x, y, and time coordinates are represented in the grid index
+        assert set(result.index.get_level_values("x")) == set(x)
+        assert set(result.index.get_level_values("y")) == set(y)
+        assert set(result.index.get_level_values("time")) == set(times)
 
-            # TODO: Work out what order rows should be returned in in
-            # "one-to-many" and "wide" mode
 
-        elif output_format == "long":
-            # In "long" output format, the number of rows should equal
-            # the number of x, y points multiplied by timesteps and
-            # the number of tide models
-            assert len(modelled_tides_df.index) == len(x) * len(times) * len(models)
+def test_model_tides_mode_consistency():
+    """Verify numerical consistency across output formats, modes, and scalar inputs."""
+    # Define sample coordinates, timesteps, and models
+    x = [122.14, 122.30, 122.12]
+    y = [-17.91, -17.92, -18.07]
+    times = pd.date_range("2020", "2021", periods=3)
+    models = ["EOT20", "HAMTIDE11"]
 
-            # Verify index values match expected x, y, time order
-            assert all(modelled_tides_df.index.get_level_values("time") == np.tile(times, len(x) * len(models)))
-            assert all(modelled_tides_df.index.get_level_values("x") == np.tile(np.repeat(x, len(times)), len(models)))
-            assert all(modelled_tides_df.index.get_level_values("y") == np.tile(np.repeat(y, len(times)), len(models)))
+    # Run tide modelling across formats and modes for comparison
+    df_long = model_tides(x=x, y=y, time=times, mode="one-to-many", output_format="long", model=models)
+    df_wide = model_tides(x=x, y=y, time=times, mode="one-to-many", output_format="wide", model=models)
+    df_1to1 = model_tides(x=x, y=y, time=times, mode="one-to-one", output_format="long", model=models)
 
-            # Verify correct models exist in column
-            assert "tide_model" in modelled_tides_df.columns
-            assert all(modelled_tides_df.tide_model.unique() == models)
+    # Verify long and wide formats contain identical tide height values
+    pd.testing.assert_frame_equal(df_long["tide_height"].unstack("tide_model")[models], df_wide)
+
+    # Verify one-to-one predictions match corresponding (x, y, time) entries in one-to-many
+    for m in models:
+        for xi, yi, ti in zip(x, y, times, strict=True):
+            val_1to1 = df_1to1.loc[(m, ti, xi, yi), "tide_height"]
+            val_1tomany = df_long.loc[(m, ti, xi, yi), "tide_height"]
+            assert np.isclose(val_1to1, val_1tomany)
+
+    # Verify bare scalar inputs return a single-row DataFrame matching array output
+    df_scalar = model_tides(x=x[0], y=y[0], time=times[0], mode="one-to-one", model="EOT20")
+    assert len(df_scalar) == 1
+    assert np.isclose(df_scalar["tide_height"].iloc[0], df_1to1.loc[("EOT20", times[0], x[0], y[0]), "tide_height"])
 
 
 # Test ensemble modelling functionality
