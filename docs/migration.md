@@ -20,13 +20,40 @@ The `model_phases` functionality (e.g. classifying each tide observation by tida
     model_tides(..., tide_stage=True)
     ```
 
-### "tide_model" is now an index level on long Pandas outputs
+### "tide_model" is now an index level on long-format Pandas outputs
 
 If long-format `pandas.DataFrame` outputs are requested via `model_tides(..., output_format="long")`, the `"tide_model"` column will now be returned as an index level rather than a data column (matching `"x"`, `"y"`, and `"time"`).
 
 !!! tip "Action required"
 
     To access tide model information, use `tide_df.index.get_level_values("tide_model")` instead of `tide_df["tide_model"]`.
+
+### Updated `extra_databases` format for specifying custom tide model definitions
+
+Custom tide models provided via the `extra_databases` parameter must be specified using a new JSON or definition file format; see the [pyTMD v3 Transition guide](https://pytmd.readthedocs.io/en/latest/user_guide/Transition-Guide.html#restructuring-definition-files) for more details.
+
+### Ensemble tide modelling changes
+
+Previously, `ensemble_tides` (called within `model_tides` and other tide modelling functions) operated on `pandas.DataFrame` objects, and custom `ensemble_func` functions returned model weights that were combined using a weighted mean.
+
+To provide greater flexibility and to support any aggregation method (e.g. mean, median etc), `ensemble_tides` and custom `ensemble_func` functions now take a multi-model `xarray.Dataset` as input and return an aggregated single-model `xarray.Dataset` (reduced along the "tide_model" dimension, optionally using the supplied model ranks DataArray):
+
+!!! tip "Action required"
+
+    Update:
+    ```python
+    model_tides(
+        ...,
+        ensemble_func={"ensemble-custom": lambda x: x["rank"] <= 3},
+    )
+    ```
+    To:
+    ```python
+    model_tides(
+        ...,
+        ensemble_func={"ensemble-custom": lambda x, ranks, **kw: x.where(ranks <= 3).mean(dim="tide_model")},
+    )
+    ```
 
 # Migrating from `dea_tools`
 

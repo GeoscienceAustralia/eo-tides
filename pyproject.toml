@@ -36,6 +36,7 @@ classifiers = [
 ]
 requires-python = ">=3.11,<4.0"
 dependencies = [
+    "bottleneck>=1.5.0",
     "colorama>=0.4.3",
     "dask[complete]>=2023.1.0",
     "geopandas>=1.0.0",
@@ -177,6 +178,7 @@ DEP002 = [
     "dask",
     "jupyter",
     "h5py",
+    "bottleneck",
 ]
 
 [tool.coverage.report]
