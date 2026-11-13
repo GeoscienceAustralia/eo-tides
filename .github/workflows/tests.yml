@@ -45,11 +45,6 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
         resolution: ["highest", "lowest-direct"]
-        exclude: # Temporarily excluded due to 3.13, 3.14 only supported by Numpy >=2.0
-          - python-version: "3.13"
-            resolution: "lowest-direct"
-          - python-version: "3.14"
-            resolution: "lowest-direct"
       fail-fast: false
       max-parallel: 10
     defaults:
