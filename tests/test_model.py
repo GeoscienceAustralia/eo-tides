@@ -275,13 +275,14 @@ def test_model_tides_units_with_nan(units):
     assert pd.isna(result.tide_height.mean())
 
 
-# Run test for each combination of mode, output format, and one or
+# Run test for each combination of mode, output format, tide stage, and one or
 # multiple tide models
+@pytest.mark.parametrize("tide_stage", [False, True])
 @pytest.mark.parametrize("models", [["EOT20"], ["EOT20", "HAMTIDE11"]])
 @pytest.mark.parametrize("output_format", ["long", "wide", "xarray"])
 @pytest.mark.parametrize("mode", ["one-to-many", "one-to-one", "grid"])
-def test_model_tides_mode(mode, models, output_format):
-    """Verify output shapes, dimensions, and index structure across modes and formats."""
+def test_model_tides_mode(mode, models, output_format, tide_stage):
+    """Verify output shapes, dimensions, and index structure across modes, formats, and tide_stage."""
     # Use distinct x and y lengths in grid mode to catch axis transpositions
     if mode == "grid":
         x = [122.14, 122.30, 122.12]
@@ -291,7 +292,7 @@ def test_model_tides_mode(mode, models, output_format):
         y = [-17.91, -17.92, -18.07]
     times = pd.date_range("2020", "2021", periods=3)
 
-    # Model tides across requested mode, models, and output format
+    # Model tides across requested mode, models, output format, and tide stage
     result = model_tides(
         x=x,
         y=y,
@@ -299,6 +300,7 @@ def test_model_tides_mode(mode, models, output_format):
         mode=mode,
         output_format=output_format,
         model=models,
+        tide_stage=tide_stage,
     )
 
     # Validate xarray Dataset structure and dimensions when output_format='xarray'
@@ -306,6 +308,15 @@ def test_model_tides_mode(mode, models, output_format):
         assert isinstance(result, xr.Dataset)
         assert list(result.tide_model.values) == models
         assert not result.tide_height.isnull().any()
+
+        # Check presence and shape of tide_stage variable when requested
+        if tide_stage:
+            assert "tide_stage" in result.data_vars
+            assert result.tide_stage.dims == result.tide_height.dims
+            assert result.tide_stage.shape == result.tide_height.shape
+            assert not (result.tide_stage == "").any()
+        else:
+            assert "tide_stage" not in result.data_vars
 
         # Verify expected dimension names and sizes for each analysis mode
         if mode == "one-to-one":
@@ -328,11 +339,16 @@ def test_model_tides_mode(mode, models, output_format):
 
     # Verify column layout and tide_model placement for long vs wide dataframe formats
     if output_format == "long":
-        assert list(result.columns) == ["tide_height"]
+        expected_cols = ["tide_height", "tide_stage"] if tide_stage else ["tide_height"]
+        assert list(result.columns) == expected_cols
         assert list(result.index.names) == ["tide_model", "time", "x", "y"]
         assert list(result.index.get_level_values("tide_model").unique()) == models
     elif output_format == "wide":
-        assert list(result.columns) == models
+        if tide_stage:
+            expected_cols = [(var, m) for var in ("tide_height", "tide_stage") for m in models]
+        else:
+            expected_cols = models
+        assert list(result.columns) == expected_cols
         assert list(result.index.names) == ["time", "x", "y"]
 
     # Multiplier accounting for vertical stacking of models in long format
@@ -699,83 +715,46 @@ def test_model_tides_errors(bad_args, expected_exception):
         model_tides(**args)
 
 
-# @pytest.mark.parametrize("time_offset", ["15 min", "20 min"])
-# def test_model_phases(time_offset):
-#     phase_df = model_phases(
-#         x=[122.14],
-#         y=[-17.91],
-#         time=pd.date_range("2020-01-01", "2020-01-02", freq="h"),
-#         model=["EOT20"],
-#         time_offset=time_offset,
-#     )
+def test_model_tides_stage():
+    """Verify modelled tide stage classifications match expected ebb/flow and high/low values."""
+    # Model tide heights and tide stages across an hourly tidal cycle
+    tide_df = model_tides(
+        x=[122.14],
+        y=[-17.91],
+        time=pd.date_range("2020-01-01", "2020-01-02", freq="h"),
+        model=["EOT20"],
+        tide_stage=True,
+    )
 
-#     assert phase_df.tide_phase.tolist() == [
-#         "low-flow",
-#         "low-flow",
-#         "low-flow",
-#         "low-flow",
-#         "high-flow",
-#         "high-flow",
-#         "high-flow",
-#         "high-ebb",
-#         "high-ebb",
-#         "high-ebb",
-#         "low-ebb",
-#         "low-ebb",
-#         "low-ebb",
-#         "low-flow",
-#         "low-flow",
-#         "high-flow",
-#         "high-flow",
-#         "high-flow",
-#         "high-flow",
-#         "high-ebb",
-#         "high-ebb",
-#         "high-ebb",
-#         "low-ebb",
-#         "low-ebb",
-#         "low-ebb",
-#     ]
+    # Verify tide stage classifications match expected sequence
+    assert tide_df.tide_stage.tolist() == [
+        "low-flow",
+        "low-flow",
+        "low-flow",
+        "low-flow",
+        "high-flow",
+        "high-flow",
+        "high-flow",
+        "high-ebb",
+        "high-ebb",
+        "high-ebb",
+        "low-ebb",
+        "low-ebb",
+        "low-ebb",
+        "low-flow",
+        "low-flow",
+        "high-flow",
+        "high-flow",
+        "high-flow",
+        "high-flow",
+        "high-ebb",
+        "high-ebb",
+        "high-ebb",
+        "low-ebb",
+        "low-ebb",
+        "low-ebb",
+    ]
 
-
-# @pytest.mark.parametrize(
-#     "models,output_format,return_tides,expected_cols",
-#     [
-#         (["EOT20"], "long", False, ["tide_model", "tide_phase"]),
-#         (["EOT20"], "long", True, ["tide_model", "tide_height", "tide_phase"]),
-#         (["EOT20", "GOT5.5"], "long", False, ["tide_model", "tide_phase"]),
-#         (
-#             ["EOT20", "GOT5.5"],
-#             "long",
-#             True,
-#             ["tide_model", "tide_height", "tide_phase"],
-#         ),
-#         (["EOT20"], "wide", False, ["EOT20"]),
-#         (["EOT20"], "wide", True, [("tide_height", "EOT20"), ("tide_phase", "EOT20")]),
-#         (["EOT20", "GOT5.5"], "wide", False, ["EOT20", "GOT5.5"]),
-#         (
-#             ["EOT20", "GOT5.5"],
-#             "wide",
-#             True,
-#             [
-#                 ("tide_height", "EOT20"),
-#                 ("tide_height", "GOT5.5"),
-#                 ("tide_phase", "EOT20"),
-#                 ("tide_phase", "GOT5.5"),
-#             ],
-#         ),
-#     ],
-# )
-# def test_model_phases_format(models, output_format, return_tides, expected_cols):
-#     phase_df = model_phases(
-#         x=[122.14],
-#         y=[-17.91],
-#         time=pd.date_range("2020", "2021", periods=2),
-#         model=models,
-#         output_format=output_format,
-#         return_tides=return_tides,
-#     )
-
-#     # Assert expected indexes and columns
-#     assert phase_df.index.names == ["time", "x", "y"]
-#     assert phase_df.columns.tolist() == expected_cols
+    # Verify high/low prefix aligns with positive/negative tide heights
+    assert all(tide_df.loc[tide_df.tide_height >= 0, "tide_stage"].str.startswith("high-"))
+    assert all(tide_df.loc[tide_df.tide_height < 0, "tide_stage"].str.startswith("low-"))

@@ -833,6 +833,11 @@ def model_tides(
         # Redefine data to include only target timesteps
         models_combined = models_combined.isel(time=slice(0, time_n))
 
+        # Trim x and y coordinates back to original length in one-to-one mode
+        if mode == "one-to-one":
+            x = x[:time_n]
+            y = y[:time_n]
+
         # Determine ebb/flow and high/low state; tides are ebbing
         # if preceding tides were higher than current tides.
         is_ebb = models_combined.tide_height < pre.tide_height
