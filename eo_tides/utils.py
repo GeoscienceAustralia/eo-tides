@@ -111,10 +111,10 @@ def _standardise_time(
         return None
 
     # Use pd.to_datetime for conversion, then convert to numpy array
-    time = pd.to_datetime(time).to_numpy().astype("datetime64[ns]")
+    time_array = pd.to_datetime(time).to_numpy().astype("datetime64[ns]")
 
     # Ensure that data has at least one dimension
-    return np.atleast_1d(time)
+    return np.atleast_1d(time_array)
 
 
 def _standardise_models(
