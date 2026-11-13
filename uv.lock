@@ -1305,7 +1305,7 @@ requires-dist = [
     { name = "dask", extras = ["complete"], specifier = ">=2023.1.0" },
     { name = "folium", marker = "extra == 'notebooks'", specifier = ">=0.16.0" },
     { name = "geopandas", specifier = ">=1.0.0" },
-    { name = "h5py", specifier = ">=3.10.0" },
+    { name = "h5py", specifier = ">=3.12.1" },
     { name = "jupyter", marker = "extra == 'notebooks'", specifier = ">=1.0.0" },
     { name = "matplotlib", specifier = ">=3.8.0" },
     { name = "numpy", specifier = ">=2.0.0" },
