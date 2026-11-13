@@ -45,6 +45,11 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
         resolution: ["highest", "lowest-direct"]
+        exclude: # Temporarily exclude latest Python due to wheel inavailability
+          - python-version: "3.13"
+            resolution: "lowest-direct"
+          - python-version: "3.14"
+            resolution: "lowest-direct"
       fail-fast: false
       max-parallel: 10
     defaults:
