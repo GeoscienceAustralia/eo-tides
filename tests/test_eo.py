@@ -47,22 +47,22 @@ def test_tag_tides(satellite_ds, measured_tides_ds, tidepost_lat, tidepost_lon):
     assert abs(val_stats["Bias"]) < 0.20
 
 
-def test_tag_tides_phases(satellite_ds, measured_tides_ds):
-    # Use tag_tides to model both phases and tide heights
+def test_tag_tides_stages(satellite_ds, measured_tides_ds):
+    # Use tag_tides to model both stages and tide heights
     tagged_tides_ds = tag_tides(
         satellite_ds,
-        return_phases=True,
+        tide_stage=True,
     )
 
     # Verify output is an xarray.Dataset
     assert isinstance(tagged_tides_ds, xr.Dataset)
 
     # Verify vars are as expected
-    expected_vars = ["tide_height", "tide_phase"]
+    expected_vars = ["tide_height", "tide_stage"]
     assert set(expected_vars) == set(tagged_tides_ds.data_vars)
 
-    # Verify tide_phase values
-    expected_phases = [
+    # Verify tide_stage values
+    expected_stages = [
         "low-flow",
         "high-flow",
         "low-ebb",
@@ -71,7 +71,7 @@ def test_tag_tides_phases(satellite_ds, measured_tides_ds):
         "low-flow",
         "high-flow",
     ]
-    assert tagged_tides_ds.tide_phase.values.tolist() == expected_phases
+    assert tagged_tides_ds.tide_stage.values.tolist() == expected_stages
 
     # Assert tide_model dim has been squeezed out
     assert "tide_model" not in tagged_tides_ds.dims
@@ -80,7 +80,7 @@ def test_tag_tides_phases(satellite_ds, measured_tides_ds):
     tagged_tides_ds = tag_tides(
         satellite_ds,
         model=["EOT20", "GOT5.5"],
-        return_phases=True,
+        tide_stage=True,
     )
 
     # Assert that output now has a tide_model dimension

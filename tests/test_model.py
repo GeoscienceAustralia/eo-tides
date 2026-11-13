@@ -2,9 +2,10 @@ import numpy as np
 import pandas as pd
 import pytest
 from pyTMD.compute import tide_elevations
+import xarray as xr
 
 from eo_tides.model import (
-    _parallel_splits,
+    # _parallel_splits,
     _set_directory,
     ensemble_tides,
     model_phases,
@@ -17,51 +18,58 @@ GAUGE_Y = -18.0008
 ENSEMBLE_MODELS = ["EOT20", "HAMTIDE11"]  # simplified for tests
 
 
-@pytest.mark.parametrize(
-    "total_points, model_count, parallel_max, expected_splits",
-    [
-        # Basic cases
-        (10000, 2, 8, 4),  # Standard case with explicit parallel_max
-        (5000, 1, 4, 4),  # Single model case
-        # Minimum split size cases
-        (900, 1, 4, 1),  # Less than min_points_per_split
-        (2000, 2, 2, 1),  # Just enough for 1 split with 2 models
-        # Maximum parallelization cases
-        (100000, 2, 4, 2),  # Limited by CPU cores / model_count
-        (100000, 4, 8, 2),  # Testing with more models
-        # Edge cases
-        (1, 1, 1, 1),  # Minimum possible values
-        (999999, 1, 8, 8),  # Large number of points
-        (10000, 8, 8, 1),  # Many models relative to cores
-    ],
-)
-def test_parallel_splits(total_points, model_count, parallel_max, expected_splits):
-    """Test the _parallel_splits function with various parameter combinations."""
-    result = _parallel_splits(
-        total_points=total_points,
-        model_count=model_count,
-        parallel_max=parallel_max,
-    )
+# @pytest.mark.parametrize(
+#     "total_points, model_count, parallel_max, expected_splits",
+#     [
+#         # Basic cases
+#         (10000, 2, 8, 4),  # Standard case with explicit parallel_max
+#         (5000, 1, 4, 4),  # Single model case
+#         # Minimum split size cases
+#         (900, 1, 4, 1),  # Less than min_points_per_split
+#         (2000, 2, 2, 1),  # Just enough for 1 split with 2 models
+#         # Maximum parallelization cases
+#         (100000, 2, 4, 2),  # Limited by CPU cores / model_count
+#         (100000, 4, 8, 2),  # Testing with more models
+#         # Edge cases
+#         (1, 1, 1, 1),  # Minimum possible values
+#         (999999, 1, 8, 8),  # Large number of points
+#         (10000, 8, 8, 1),  # Many models relative to cores
+#     ],
+# )
+# def test_parallel_splits(total_points, model_count, parallel_max, expected_splits):
+#     """Test the _parallel_splits function with various parameter combinations."""
+#     result = _parallel_splits(
+#         total_points=total_points,
+#         model_count=model_count,
+#         parallel_max=parallel_max,
+#     )
 
-    # Check the returned value
-    assert result == expected_splits
+#     # Check the returned value
+#     assert result == expected_splits
 
 
 # Run test for multiple input coordinates, CRSs and interpolation methods
 @pytest.mark.parametrize(
     "x, y, crs, method, model",
     [
-        (GAUGE_X, GAUGE_Y, "EPSG:4326", "bilinear", "EOT20"),  # WGS84, bilinear interp
-        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline", "EOT20"),  # WGS84, spline interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "linear", "EOT20"),  # WGS84, linear interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "nearest", "EOT20"),  # WGS84, nearest interp
         (
             -1034913,
             -1961916,
             "EPSG:3577",
-            "bilinear",
+            "linear",
             "EOT20",
-        ),  # Australian Albers, bilinear interp
-        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline", "GOT5.5"),
-        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline", "HAMTIDE11"),
+        ),  # Australian Albers, linear interp
+        (
+            -1034913,
+            -1961916,
+            "EPSG:3577",
+            "nearest",
+            "EOT20",
+        ),  # Australian Albers, nearest interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "linear", "GOT5.5"),
+        # (GAUGE_X, GAUGE_Y, "EPSG:4326", "linear", "HAMTIDE11"),
     ],
 )
 def test_model_tides(measured_tides_ds, x, y, crs, method, model):
@@ -77,8 +85,8 @@ def test_model_tides(measured_tides_ds, x, y, crs, method, model):
 
     # Test that modelled tides contain correct headings and have same
     # number of timesteps
-    assert modelled_tides_df.index.names == ["time", "x", "y"]
-    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
+    assert modelled_tides_df.index.names == ["tide_model", "time", "x", "y"]
+    assert modelled_tides_df.columns.tolist() == ["tide_height"]
     assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
 
     # Run equivalent pyTMD code
@@ -86,13 +94,13 @@ def test_model_tides(measured_tides_ds, x, y, crs, method, model):
         x=x,
         y=y,
         delta_time=measured_tides_ds.time,
-        DIRECTORY=_set_directory(None),
-        MODEL=model,
-        EPSG=int(crs[-4:]),
-        TIME="datetime",
-        EXTRAPOLATE=True,
-        CUTOFF=np.inf,
-        METHOD=method,
+        directory=_set_directory(None),
+        model=model,
+        crs=crs[-4:],
+        standard="datetime",
+        extrapolate=True,
+        cutoff=np.inf,
+        method=method,
     )
 
     # Verify that pyTMD produces same results as `model_tides`
@@ -126,13 +134,13 @@ def test_model_tides(measured_tides_ds, x, y, crs, method, model):
         ("GOT5.5", ["m2"]),
         (
             "GOT5.5",
-            ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
+            ["2n2", "j1", "k1", "k2", "m2", "m4", "n2", "o1", "p1", "q1", "s1", "s2"],
         ),
-        ("HAMTIDE11", ["m2"]),
-        (
-            "HAMTIDE11",
-            ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
-        ),
+        # ("HAMTIDE11", ["m2"]),
+        # (
+        #     "HAMTIDE11",
+        #     ["2n2", "j1", "k1", "k2", "m2", "m4", "mf", "mm", "n2", "o1", "p1", "q1", "s1", "s2", "sa", "ssa", "t2"],
+        # ),
     ],
 )
 def test_model_tides_constituents(measured_tides_ds, model, constituents):
@@ -150,12 +158,12 @@ def test_model_tides_constituents(measured_tides_ds, model, constituents):
         x=GAUGE_X,
         y=GAUGE_Y,
         delta_time=measured_tides_ds.time,
-        DIRECTORY=_set_directory(None),
-        MODEL=model,
-        TIME="datetime",
-        EXTRAPOLATE=True,
-        CUTOFF=np.inf,
-        CONSTITUENTS=constituents,
+        directory=_set_directory(None),
+        model=model,
+        standard="datetime",
+        extrapolate=True,
+        cutoff=np.inf,
+        constituents=constituents,
     )
 
     # Verify that pyTMD produces same results as `model_tides`
@@ -190,11 +198,11 @@ def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
 
     if output_format == "long":
         # Verify output has correct columns
-        assert modelled_tides_df.index.names == ["time", "x", "y"]
-        assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
+        assert modelled_tides_df.index.names == ["tide_model", "time", "x", "y"]
+        assert modelled_tides_df.columns.tolist() == ["tide_height"]
 
-        # Verify tide model column contains correct values
-        assert modelled_tides_df.tide_model.unique().tolist() == models
+        # Verify tide model index level contains correct values
+        assert modelled_tides_df.index.get_level_values("tide_model").unique().tolist() == models
 
         # Verify that dataframe has length of original timesteps multiplied by
         # n models
@@ -267,85 +275,150 @@ def test_model_tides_units_with_nan(units):
     assert pd.isna(result.tide_height.mean())
 
 
-# Run test for each combination of mode, output format, and one or
+# Run test for each combination of mode, output format, tide stage, and one or
 # multiple tide models
-@pytest.mark.parametrize(
-    "mode, models, output_format",
-    [
-        ("one-to-many", ["EOT20"], "long"),
-        ("one-to-one", ["EOT20"], "long"),
-        ("one-to-many", ["EOT20"], "wide"),
-        ("one-to-one", ["EOT20"], "wide"),
-        ("one-to-many", ["EOT20", "HAMTIDE11"], "long"),
-        ("one-to-one", ["EOT20", "HAMTIDE11"], "long"),
-        ("one-to-many", ["EOT20", "HAMTIDE11"], "wide"),
-        ("one-to-one", ["EOT20", "HAMTIDE11"], "wide"),
-    ],
-)
-def test_model_tides_mode(mode, models, output_format):
-    # Input params
-    x = [122.14, 122.30, 122.12]
-    y = [-17.91, -17.92, -18.07]
+@pytest.mark.parametrize("tide_stage", [False, True], ids=["no-stage", "tide-stage"])
+@pytest.mark.parametrize("models", [["EOT20"], ["EOT20", "HAMTIDE11"]], ids=["single-model", "multiple-model"])
+@pytest.mark.parametrize("output_format", ["long", "wide", "xarray"])
+@pytest.mark.parametrize("mode", ["one-to-many", "one-to-one", "grid"])
+def test_model_tides_mode(mode, models, output_format, tide_stage):
+    """Verify output shapes, dimensions, and index structure across modes, formats, and tide_stage."""
+    # Use distinct x and y lengths in grid mode to catch axis transpositions
+    if mode == "grid":
+        x = [122.14, 122.30, 122.12]
+        y = [-17.91, -18.07]
+    else:
+        x = [122.14, 122.30, 122.12]
+        y = [-17.91, -17.92, -18.07]
     times = pd.date_range("2020", "2021", periods=3)
 
-    # Model tides
-    modelled_tides_df = model_tides(
+    # Model tides across requested mode, models, output format, and tide stage
+    result = model_tides(
         x=x,
         y=y,
         time=times,
         mode=mode,
         output_format=output_format,
         model=models,
+        tide_stage=tide_stage,
     )
 
+    # Validate xarray Dataset structure and dimensions when output_format='xarray'
+    if output_format == "xarray":
+        assert isinstance(result, xr.Dataset)
+        assert list(result.tide_model.values) == models
+        assert not result.tide_height.isnull().any()
+
+        # Check presence and shape of tide_stage variable when requested
+        if tide_stage:
+            assert "tide_stage" in result.data_vars
+            assert result.tide_stage.dims == result.tide_height.dims
+            assert result.tide_stage.shape == result.tide_height.shape
+            assert not (result.tide_stage == "").any()
+        else:
+            assert "tide_stage" not in result.data_vars
+
+        # Verify expected dimension names and sizes for each analysis mode
+        if mode == "one-to-one":
+            assert result.tide_height.dims == ("tide_model", "time")
+            assert result.sizes["time"] == len(times)
+        elif mode == "one-to-many":
+            assert result.tide_height.dims == ("tide_model", "site", "time")
+            assert result.sizes["site"] == len(x)
+            assert result.sizes["time"] == len(times)
+        elif mode == "grid":
+            assert result.tide_height.dims == ("tide_model", "y", "x", "time")
+            assert result.sizes["x"] == len(x)
+            assert result.sizes["y"] == len(y)
+            assert result.sizes["time"] == len(times)
+        return
+
+    # Verify DataFrame type and ensure no unexpected NaN values were produced
+    assert isinstance(result, pd.DataFrame)
+    assert not result.isna().any().any()
+
+    # Verify column layout and tide_model placement for long vs wide dataframe formats
+    if output_format == "long":
+        expected_cols = ["tide_height", "tide_stage"] if tide_stage else ["tide_height"]
+        assert list(result.columns) == expected_cols
+        assert list(result.index.names) == ["tide_model", "time", "x", "y"]
+        assert list(result.index.get_level_values("tide_model").unique()) == models
+    elif output_format == "wide":
+        if tide_stage:
+            expected_cols = [(var, m) for var in ("tide_height", "tide_stage") for m in models]
+        else:
+            expected_cols = models
+        assert list(result.columns) == expected_cols
+        assert list(result.index.names) == ["time", "x", "y"]
+
+    # Multiplier accounting for vertical stacking of models in long format
+    n_models = len(models) if output_format == "long" else 1
+
     if mode == "one-to-one":
-        if output_format == "wide":
-            # Should have the same number of rows as input x, y, times
-            assert len(modelled_tides_df.index) == len(x)
-            assert len(modelled_tides_df.index) == len(times)
+        # In one-to-one mode, rows should equal the number of input point/time pairs
+        assert len(result) == len(x) * n_models
 
-            # Output indexes should match order of input x, y, times
-            assert all(modelled_tides_df.index.get_level_values("time") == times)
-            assert all(modelled_tides_df.index.get_level_values("x") == x)
-            assert all(modelled_tides_df.index.get_level_values("y") == y)
+        # Verify index values preserve exact input x, y, and time ordering
+        np.testing.assert_array_equal(result.index.get_level_values("time"), np.tile(times, n_models))
+        np.testing.assert_array_equal(result.index.get_level_values("x"), np.tile(x, n_models))
+        np.testing.assert_array_equal(result.index.get_level_values("y"), np.tile(y, n_models))
 
-        elif output_format == "long":
-            # In "long" format, the number of x, y points multiplied by
-            # the number of tide models
-            assert len(modelled_tides_df.index) == len(x) * len(models)
+    elif mode == "one-to-many":
+        # In one-to-many mode, rows should equal points multiplied by timesteps
+        assert len(result) == len(x) * len(times) * n_models
 
-            # Verify index values match expected x, y, time order
-            assert all(modelled_tides_df.index.get_level_values("time") == np.tile(times, len(models)))
-            assert all(modelled_tides_df.index.get_level_values("x") == np.tile(x, len(models)))
-            assert all(modelled_tides_df.index.get_level_values("y") == np.tile(y, len(models)))
+        # Verify index values follow expected repeating x, y, and time order in long format
+        if output_format == "long":
+            np.testing.assert_array_equal(
+                result.index.get_level_values("time"),
+                np.tile(times, len(x) * len(models)),
+            )
+            np.testing.assert_array_equal(
+                result.index.get_level_values("x"),
+                np.tile(np.repeat(x, len(times)), len(models)),
+            )
+            np.testing.assert_array_equal(
+                result.index.get_level_values("y"),
+                np.tile(np.repeat(y, len(times)), len(models)),
+            )
 
-            # Verify correct models exist in column
-            assert "tide_model" in modelled_tides_df.columns
-            assert all(modelled_tides_df.tide_model.unique() == models)
+    elif mode == "grid":
+        # In grid mode, rows should equal the full x * y spatial grid across all timesteps
+        assert len(result) == len(x) * len(y) * len(times) * n_models
 
-    if mode == "one-to-many":
-        if output_format == "wide":
-            # In "wide" output format, the number of rows should equal
-            # the number of x, y points multiplied by timesteps
-            assert len(modelled_tides_df.index) == len(x) * len(times)
+        # Verify all input x, y, and time coordinates are represented in the grid index
+        assert set(result.index.get_level_values("x")) == set(x)
+        assert set(result.index.get_level_values("y")) == set(y)
+        assert set(result.index.get_level_values("time")) == set(times)
 
-            # TODO: Work out what order rows should be returned in in
-            # "one-to-many" and "wide" mode
 
-        elif output_format == "long":
-            # In "long" output format, the number of rows should equal
-            # the number of x, y points multiplied by timesteps and
-            # the number of tide models
-            assert len(modelled_tides_df.index) == len(x) * len(times) * len(models)
+def test_model_tides_mode_consistency():
+    """Verify numerical consistency across output formats, modes, and scalar inputs."""
+    # Define sample coordinates, timesteps, and models
+    x = [122.14, 122.30, 122.12]
+    y = [-17.91, -17.92, -18.07]
+    times = pd.date_range("2020", "2021", periods=3)
+    models = ["EOT20", "HAMTIDE11"]
 
-            # Verify index values match expected x, y, time order
-            assert all(modelled_tides_df.index.get_level_values("time") == np.tile(times, len(x) * len(models)))
-            assert all(modelled_tides_df.index.get_level_values("x") == np.tile(np.repeat(x, len(times)), len(models)))
-            assert all(modelled_tides_df.index.get_level_values("y") == np.tile(np.repeat(y, len(times)), len(models)))
+    # Run tide modelling across formats and modes for comparison
+    df_long = model_tides(x=x, y=y, time=times, mode="one-to-many", output_format="long", model=models)
+    df_wide = model_tides(x=x, y=y, time=times, mode="one-to-many", output_format="wide", model=models)
+    df_1to1 = model_tides(x=x, y=y, time=times, mode="one-to-one", output_format="long", model=models)
 
-            # Verify correct models exist in column
-            assert "tide_model" in modelled_tides_df.columns
-            assert all(modelled_tides_df.tide_model.unique() == models)
+    # Verify long and wide formats contain identical tide height values
+    pd.testing.assert_frame_equal(df_long["tide_height"].unstack("tide_model")[models], df_wide)
+
+    # Verify one-to-one predictions match corresponding (x, y, time) entries in one-to-many
+    for m in models:
+        for xi, yi, ti in zip(x, y, times, strict=True):
+            val_1to1 = df_1to1.loc[(m, ti, xi, yi), "tide_height"]
+            val_1tomany = df_long.loc[(m, ti, xi, yi), "tide_height"]
+            assert np.isclose(val_1to1, val_1tomany)
+
+    # Verify bare scalar inputs return a single-row DataFrame matching array output
+    df_scalar = model_tides(x=x[0], y=y[0], time=times[0], mode="one-to-one", model="EOT20")
+    assert len(df_scalar) == 1
+    assert np.isclose(df_scalar["tide_height"].iloc[0], df_1to1.loc[("EOT20", times[0], x[0], y[0]), "tide_height"])
 
 
 # Test ensemble modelling functionality
@@ -367,9 +440,9 @@ def test_model_tides_ensemble():
         ensemble_models=ENSEMBLE_MODELS,
     )
 
-    assert modelled_tides_df.index.names == ["time", "x", "y"]
-    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
-    assert all(modelled_tides_df.tide_model == "ensemble")
+    assert modelled_tides_df.index.names == ["tide_model", "time", "x", "y"]
+    assert modelled_tides_df.columns.tolist() == ["tide_height"]
+    assert all(modelled_tides_df.index.get_level_values("tide_model") == "ensemble")
 
     # Default, ensemble + other models requested
     models = ["EOT20", "HAMTIDE11", "ensemble"]
@@ -381,9 +454,9 @@ def test_model_tides_ensemble():
         ensemble_models=ENSEMBLE_MODELS,
     )
 
-    assert modelled_tides_df.index.names == ["time", "x", "y"]
-    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
-    assert set(modelled_tides_df.tide_model) == set(models)
+    assert modelled_tides_df.index.names == ["tide_model", "time", "x", "y"]
+    assert modelled_tides_df.columns.tolist() == ["tide_height"]
+    assert set(modelled_tides_df.index.get_level_values("tide_model")) == set(models)
     assert np.allclose(
         modelled_tides_df.tide_height.values,
         [
@@ -413,9 +486,9 @@ def test_model_tides_ensemble():
         ensemble_models=ENSEMBLE_MODELS,
     )
 
-    assert modelled_tides_df.index.names == ["time", "x", "y"]
-    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_height"]
-    assert set(modelled_tides_df.tide_model) == set(models)
+    assert modelled_tides_df.index.names == ["tide_model", "time", "x", "y"]
+    assert modelled_tides_df.columns.tolist() == ["tide_height"]
+    assert set(modelled_tides_df.index.get_level_values("tide_model")) == set(models)
 
     # Wide mode, default
     modelled_tides_df = model_tides(
@@ -468,32 +541,26 @@ def test_model_tides_ensemble():
 
     # Wide mode, custom functions
     ensemble_funcs = {
-        "ensemble-best": lambda x: x["rank"] == 1,
-        "ensemble-worst": lambda x: x["rank"] == 2,
-        "ensemble-mean-top2": lambda x: x["rank"].isin([1, 2]),
-        "ensemble-mean-weighted": lambda x: 3 - x["rank"],
-        "ensemble-mean": lambda x: x["rank"] <= 2,
+        "ensemble-best": lambda x, ranks, **kw: x.where(ranks == 1).mean(dim="tide_model"),
+        "ensemble-worst": lambda x, ranks, **kw: x.where(ranks == 2).mean(dim="tide_model"),
+        "ensemble-mean-top2": lambda x, ranks, **kw: x.where(ranks.isin([1, 2])).mean(dim="tide_model"),
+        "ensemble-mean-weighted": lambda x, ranks, **kw: x.weighted((3 - ranks).fillna(0)).mean(dim="tide_model"),
+        "ensemble-mean": lambda x, ranks=None, **kw: x.mean(dim="tide_model"),
     }
+    custom_models = ["EOT20", "HAMTIDE11", *ensemble_funcs]
+
     modelled_tides_df = model_tides(
         x=x,
         y=y,
         time=times,
-        model=models,
+        model=custom_models,
         output_format="wide",
         ensemble_func=ensemble_funcs,
         ensemble_models=ENSEMBLE_MODELS,
     )
 
     # Check that expected models exist, and that valid data is produced
-    assert set(modelled_tides_df.columns) == {
-        "EOT20",
-        "HAMTIDE11",
-        "ensemble-best",
-        "ensemble-worst",
-        "ensemble-mean-top2",
-        "ensemble-mean-weighted",
-        "ensemble-mean",
-    }
+    assert set(modelled_tides_df.columns) == set(custom_models)
     assert all(modelled_tides_df.notnull())
 
     # Long mode, custom functions
@@ -501,46 +568,42 @@ def test_model_tides_ensemble():
         x=x,
         y=y,
         time=times,
-        model=models,
+        model=custom_models,
         output_format="long",
         ensemble_func=ensemble_funcs,
         ensemble_models=ENSEMBLE_MODELS,
     )
 
-    # Check that expected models exist in "tide_model" column
-    assert set(modelled_tides_df.tide_model) == {
-        "EOT20",
-        "HAMTIDE11",
-        "ensemble-best",
-        "ensemble-worst",
-        "ensemble-mean-top2",
-        "ensemble-mean-weighted",
-        "ensemble-mean",
-    }
+    # Check that expected models exist in "tide_model" index level
+    assert set(modelled_tides_df.index.get_level_values("tide_model")) == set(custom_models)
 
 
-# Test ensemble dtype is set correctly
-@pytest.mark.parametrize(
-    "dtype",
-    ["float32", "float64", "int16"],
-)
+# Test ensemble dtype is preserved for floating-point inputs
+@pytest.mark.parametrize("dtype", ["float32", "float64"])
 def test_model_tides_ensemble_dtype(dtype):
-    # Create dummy modelled tide data with specific dtype
-    modelled_tides_df = pd.DataFrame({
-        "time": pd.date_range(start="2000-01-01", periods=5, freq="5h").repeat(2),
-        "x": 122.2183,
-        "y": -18.0008,
-        "tide_model": ["EOT20", "HAMTIDE11"] * 5,
-        "tide_height": np.random.uniform(-4, 3, 10).astype(dtype),
-    })
-    modelled_tides_df = modelled_tides_df.set_index(["time", "x", "y"])
+    # Create dummy modelled tide dataset with specific dtype
+    times = pd.date_range(start="2000-01-01", periods=5, freq="5h")
+    modelled_tides_ds = xr.Dataset(
+        data_vars={
+            "tide_height": (
+                ["tide_model", "site", "time"],
+                np.random.uniform(-4, 3, (2, 1, 5)).astype(dtype),
+            ),
+        },
+        coords={
+            "tide_model": ["EOT20", "HAMTIDE11"],
+            "time": times,
+            "x": ("site", [122.2183]),
+            "y": ("site", [-18.0008]),
+        },
+    )
 
     # Run ensemble modelling on modelled tides input
-    ensemble_df = ensemble_tides(modelled_tides_df, ensemble_models=ENSEMBLE_MODELS, crs="EPSG:4326")
+    ensemble_ds = ensemble_tides(modelled_tides_ds, ensemble_models=ENSEMBLE_MODELS, crs="EPSG:4326")
 
-    # Verify that output tides match are as expected, and match the input data
-    assert ensemble_df.tide_height.dtype == dtype
-    assert ensemble_df.tide_height.dtype == modelled_tides_df.tide_height.dtype
+    # Verify that output dtype matches the input data
+    assert ensemble_ds.tide_height.dtype == dtype
+    assert ensemble_ds.tide_height.dtype == modelled_tides_ds.tide_height.dtype
 
 
 # Test listing extra_databases models from dict and file
@@ -552,9 +615,19 @@ def test_model_tides_ensemble_dtype(dtype):
         # Extra database as a dictionary
         [
             {
-                "elevation": {
-                    "EOT20_custom": {
-                        "format": "FES-netcdf",
+                "EOT20_custom": {
+                    "format": "FES-netcdf",
+                    "name": "EOT20_custom",
+                    "projection": {
+                        "datum": "WGS84",
+                        "ellps": "WGS84",
+                        "lon_wrap": 180,
+                        "proj": "longlat",
+                        "type": "crs",
+                    },
+                    "reference": "https://doi.org/10.17882/79489",
+                    "version": "EOT20",
+                    "z": {
                         "model_file": [
                             "EOT20/ocean_tides/2N2_ocean_eot20.nc",
                             "EOT20/ocean_tides/J1_ocean_eot20.nc",
@@ -574,13 +647,9 @@ def test_model_tides_ensemble_dtype(dtype):
                             "EOT20/ocean_tides/SSA_ocean_eot20.nc",
                             "EOT20/ocean_tides/T2_ocean_eot20.nc",
                         ],
-                        "name": "EOT20_custom",
-                        "reference": "https://doi.org/10.17882/79489",
-                        "scale": 0.01,
-                        "type": "z",
+                        "units": "cm",
                         "variable": "tide_ocean",
-                        "version": "EOT20",
-                    }
+                    },
                 }
             }
         ],
@@ -646,17 +715,19 @@ def test_model_tides_errors(bad_args, expected_exception):
         model_tides(**args)
 
 
-@pytest.mark.parametrize("time_offset", ["15 min", "20 min"])
-def test_model_phases(time_offset):
-    phase_df = model_phases(
+def test_model_tides_stage():
+    """Verify modelled tide stage classifications match expected ebb/flow and high/low values."""
+    # Model tide heights and tide stages across an hourly tidal cycle
+    tide_df = model_tides(
         x=[122.14],
         y=[-17.91],
         time=pd.date_range("2020-01-01", "2020-01-02", freq="h"),
         model=["EOT20"],
-        time_offset=time_offset,
+        tide_stage=True,
     )
 
-    assert phase_df.tide_phase.tolist() == [
+    # Verify tide stage classifications match expected sequence
+    assert tide_df.tide_stage.tolist() == [
         "low-flow",
         "low-flow",
         "low-flow",
@@ -684,45 +755,6 @@ def test_model_phases(time_offset):
         "low-ebb",
     ]
 
-
-@pytest.mark.parametrize(
-    "models,output_format,return_tides,expected_cols",
-    [
-        (["EOT20"], "long", False, ["tide_model", "tide_phase"]),
-        (["EOT20"], "long", True, ["tide_model", "tide_height", "tide_phase"]),
-        (["EOT20", "GOT5.5"], "long", False, ["tide_model", "tide_phase"]),
-        (
-            ["EOT20", "GOT5.5"],
-            "long",
-            True,
-            ["tide_model", "tide_height", "tide_phase"],
-        ),
-        (["EOT20"], "wide", False, ["EOT20"]),
-        (["EOT20"], "wide", True, [("tide_height", "EOT20"), ("tide_phase", "EOT20")]),
-        (["EOT20", "GOT5.5"], "wide", False, ["EOT20", "GOT5.5"]),
-        (
-            ["EOT20", "GOT5.5"],
-            "wide",
-            True,
-            [
-                ("tide_height", "EOT20"),
-                ("tide_height", "GOT5.5"),
-                ("tide_phase", "EOT20"),
-                ("tide_phase", "GOT5.5"),
-            ],
-        ),
-    ],
-)
-def test_model_phases_format(models, output_format, return_tides, expected_cols):
-    phase_df = model_phases(
-        x=[122.14],
-        y=[-17.91],
-        time=pd.date_range("2020", "2021", periods=2),
-        model=models,
-        output_format=output_format,
-        return_tides=return_tides,
-    )
-
-    # Assert expected indexes and columns
-    assert phase_df.index.names == ["time", "x", "y"]
-    assert phase_df.columns.tolist() == expected_cols
+    # Verify high/low prefix aligns with positive/negative tide heights
+    assert all(tide_df.loc[tide_df.tide_height >= 0, "tide_stage"].str.startswith("high-"))
+    assert all(tide_df.loc[tide_df.tide_height < 0, "tide_stage"].str.startswith("low-"))

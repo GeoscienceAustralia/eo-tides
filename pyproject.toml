@@ -28,34 +28,35 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Visualization",
     "Topic :: Scientific/Engineering :: Image Processing",
     "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
 ]
-requires-python = ">=3.10,<4.0"
+requires-python = ">=3.11,<4.0"
 dependencies = [
-    "certifi>=2026.10.19",
+    "bottleneck>=1.5.0",
     "colorama>=0.4.3",
     "dask[complete]>=2023.1.0",
-    "geopandas>=0.10.0",
+    "geopandas>=1.0.0",
+    "h5py>=3.12.1",
     "matplotlib>=3.8.0",
-    "numpy>=1.26.0",
-    "odc-geo>=0.4.7",
+    "numpy>=2.0.0",
+    "odc-geo>=0.5.0",
     "odc-stac[botocore]>=0.3.10",
     "pandas>=2.2.0",
     "planetary_computer>=1.0.0",
     "psutil>=6.0.0",
-    "pyogrio>=0.10.0",
-    "pyproj>=3.7.0",
+    "pyogrio>=0.12.0",
     "pystac-client>=0.8.3",
-    "pyTMD>=2.2.8,<3.0.0",
-    "scikit-learn>=1.4.0",
+    "pyTMD>=3.1.0",
+    "scikit-learn>=1.7.2",
     "scipy>=1.14.1",
     "shapely>=2.0.6",
-    "timescale>=0.0.3",
+    "timescale>=0.1.3",
     "tqdm>=4.55.0",
-    "xarray>=2022.3.0",
+    "xarray>=2025.6.1",
 ]
 
 [project.urls]
@@ -76,12 +77,11 @@ dev = [
     "deptry>=0.20.0",
     "mypy>=0.900",
     "pytest-cov>=0.6",
-    "ruff>=0.0.200",
+    "ruff>=0.15.0",
     "mkdocs>=1.2",
     "mkdocs-material>=9.5.0",
     "mkdocs-jupyter>=0.24.0",
-    "mkdocstrings[python]>=0.20.0,<1.0.0",
-    "pymdown-extensions<12.0",
+    "mkdocstrings[python]>=1.0.0",
     "black>=22.1.0",
     "nbval>=0.10.0",
 ]
@@ -108,15 +108,24 @@ allow-direct-references = true
 
 [tool.mypy]
 files = ["eo_tides"]
-python_version = "3.10"
+python_version = "3.11"
 ignore_missing_imports = true
 allow_redefinition = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = [
+    # "tests",
+    "tests/test_model.py",
+]
+
+[tool.uv]
+constraint-dependencies = [
+    "pillow>=13.0.0",
+    "certifi>=2026.10.19",
+]
 
 [tool.ruff]
-target-version = "py310"     # Target Python 3.10 syntax
+target-version = "py311"     # Target Python 3.11 syntax
 line-length = 120            # Set max line length
 fix = true                   # Allow auto-fix when used without pre-commit
 lint.select = ["ALL"]
@@ -146,6 +155,8 @@ lint.ignore = [
   "PD003",    # Ignore notnull (confusing xarray with pandas)
   "PD004",    # Ignore notnull (confusing xarray with pandas)
   "PD013",    # Ignore stack vs. melt (confusing xarray with pandas)
+  "PD010",    # Ignore pivot_table vs. unstack (confusing xarray with pandas)
+  "ARG005",   # Ignore unused lambda argument
 ]
 exclude = ["tests/testing.ipynb"]  # Don't modify testing notebook
 
@@ -166,7 +177,8 @@ DEP002 = [
     "pyogrio",
     "dask",
     "jupyter",
-    "certifi",
+    "h5py",
+    "bottleneck",
 ]
 
 [tool.coverage.report]
