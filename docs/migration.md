@@ -7,7 +7,7 @@ It includes a number of breaking changes compared to `eo-tides <= 0.10`:
 
 ### `model_phases` function deprecated
 
-The `model_phases` functionality (e.g. classifying each tide observation by tidal stage; "high-ebb", "high-flow", "low-ebb", "low-flow") has been relocated into the main `model_tides` function via a new `tide_stage` parameter. The `model_phases` function will be removed in a future release.
+The `model_phases` functionality (e.g. classifying each tide observation by tidal stage; "high-ebb", "high-flow", "low-ebb", "low-flow") has been relocated into the main `model_tides` function via a new `tide_stage` parameter, which will add a new "tide_stage" column or data variable to outputs. The `model_phases` function will be removed in a future release.
 
 !!! tip "Action required"
 

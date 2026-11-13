@@ -277,8 +277,8 @@ def test_model_tides_units_with_nan(units):
 
 # Run test for each combination of mode, output format, tide stage, and one or
 # multiple tide models
-@pytest.mark.parametrize("tide_stage", [False, True])
-@pytest.mark.parametrize("models", [["EOT20"], ["EOT20", "HAMTIDE11"]])
+@pytest.mark.parametrize("tide_stage", [False, True], ids=["no-stage", "tide-stage"])
+@pytest.mark.parametrize("models", [["EOT20"], ["EOT20", "HAMTIDE11"]], ids=["single-model", "multiple-model"])
 @pytest.mark.parametrize("output_format", ["long", "wide", "xarray"])
 @pytest.mark.parametrize("mode", ["one-to-many", "one-to-one", "grid"])
 def test_model_tides_mode(mode, models, output_format, tide_stage):
