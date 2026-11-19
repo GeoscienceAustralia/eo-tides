@@ -117,6 +117,9 @@ testpaths = [
     # "tests",
     "tests/test_model.py",
     "tests/test_eo.py",
+    "tests/test_stats.py",
+    "test_stac.py",
+    "test_validation.py",
 ]
 
 [tool.uv]
