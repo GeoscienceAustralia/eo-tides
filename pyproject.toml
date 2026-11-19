@@ -116,6 +116,7 @@ allow_redefinition = true
 testpaths = [
     # "tests",
     "tests/test_model.py",
+    "tests/test_eo.py",
 ]
 
 [tool.uv]

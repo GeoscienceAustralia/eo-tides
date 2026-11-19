@@ -818,11 +818,9 @@ def model_tides(
             **ensemble_kwargs,
         )
 
-        # Combine ensemble with existing models
-        models_combined = xr.concat([models_combined, ensemble_ds], dim="tide_model")
-
-        # Return only requested models
-        models_combined = models_combined.sel(tide_model=models_requested)
+        # Combine ensemble with existing models, and ensure requested
+        # models are returned in their original order
+        models_combined = xr.concat([models_combined, ensemble_ds], dim="tide_model").sel(tide_model=models_requested)
 
     # Add "tide_stage" variable to data if requested
     if tide_stage:
@@ -850,11 +848,11 @@ def model_tides(
         valid_mask = models_combined.tide_height.notnull() & pre.tide_height.notnull()
         models_combined["tide_stage"] = xr.where(valid_mask, tide_phase, "")
 
-    # Re-assign original coords due to tide modelling functions
-    # returning coords in the native CRS of the model
+    # Re-assign original coords in (y, x) order due to tide modelling
+    # functions returning coords in the native CRS of the model
     models_combined = models_combined.assign_coords(
-        x=(models_combined.x.dims, x, models_combined.x.attrs),
         y=(models_combined.y.dims, y, models_combined.y.attrs),
+        x=(models_combined.x.dims, x, models_combined.x.attrs),
     )
 
     # Simplify x and y dimensions if they are two-dimensional
@@ -864,16 +862,19 @@ def model_tides(
             x=models_combined.x.isel(y=0),
         )
 
+    # Rename station to site if it exists and standardise dimension order
+    if "station" in models_combined.dims:
+        models_combined = models_combined.rename_dims({"station": "site"})
+    models_combined = models_combined.transpose("tide_model", "y", "x", "site", "time", missing_dims="ignore")
+
     # Units and dtype conversion
     if output_units in ("cm", "mm"):
         models_combined = models_combined.fillna(output_nodata).astype("int16")
         models_combined["tide_height"].attrs["_FillValue"] = output_nodata
 
-    # Rename station to site if it exists, then return xarray with CRS info
+    # Return xarray Dataset with CRS info
     if output_format == "xarray":
         print("Returning data in xarray format")
-        if "station" in models_combined.dims:
-            return models_combined.rename_dims({"station": "site"})
         return models_combined.odc.assign_crs(crs)
 
     # Raise performance warning for dataframe conversion if large size
@@ -893,26 +894,36 @@ def model_tides(
             tide_df["tide_height"].replace(models_combined.tide_height.attrs["_FillValue"], pd.NA).astype("Int16")
         )
 
-    # Move x and y to the index if they are data columns (one-to-one and one-to-many modes)
-    index_cols = [col for col in ["x", "y"] if col in tide_df.columns]
+    # Move y and x to the index if they are data columns (one-to-one and one-to-many modes)
+    index_cols = [col for col in ["y", "x"] if col in tide_df.columns]
     if index_cols:
         tide_df = tide_df.set_index(index_cols, append=True)
 
-    # Drop internal spatial dimension from index as x and y uniquely identify locations
-    if "station" in tide_df.index.names:
-        tide_df = tide_df.droplevel("station")
+    # Drop internal spatial dimension from index as y and x uniquely identify locations
+    if "site" in tide_df.index.names:
+        tide_df = tide_df.droplevel("site")
 
     # Standardise index level order across all analysis modes
-    tide_df = tide_df.reorder_levels(["tide_model", "time", "x", "y"])
+    tide_df = tide_df.reorder_levels(["tide_model", "y", "x", "time"])
 
     # Return long format pandas dataframe directly
     if output_format == "long":
         print("Returning data in 'long' format")
         return tide_df
 
-    # Or convert to wide format by unstacking tide model index
+    # Or convert to wide format while preserving input order
+    # Need to use bespoke re-sorting due to bug in pandas unstack
     print("Returning data in 'wide' format")
-    return tide_df.squeeze("columns").unstack("tide_model")
+    target_index = tide_df.loc[models_requested[0]].index
+    wide_df = tide_df.squeeze("columns").unstack("tide_model")
+    if tide_stage:
+        target_cols = pd.MultiIndex.from_product(
+            [tide_df.columns, models_requested],
+            names=wide_df.columns.names,
+        )
+    else:
+        target_cols = models_requested
+    return wide_df.reindex(index=target_index, columns=target_cols)
 
 
 def model_phases(

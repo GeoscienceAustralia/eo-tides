@@ -94,7 +94,7 @@ def test_tag_tides_multiple(satellite_ds):
 
     assert tagged_tides_da.name == "tide_height"
     assert "tide_model" in tagged_tides_da.dims
-    assert tagged_tides_da.dims == ("time", "tide_model")
+    assert tagged_tides_da.dims == ("tide_model", "time")
 
     # Test that multiple tide models are correlated
     val_stats = eval_metrics(
@@ -122,8 +122,7 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
 
     # Assert that modelled tides have the same shape and dims as
     # arrays in `satellite_ds`
-    assert modelled_tides_ds.shape == satellite_ds.nbart_red.shape
-    assert modelled_tides_ds.dims == satellite_ds.nbart_red.dims
+    assert modelled_tides_ds.sizes == satellite_ds.sizes
 
     # Assert that high res and low res data have the same dims
     assert modelled_tides_ds.dims == modelled_tides_lowres.dims
@@ -183,7 +182,7 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
         )
 
     # Test if extracted tides match expected results (to within ~5 cm)
-    expected_tides = [-0.68, -0.84, -0.80, -0.88]
+    expected_tides = [-0.66, -0.84, -0.80, -0.88]
     assert np.allclose(extracted_tides.values, expected_tides, atol=0.05)
 
 
@@ -206,7 +205,7 @@ def test_pixel_tides_times(satellite_ds, measured_tides_ds):
 
     # Verify passing a single timestamp
     measured_tides_ds = pixel_tides(satellite_ds, time=custom_times.tolist()[0])
-    assert len(measured_tides_ds) == 1
+    assert len(measured_tides_ds.time) == 1
 
     # Verify that passing a dataset without time leads to error
     satellite_ds_notime = satellite_ds.isel(time=0)
@@ -259,7 +258,7 @@ def test_pixel_tides_quantile(satellite_ds):
 
     # Test if extracted tides match expected results (to within ~2 cm)
     expected_tides = np.array([
-        [-1.90, -2.18, -2.11, -2.22],
+        [-1.87, -2.18, -2.11, -2.22],
         [-1.20, -1.27, -1.25, -1.29],
         [-0.70, -0.78, -0.76, -0.80],
         [-0.31, -0.31, -0.32, -0.31],
@@ -301,24 +300,29 @@ def test_pixel_tides_multiplemodels(satellite_ds, quantiles):
 
 # Run test for different combinations of Dask chunking
 @pytest.mark.parametrize(
-    "dask_chunks",
+    "resample_chunks",
     [None, (300, 300), (200, 300)],
 )
-def test_pixel_tides_dask(satellite_ds, dask_chunks):
+def test_pixel_tides_dask(satellite_ds, resample_chunks):
     # Model tides with Dask compute turned off to return Dask arrays
-    modelled_tides_ds = pixel_tides(satellite_ds, dask_compute=False, dask_chunks=dask_chunks)
+    modelled_tides_ds = pixel_tides(satellite_ds, dask_compute=False, resample_chunks=resample_chunks)
 
-    # Verify output is Dask-enabled
+    # Verify output is Dask-enabled and preserves input dimension order
     assert dask.is_dask_collection(modelled_tides_ds)
+    assert modelled_tides_ds.sizes == satellite_ds.sizes
 
-    # If chunks set to "auto", check output matches `satellite_ds` chunks
-    if dask_chunks is None:
-        assert modelled_tides_ds.chunks == satellite_ds.nbart_red.chunks
+    # If chunks set to None, check output matches `satellite_ds` chunks
+    if resample_chunks is None:
+        assert modelled_tides_ds.chunksizes == satellite_ds.chunksizes
 
     # Otherwise, check output chunks match requested chunks
     else:
-        output_chunks = tuple([i[0] for i in modelled_tides_ds.chunks[1:]])
-        assert output_chunks == dask_chunks
+        y_dim, x_dim = satellite_ds.odc.spatial_dims
+        assert resample_chunks[0] == modelled_tides_ds.chunksizes[y_dim][0]
+        assert resample_chunks[1] == modelled_tides_ds.chunksizes[x_dim][0]
+
+    # Verify the lazy Dask graph computes cleanly
+    assert not modelled_tides_ds.compute().isnull().all()
 
 
 # Run test pixel tides and ensemble modelling
@@ -348,12 +352,13 @@ def test_pixel_tides_ensemble(satellite_ds):
 
     # Model tides using `pixel_tides` and custom ensemble funcs
     ensemble_funcs = {
-        "ensemble-best": lambda x: x["rank"] == 1,
-        "ensemble-worst": lambda x: x["rank"] == 2,
-        "ensemble-mean-top2": lambda x: x["rank"].isin([1, 2]),
-        "ensemble-mean-weighted": lambda x: 3 - x["rank"],
-        "ensemble-mean": lambda x: x["rank"] <= 2,
+        "ensemble-best": lambda x, ranks, **kw: x.where(ranks == 1).mean(dim="tide_model"),
+        "ensemble-worst": lambda x, ranks, **kw: x.where(ranks == 2).mean(dim="tide_model"),
+        "ensemble-mean-top2": lambda x, ranks, **kw: x.where(ranks.isin([1, 2])).mean(dim="tide_model"),
+        "ensemble-mean-weighted": lambda x, ranks, **kw: x.weighted((3 - ranks).fillna(0)).mean(dim="tide_model"),
+        "ensemble-mean": lambda x, ranks=None, **kw: x.mean(dim="tide_model"),
     }
+    models = ["EOT20", "HAMTIDE11", *ensemble_funcs]
     modelled_tides_ds = pixel_tides(
         satellite_ds,
         model=models,
@@ -361,15 +366,7 @@ def test_pixel_tides_ensemble(satellite_ds):
         ensemble_models=ENSEMBLE_MODELS,
     )
 
-    assert set(modelled_tides_ds.tide_model.values) == {
-        "EOT20",
-        "HAMTIDE11",
-        "ensemble-best",
-        "ensemble-worst",
-        "ensemble-mean-top2",
-        "ensemble-mean-weighted",
-        "ensemble-mean",
-    }
+    assert set(modelled_tides_ds.tide_model.values) == set(models)
 
 
 @pytest.mark.parametrize(

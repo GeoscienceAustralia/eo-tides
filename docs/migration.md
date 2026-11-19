@@ -28,6 +28,25 @@ If long-format `pandas.DataFrame` outputs are requested via `model_tides(..., ou
 
     To access tide model information, use `tide_df.index.get_level_values("tide_model")` instead of `tide_df["tide_model"]`.
 
+### `pixel_tides` parameter "dask_chunks" renamed to "resample_chunks"
+
+To avoid confusion between the `model_tides` "dask_chunks" parameter used to control tide modelling parallelisation, the `pixel_tides` "dask_chunks" parameter to control data resampling has been renamed to "resample_chunks":
+
+    Update:
+    ```
+    pixel_tides(..., dask_chunks=...)
+    ```
+    To:
+    ```
+    pixel_tides(..., resample_chunks=...)
+    ```
+
+### Consistent index/dimension order
+
+All `model_tides` outputs are now returned in the following consistent `pandas.DataFrame` index and `xarray.Dataset` dimension order:
+
+    "tide_model", "y", "x", "time"
+
 ### Updated `extra_databases` format for specifying custom tide model definitions
 
 Custom tide models provided via the `extra_databases` parameter must be specified using a new JSON or definition file format; see the [pyTMD v3 Transition guide](https://pytmd.readthedocs.io/en/latest/user_guide/Transition-Guide.html#restructuring-definition-files) for more details.

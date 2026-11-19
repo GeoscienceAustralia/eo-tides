@@ -31,7 +31,7 @@ from .utils import DatetimeLike, _standardise_time
 
 def _resample_chunks(
     data: xr.DataArray | xr.Dataset | GeoBox,
-    dask_chunks: tuple | None = None,
+    resample_chunks: tuple | None = None,
 ) -> tuple | Shape2d:
     """Create optimised dask chunks for reprojection.
 
@@ -40,9 +40,9 @@ def _resample_chunks(
     Use entire image if GeoBox or if no default
     chunks; use existing chunks if they exist.
     """
-    # If dask_chunks is provided, return directly
-    if dask_chunks is not None:
-        return dask_chunks
+    # If resample_chunks is provided, return directly
+    if resample_chunks is not None:
+        return resample_chunks
 
     # If data is a GeoBox, return its shape
     if isinstance(data, GeoBox):
@@ -51,7 +51,7 @@ def _resample_chunks(
     # if data has chunks, then return just spatial chunks
     if data.chunks:
         y_dim, x_dim = data.odc.spatial_dims
-        return data.chunks[y_dim], data.chunks[x_dim]
+        return data.chunksizes[y_dim], data.chunksizes[x_dim]
 
     # if data has no chunks, then return entire image shape
     return data.odc.geobox.shape
@@ -112,7 +112,7 @@ def _pixel_tides_resample(
     tides_lowres,
     gbox,
     resample_method="bilinear",
-    dask_chunks=None,
+    resample_chunks=None,
     dask_compute=True,
     name="tide_height",
 ):
@@ -133,7 +133,7 @@ def _pixel_tides_resample(
     resample_method : string, optional
         The resampling method to use. Defaults to "bilinear"; valid
         options include "nearest", "cubic", "min", "max", "average" etc.
-    dask_chunks : tuple of float, optional
+    resample_chunks : tuple of float, optional
         Can be used to configure custom Dask chunking for the final
         resampling step. For custom chunks, provide a tuple in the form
         (y, x), e.g. (2048, 2048).
@@ -161,7 +161,7 @@ def _pixel_tides_resample(
     # Reproject into the pixel grid of `gbox` using odc.geo and Dask
     tides_highres = tides_lowres_dask.odc.reproject(
         how=gbox,
-        chunks=dask_chunks,
+        chunks=resample_chunks,
         resampling=resample_method,
     )
 
@@ -439,7 +439,7 @@ def pixel_tides(
     resolution: float | None = None,
     buffer: float | None = None,
     resample_method: str = "bilinear",
-    dask_chunks: tuple[float, float] | None = None,
+    resample_chunks: tuple[float, float] | None = None,
     dask_compute: bool = True,
     **model_tides_kwargs,
 ) -> xr.DataArray:
@@ -531,7 +531,7 @@ def pixel_tides(
         resampling method when resampling from low resolution to high
         resolution pixels. Defaults to "bilinear"; valid options include
         "nearest", "cubic", "min", "max", "average" etc.
-    dask_chunks : tuple of float, optional
+    resample_chunks : tuple of float, optional
         Can be used to configure custom Dask chunking for the final
         resampling step. By default, chunks will be automatically set
         to match y/x chunks from `data` if they exist; otherwise chunks
@@ -563,7 +563,7 @@ def pixel_tides(
     """
     # Standardise data inputs, time and models
     gbox, time_coords = _standardise_inputs(data, time)
-    dask_chunks = _resample_chunks(data, dask_chunks)
+    resample_chunks = _resample_chunks(data, resample_chunks)
 
     # Determine spatial dimensions
     y_dim, x_dim = gbox.dimensions
@@ -650,16 +650,26 @@ def pixel_tides(
     # (can be dropped by quantile calculation)
     tides_lowres = tides_lowres.odc.assign_crs(gbox.crs)
 
-    # Reproject into original high resolution grid
+    # Restore original spatial dimension names from gbox
+    if (y_dim, x_dim) != ("y", "x"):
+        tides_lowres = tides_lowres.rename({"y": y_dim, "x": x_dim})
+
+    # Reproject into original high resolution grid or keep low-res grid
     if resample:
         print("Reprojecting tides into original resolution")
-        return _pixel_tides_resample(
+        tides_out = _pixel_tides_resample(
             tides_lowres,
             gbox,
             resample_method,
-            dask_chunks,
+            resample_chunks,
             dask_compute,
         )
+    else:
+        print("Returning low resolution tide array")
+        tides_out = tides_lowres
 
-    print("Returning low resolution tide array")
-    return tides_lowres
+    # Match dimension order to input xarray object if provided
+    if isinstance(data, xr.DataArray | xr.Dataset):
+        return tides_out.transpose(..., *data.dims, missing_dims="ignore")
+
+    return tides_out
