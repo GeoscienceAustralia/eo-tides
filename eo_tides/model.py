@@ -293,13 +293,13 @@ def ensemble_tides(
         A dataset containing a "tide_height" variable and multiple
         models specified along the "tide_model" dimension.
     crs : str, optional
-        Coordinate reference system used to re-project ranking
+        Coordinate reference system used to reproject ranking
         points data. This should match the CRS of `ds`.
         Defaults to "EPSG:4326" (degrees latitude, longitude).
     ensemble : list or str, optional
         The ensemble(s) to generate. Several options are supported
-        by default (for custom ensembles, provide a dictionary
-        of functions to `ensemble_func`):
+        by default (to add support for custom ensembles, provide a
+        dictionary of custom functions to `ensemble_func`):
 
         - `"ensemble"`: Default method, combining the top N models at
         each location (`ensemble_top_n`) using the statistic
@@ -710,7 +710,7 @@ def model_tides(
 
     # Standardise model list, handling "all" and ensemble
     # functionality and any custom tide model definitions
-    ensemble_models = ensemble_kwargs.get("ensemble_models")
+    ensemble_models = ensemble_kwargs.pop("ensemble_models", None)
     ensemble_func = ensemble_kwargs.get("ensemble_func")
     models_requested, models_to_process, ensemble_requested, ensemble_models = _standardise_models(
         model=model,
@@ -815,6 +815,7 @@ def model_tides(
             ds=models_combined,
             crs=crs,
             ensemble=ensemble_requested,
+            ensemble_models=ensemble_models,
             **ensemble_kwargs,
         )
 
