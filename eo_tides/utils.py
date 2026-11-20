@@ -119,7 +119,7 @@ def _standardise_time(
 
 def _standardise_models(
     model: str | Iterable[str],
-    directory: str | os.PathLike,
+    directory: str | os.PathLike | None = None,
     ensemble_models: Iterable[str] | None = None,
     ensemble_func: dict | None = None,
     extra_databases: str | os.PathLike | list | None = None,
@@ -133,12 +133,14 @@ def _standardise_models(
     Parameters
     ----------
     model : str or iterable of str
-        Name(s) of tide model(s) to process.
-    directory : str or path
+        Name(s) of tide model(s) to process. This can include
+        standard models (e.g. "EOT20"), ensembles ("ensemble"),
+        or "all".
+    directory : str or path, optional
         Directory containing tide model data.
     ensemble_models : iterable of str, optional
-        Input models to include in ensemble modelling (e.g.
-        models to be combined to create multi-model ensembles).
+        Input standard models to include in ensemble modelling (e.g.
+        models to combine to create a multi-model ensemble).
     ensemble_func : dict, optional
         An optional dictionary containing additional custom ensemble
         function definitions. Dictionary keys will be used to
@@ -149,15 +151,15 @@ def _standardise_models(
     Returns
     -------
     models_requested : list of str
-        List of output model names requested by the user, supplemented
-        by additional options if "all" was included.
+        List of models requested by the user, expanded
+        to include all available models in `directory` if "all" was included.
     models_to_process : list of str
         List of all standard tide models to compute tides for, including
         any additional models temporarily required for ensemble modelling.
     ensemble_requested : list of str
         List of all ensembles requested by the user.
     ensemble_models : list of str
-        List of additional input models required for ensemble processing.
+        List of standard models required for ensemble processing.
 
     """
     # Load supported models from pyTMD database, and convert to sets
@@ -239,9 +241,13 @@ def _standardise_models(
 
     # Cast all final sets to sorted lists
     return (
+        # models user originally requested (with "all" translated to full list)
         sorted(models_requested),
+        # models needing to be loaded/processed (requested + ensemble inputs)
         sorted(models_to_process),
+        # ensembles to run (e.g. "ensemble-mean-top3")
         sorted(ensemble_requested),
+        # input models required for ensemble
         sorted(ensemble_models_set),
     )
 
