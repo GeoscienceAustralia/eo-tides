@@ -1,3 +1,4 @@
+import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pytest
@@ -7,6 +8,7 @@ from eo_tides.model import (
     _parallel_splits,
     _set_directory,
     ensemble_tides,
+    idw,
     model_phases,
     model_tides,
 )
@@ -517,6 +519,60 @@ def test_model_tides_ensemble():
         "ensemble-mean-weighted",
         "ensemble-mean",
     }
+
+
+def test_ensemble_tides_deduplicates_ranking_queries(monkeypatch, tmp_path):
+    """`ensemble_tides` should interpolate model rankings once per unique (x, y)
+    location, not once per (time, x, y, tide_model) row. `tide_df` repeats each
+    location once per timestep and tide model, but rankings are static per
+    location, so passing the full repeated coordinates into `idw` performs the
+    same interpolation over and over for no benefit. For a large number of
+    timesteps and/or models this scales query size unnecessarily and can raise
+    a MemoryError for large study areas or long time series."""
+    locations = [(0.0, 0.0), (10.0, 0.0), (5.0, 8.0)]
+    times = pd.date_range("2021-01-01", periods=5, freq="6h")
+    models = ["EOT20", "HAMTIDE11"]
+
+    rng = np.random.default_rng(0)
+    rows = [
+        {"time": t, "x": x, "y": y, "tide_model": m, "tide_height": rng.uniform(-1, 1)}
+        for t in times
+        for x, y in locations
+        for m in models
+    ]
+    tide_df = pd.DataFrame(rows).set_index(["time", "x", "y"])
+
+    ranking_gdf = gpd.GeoDataFrame(
+        {"rank_EOT20": [1, 2], "rank_HAMTIDE11": [2, 1], "valid_perc": [0.5, 0.5]},
+        geometry=gpd.points_from_xy([-2, 12], [-2, -1]),
+        crs="EPSG:3857",
+    )
+    ranking_path = tmp_path / "ranking.gpkg"
+    ranking_gdf.to_file(ranking_path, driver="GPKG")
+
+    # Spy on `idw` to record how many query points it was actually called with
+    query_sizes = []
+    original_idw = idw
+
+    def spy_idw(*args, **kwargs):
+        query_sizes.append(len(np.atleast_1d(kwargs["output_x"])))
+        return original_idw(*args, **kwargs)
+
+    monkeypatch.setattr("eo_tides.model.idw", spy_idw)
+
+    ensemble_tides(
+        tide_df,
+        crs="EPSG:3857",
+        ensemble_models=models,
+        ranking_points=str(ranking_path),
+        ranking_valid_perc=0.0,
+        k=2,
+    )
+
+    n_unique_locations = len(locations)
+    n_total_rows = len(locations) * len(times) * len(models)
+    assert n_total_rows > n_unique_locations  # sanity check the scenario is meaningful
+    assert query_sizes == [n_unique_locations]
 
 
 # Test ensemble dtype is set correctly
