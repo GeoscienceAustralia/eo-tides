@@ -44,12 +44,15 @@ def create_synthetic_hamtide11(base_dir="tests/data/tide_models_synthetic"):
         data = np.random.random(shape).astype(np.float32)
         ds = xr.Dataset(
             {
-                "RE": (("LAT", "LON"), data),
-                "IM": (("LAT", "LON"), data),
-                "AMPL": (("LAT", "LON"), data),
-                "PHAS": (("LAT", "LON"), data),
+                "RE": (("LAT", "LON"), data, {"units": "cm"}),
+                "IM": (("LAT", "LON"), data, {"units": "cm"}),
+                "AMPL": (("LAT", "LON"), data, {"units": "cm"}),
+                "PHAS": (("LAT", "LON"), data, {"units": "deg"}),
             },
-            coords={"LON": lon, "LAT": lat},
+            coords={
+                "LON": ("LON", lon, {"units": "degrees_east"}),
+                "LAT": ("LAT", lat, {"units": "degrees_north"}),
+            },
             attrs={"title": f"HAMTIDE11a: {constituent} ocean tide"},
         )
 
@@ -106,15 +109,18 @@ def create_synthetic_eot20(base_dir="tests/data/tide_models_synthetic"):
         mask = np.random.random(shape) < 0.2
         data[mask] = np.nan
 
-        # Create the dataset
+        # Create the dataset with CF/EOT20 unit attributes
         ds = xr.Dataset(
             {
-                "amplitude": (("lat", "lon"), data),
-                "phase": (("lat", "lon"), data),
-                "imag": (("lat", "lon"), data),
-                "real": (("lat", "lon"), data),
+                "amplitude": (("lat", "lon"), data, {"units": "cm"}),
+                "phase": (("lat", "lon"), data, {"units": "degrees"}),
+                "imag": (("lat", "lon"), data, {"units": "cm"}),
+                "real": (("lat", "lon"), data, {"units": "cm"}),
             },
-            coords={"lat": lat, "lon": lon},
+            coords={
+                "lat": ("lat", lat, {"units": "degrees_north"}),
+                "lon": ("lon", lon, {"units": "degrees_east"}),
+            },
             attrs={"title": "DGFI-TUM global empirical ocean tide model"},
         )
 
@@ -124,30 +130,72 @@ def create_synthetic_eot20(base_dir="tests/data/tide_models_synthetic"):
 
 
 @pytest.mark.parametrize(
-    "model, ensemble_models, exp_process, exp_request, exp_ensemble",
+    "model, ensemble_models, ensemble_func, exp_request, exp_process, exp_ensemble_req, exp_ensemble_models",
     [
-        # Case 1, 2: Specific model in str and list format
-        ("EOT20", None, ["EOT20"], ["EOT20"], None),
-        (["EOT20"], None, ["EOT20"], ["EOT20"], None),
-        # Case 3, 4: Using "all" to request all available models
+        # Specific model in str and list format
+        (
+            "EOT20",
+            None,
+            None,
+            ["EOT20"],
+            ["EOT20"],
+            [],
+            [],
+        ),
+        (
+            ["EOT20"],
+            None,
+            None,
+            ["EOT20"],
+            ["EOT20"],
+            [],
+            [],
+        ),
+        # Multiple models
+        (
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            None,
+            None,
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            [],
+            [],
+        ),
+        # Using "all" to request all available models
         (
             "all",
             None,
-            ["EOT20", "GOT5.5", "HAMTIDE11"],
-            ["EOT20", "GOT5.5", "HAMTIDE11"],
             None,
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            [],
+            [],
         ),
         (
             ["all"],
             None,
-            ["EOT20", "GOT5.5", "HAMTIDE11"],
-            ["EOT20", "GOT5.5", "HAMTIDE11"],
             None,
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            [],
+            [],
         ),
-        # Case 5, 6: Using "ensemble" to model tides for specific set of ensemble models
+        # "all" in combination with a specific model
+        (
+            ["HAMTIDE11", "all"],
+            None,
+            None,
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            [],
+            [],
+        ),
+        # Using "ensemble" to model tides for specific set of ensemble models
         (
             "ensemble",
             ["EOT20", "HAMTIDE11"],
+            None,
+            ["ensemble"],
             ["EOT20", "HAMTIDE11"],
             ["ensemble"],
             ["EOT20", "HAMTIDE11"],
@@ -155,55 +203,88 @@ def create_synthetic_eot20(base_dir="tests/data/tide_models_synthetic"):
         (
             ["ensemble"],
             ["EOT20", "HAMTIDE11"],
+            None,
+            ["ensemble"],
             ["EOT20", "HAMTIDE11"],
             ["ensemble"],
             ["EOT20", "HAMTIDE11"],
         ),
-        # Case 7: Modelling tides using ensemble set and an additional model
+        # Modelling tides using ensemble set and an additional model
         (
             ["ensemble", "GOT5.5"],
             ["EOT20", "HAMTIDE11"],
+            None,
+            ["GOT5.5", "ensemble"],
             ["EOT20", "GOT5.5", "HAMTIDE11"],
-            ["ensemble", "GOT5.5"],
+            ["ensemble"],
             ["EOT20", "HAMTIDE11"],
         ),
-        # Case 8: Modelling tides for all available models, AND ensemble set
+        # Modelling tides for all available models and ensemble set
         (
             ["all", "ensemble"],
-            ["EOT20", "HAMTIDE11"],
-            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            ["EOT20", "HAMTIDE11", "GOT5.5"],
+            None,
             ["EOT20", "GOT5.5", "HAMTIDE11", "ensemble"],
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+            ["ensemble"],
+            ["EOT20", "GOT5.5", "HAMTIDE11"],
+        ),
+        # Ensemble modelling with custom function
+        (
+            "ensemble-test",
+            ["EOT20", "HAMTIDE11"],
+            {"ensemble-test": "func"},
+            ["ensemble-test"],
+            ["EOT20", "HAMTIDE11"],
+            ["ensemble-test"],
+            ["EOT20", "HAMTIDE11"],
+        ),
+        # Ensemble modelling with standard and multiple models
+        (
+            ["EOT20", "ensemble", "ensemble-test"],
+            ["EOT20", "HAMTIDE11"],
+            {"ensemble-test": "func"},
+            ["EOT20", "ensemble", "ensemble-test"],
+            ["EOT20", "HAMTIDE11"],
+            ["ensemble", "ensemble-test"],
             ["EOT20", "HAMTIDE11"],
         ),
     ],
 )
-def test_standardise_models(model, ensemble_models, exp_process, exp_request, exp_ensemble):
-    # Return lists of models
-    models_to_process, models_requested, ensemble_models = _standardise_models(
+def test_standardise_models(
+    model,
+    ensemble_models,
+    ensemble_func,
+    exp_request,
+    exp_process,
+    exp_ensemble_req,
+    exp_ensemble_models,
+):
+    # Return standardised lists of models
+    models_requested, models_to_process, ensemble_requested, ensemble_models_out = _standardise_models(
         model=model,
-        directory="tests/data/tide_models",
         ensemble_models=ensemble_models,
+        ensemble_func=ensemble_func,
     )
 
-    assert models_to_process == exp_process
     assert models_requested == exp_request
-    assert (sorted(ensemble_models) if ensemble_models else None) == (sorted(exp_ensemble) if exp_ensemble else None)
+    assert models_to_process == exp_process
+    assert ensemble_requested == exp_ensemble_req
+    assert ensemble_models_out == exp_ensemble_models
 
 
 # Test expected failures during model standardisation
 @pytest.mark.parametrize(
     "model, ensemble_models, err_msg",
     [
-        # Case 1: Duplicate models
-        (["EOT20", "EOT20"], None, "duplicate values"),
-        # Case 2: Invalid model
+        # Case 1: Invalid model
         (["bad_model"], None, "not valid"),
-        # Case 3: Valid but unavailable model
+        # Case 2: Valid but unavailable model
         (["FES2012"], None, "not available"),
-        # Case 4: Unavailable ensemble model
-        (["ensemble"], ["EOT20", "FES2012"], "ensemble models are not available"),
+        # Case 3: Unavailable ensemble model
+        (["ensemble"], ["EOT20", "FES2012"], "ensemble model inputs are not available"),
     ],
-    ids=["duplicate_model", "invalid_model", "unavailable_model", "unavailable_ensemble"],
+    ids=["invalid_model", "unavailable_model", "unavailable_ensemble"],
 )
 def test_standardise_models_errors(model, ensemble_models, err_msg):
     with pytest.raises(ValueError, match=err_msg):
@@ -218,11 +299,11 @@ def test_standardise_models_errors(model, ensemble_models, err_msg):
 @pytest.mark.parametrize(
     "directory,env_var,expected_exception",
     [
-        # Case 1: No directory, no env var → Exception
+        # No directory, no env var → Exception
         (None, None, Exception),
-        # Case 2: Directory set, but path doesn't exist → FileNotFoundError
+        # Directory set, but path doesn't exist → FileNotFoundError
         ("/some/nonexistent/path", None, FileNotFoundError),
-        # Case 3: Env var set, but path doesn't exist → FileNotFoundError
+        # Env var set, but path doesn't exist → FileNotFoundError
         (None, "/some/nonexistent/path", FileNotFoundError),
     ],
     ids=["no_directory_or_env", "invalid_dir", "invalid_env_var"],
@@ -451,9 +532,19 @@ def test_list_models():
         # Extra database as a dictionary
         [
             {
-                "elevation": {
-                    "EOT20_custom": {
-                        "format": "FES-netcdf",
+                "EOT20_custom": {
+                    "format": "FES-netcdf",
+                    "name": "EOT20_custom",
+                    "projection": {
+                        "datum": "WGS84",
+                        "ellps": "WGS84",
+                        "lon_wrap": 180,
+                        "proj": "longlat",
+                        "type": "crs",
+                    },
+                    "reference": "https://doi.org/10.17882/79489",
+                    "version": "EOT20",
+                    "z": {
                         "model_file": [
                             "EOT20/ocean_tides/2N2_ocean_eot20.nc",
                             "EOT20/ocean_tides/J1_ocean_eot20.nc",
@@ -473,13 +564,9 @@ def test_list_models():
                             "EOT20/ocean_tides/SSA_ocean_eot20.nc",
                             "EOT20/ocean_tides/T2_ocean_eot20.nc",
                         ],
-                        "name": "EOT20_custom",
-                        "reference": "https://doi.org/10.17882/79489",
-                        "scale": 0.01,
-                        "type": "z",
+                        "units": "cm",
                         "variable": "tide_ocean",
-                        "version": "EOT20",
-                    }
+                    },
                 }
             }
         ],
