@@ -41,6 +41,7 @@ def _load_model_datatree(
     directory,
     time,
     bounds,
+    crop="auto",
     crop_buffer=5,
     append_node=False,
     output_units="m",
@@ -67,16 +68,24 @@ def _load_model_datatree(
         # Convert units
         ds = ds.tmd.to_units(output_units)
 
-        # Append with corrections info
+        # Enable cropping for global grids or clipped -180 to 180 grids
+        # TODO: Update with more robust solution to allow proper
+        # cropping on all clipped inputs
+        can_crop = ds.tmd.crs.is_geographic and (
+            ds.tmd.is_global or (float(ds.x.min()) >= -180.0 and float(ds.x.max()) <= 180.0)
+        )
+        should_crop = crop is True or (crop == "auto" and can_crop)
+
+        if should_crop:
+            ds = ds.tmd.crop(bounds=bounds, buffer=crop_buffer)
+
+        # Append corrections metadata and store node
         ds.attrs["corrections"] = pytmd_model.corrections
         out[m] = ds
 
     # Create data tree with time as a dimension
     time_coords = xr.Dataset(coords={"time": time})
     dt = xr.DataTree.from_dict({"/": time_coords, **out})
-
-    # Crop to area of interest and then load into memory
-    dt = dt.tmd.crop(bounds=bounds, buffer=crop_buffer)
 
     # Load into memory and return
     return dt.compute()
@@ -470,7 +479,7 @@ def model_tides(
     extrapolate: bool = True,
     extrapolate_k: int = 1,
     cutoff: float | None = None,
-    crop: bool | str = "auto",  # noqa: ARG001
+    crop: bool | str = "auto",
     crop_buffer: float | None = 5,
     append_node: bool = False,
     constituents: list[str] | None = None,
@@ -728,7 +737,6 @@ def model_tides(
     mpt = multipoint(np.column_stack([x.ravel(), y.ravel()]).tolist(), crs=crs)
     bbox = mpt.boundingbox.to_crs("EPSG:4326")
     bounds = bbox.range_x + bbox.range_y
-    bounds_str = f"({', '.join(f'{v:.2f}' for v in bounds)})"
 
     # Optionally calculate tide_stage by adding additional timesteps
     # after subtracting a 15 min time offset. These timesteps are used
@@ -744,12 +752,13 @@ def model_tides(
             y = np.tile(y, 2)
 
     # Load model data as a datatree containing a time index
-    print(f"Loading model files after cropping to {bounds_str} with a {crop_buffer}° buffer")
+    print("Loading model files")
     dt = _load_model_datatree(
         models=models_to_process,
         directory=directory,
         time=time,
         bounds=bounds,
+        crop=crop,
         crop_buffer=crop_buffer,
         append_node=append_node,
         output_units=output_units,

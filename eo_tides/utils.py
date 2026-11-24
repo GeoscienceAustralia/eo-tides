@@ -417,13 +417,13 @@ def clip_models(
     bbox = odc.geo.geom.BoundingBox(*bbox, crs="EPSG:4326").buffered(buffer)
 
     # Identify NetCDF models
-    model_database = load_database()["elevation"]
+    model_database = load_database()
     netcdf_formats = ["ATLAS-netcdf", "FES-netcdf", "GOT-netcdf"]
-    netcdf_models = {k for k, v in model_database.items() if v["format"] in netcdf_formats}
+    netcdf_models = {k for k, v in model_database.items() if (v["format"] in netcdf_formats) & ("z" in v)}
 
     # Identify subset of available and requested NetCDF models
     available_models, _ = list_models(directory=input_directory, show_available=False, show_supported=False)
-    requested_models = list(np.atleast_1d(model)) if model is not None else available_models
+    requested_models = np.atleast_1d(model).tolist() if model is not None else available_models
     available_netcdf_models = list(set(available_models) & set(requested_models) & set(netcdf_models))
 
     # Raise error if no valid models found
@@ -437,8 +437,8 @@ def clip_models(
     # Loop through suitable models and export
     for m in available_netcdf_models:
         # Get model file and grid file list if they exist
-        model_files = model_database[m].get("model_file", [])
-        grid_file = model_database[m].get("grid_file", [])
+        model_files = model_database[m]["z"].get("model_file", [])
+        grid_file = model_database[m]["z"].get("grid_file", [])
 
         # Convert to list of strings and combine
         model_files = model_files if isinstance(model_files, list) else [model_files]
@@ -516,9 +516,13 @@ def clip_models(
             nc_clipped.to_netcdf(output_directory / file, mode="w")
 
         # Verify that models are ready
-        if pyTMD.io.model(directory=output_directory).elevation(m=m).verify:
+        try:
+            pyTMD.io.model(
+                directory=output_directory,
+                verify=True,
+            ).from_database(m, group="z")
             print(" ✅ Clipped model exported and verified")
-        else:
+        except FileNotFoundError:
             print(" ❌ Clipped model exported but unable to be verified")
 
     print(f"\nOutputs exported to {output_directory}")

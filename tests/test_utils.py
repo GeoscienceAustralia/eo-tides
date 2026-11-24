@@ -44,12 +44,15 @@ def create_synthetic_hamtide11(base_dir="tests/data/tide_models_synthetic"):
         data = np.random.random(shape).astype(np.float32)
         ds = xr.Dataset(
             {
-                "RE": (("LAT", "LON"), data),
-                "IM": (("LAT", "LON"), data),
-                "AMPL": (("LAT", "LON"), data),
-                "PHAS": (("LAT", "LON"), data),
+                "RE": (("LAT", "LON"), data, {"units": "cm"}),
+                "IM": (("LAT", "LON"), data, {"units": "cm"}),
+                "AMPL": (("LAT", "LON"), data, {"units": "cm"}),
+                "PHAS": (("LAT", "LON"), data, {"units": "deg"}),
             },
-            coords={"LON": lon, "LAT": lat},
+            coords={
+                "LON": ("LON", lon, {"units": "degrees_east"}),
+                "LAT": ("LAT", lat, {"units": "degrees_north"}),
+            },
             attrs={"title": f"HAMTIDE11a: {constituent} ocean tide"},
         )
 
@@ -106,15 +109,18 @@ def create_synthetic_eot20(base_dir="tests/data/tide_models_synthetic"):
         mask = np.random.random(shape) < 0.2
         data[mask] = np.nan
 
-        # Create the dataset
+        # Create the dataset with CF/EOT20 unit attributes
         ds = xr.Dataset(
             {
-                "amplitude": (("lat", "lon"), data),
-                "phase": (("lat", "lon"), data),
-                "imag": (("lat", "lon"), data),
-                "real": (("lat", "lon"), data),
+                "amplitude": (("lat", "lon"), data, {"units": "cm"}),
+                "phase": (("lat", "lon"), data, {"units": "degrees"}),
+                "imag": (("lat", "lon"), data, {"units": "cm"}),
+                "real": (("lat", "lon"), data, {"units": "cm"}),
             },
-            coords={"lat": lat, "lon": lon},
+            coords={
+                "lat": ("lat", lat, {"units": "degrees_north"}),
+                "lon": ("lon", lon, {"units": "degrees_east"}),
+            },
             attrs={"title": "DGFI-TUM global empirical ocean tide model"},
         )
 
@@ -526,9 +532,19 @@ def test_list_models():
         # Extra database as a dictionary
         [
             {
-                "elevation": {
-                    "EOT20_custom": {
-                        "format": "FES-netcdf",
+                "EOT20_custom": {
+                    "format": "FES-netcdf",
+                    "name": "EOT20_custom",
+                    "projection": {
+                        "datum": "WGS84",
+                        "ellps": "WGS84",
+                        "lon_wrap": 180,
+                        "proj": "longlat",
+                        "type": "crs",
+                    },
+                    "reference": "https://doi.org/10.17882/79489",
+                    "version": "EOT20",
+                    "z": {
                         "model_file": [
                             "EOT20/ocean_tides/2N2_ocean_eot20.nc",
                             "EOT20/ocean_tides/J1_ocean_eot20.nc",
@@ -548,13 +564,9 @@ def test_list_models():
                             "EOT20/ocean_tides/SSA_ocean_eot20.nc",
                             "EOT20/ocean_tides/T2_ocean_eot20.nc",
                         ],
-                        "name": "EOT20_custom",
-                        "reference": "https://doi.org/10.17882/79489",
-                        "scale": 0.01,
-                        "type": "z",
+                        "units": "cm",
                         "variable": "tide_ocean",
-                        "version": "EOT20",
-                    }
+                    },
                 }
             }
         ],
